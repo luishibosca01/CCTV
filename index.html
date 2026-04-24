@@ -2916,7 +2916,7 @@
                         canales: String(obj.canales || 16),
                     };
                     const huboCambios = JSON.stringify(nuevoSnap) !== JSON.stringify(_snapshotDisp);
-                    if (!huboCambios) { MM.cerrar('modal-editar-disp'); _editandoDispId = null; _snapshotDisp = null; return; }
+                    if (!huboCambios) { toast('Sin cambios', 'info'); MM.cerrar('modal-editar-disp'); _editandoDispId = null; _snapshotDisp = null; return; }
 
                     const idx = _data.dispositivos.findIndex(x => x.id === _editandoDispId);
                     if (idx !== -1) _data.dispositivos[idx] = obj;
@@ -3093,7 +3093,7 @@
                         dispositivoId: datos.dispositivoId || '',
                     };
                     const huboCambiosGrab = JSON.stringify(nuevoSnapGrab) !== JSON.stringify(_snapshotGrab);
-                    if (!huboCambiosGrab) { MM.cerrar('modal-editar-grab'); _editandoGrabId = null; _snapshotGrab = null; return; }
+                    if (!huboCambiosGrab) { toast('Sin cambios', 'info'); MM.cerrar('modal-editar-grab'); _editandoGrabId = null; _snapshotGrab = null; return; }
 
                     if (idx !== -1) {
                         datos.canales_data = _data.grabadores[idx].canales_data;
@@ -3352,7 +3352,7 @@
                         comentarios:   document.getElementById('canal-comentarios').value.trim(),
                     };
                     const huboCambiosCanal = JSON.stringify(nuevoSnapCanal) !== JSON.stringify(_snapshotCanal);
-                    if (!huboCambiosCanal) { MM.cerrar('modal-canal'); _editandoCanalGrabId = null; _editandoCanalN = null; _snapshotCanal = null; return; }
+                    if (!huboCambiosCanal) { toast('Sin cambios', 'info'); MM.cerrar('modal-canal'); _editandoCanalGrabId = null; _editandoCanalN = null; _snapshotCanal = null; return; }
 
                     slot.dispositivoId = nuevoSnapCanal.dispositivoId || null;
                     slot.descripcion   = nuevoSnapCanal.descripcion;
@@ -3701,7 +3701,7 @@
 
 <!--
 // ====================================================================
-//         NOTAS CCTV ACTIVOS VERSION 171
+//         NOTAS CCTV ACTIVOS VERSION 149
 // ====================================================================
 
  - PENDIENTE (futuras iteraciones):
