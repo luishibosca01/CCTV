@@ -2413,6 +2413,9 @@
             // ==============================================================
             let _editandoDispId = null;
             let _editandoGrabId = null;
+            let _snapshotDisp = null;   // snapshot al abrir modal editar dispositivo
+            let _snapshotGrab = null;   // snapshot al abrir modal editar grabador
+            let _snapshotCanal = null;  // snapshot al abrir modal canal
             let _editandoCanalGrabId = null;
             let _editandoCanalN = null;
             let _canalDesdeDispId = null; // dispId cuando el canal se abrió desde "Editar asignación"
@@ -2803,6 +2806,18 @@
                     } else {
                         btnAsig.style.display = 'none';
                     }
+                    // snapshot para detectar cambios al guardar
+                    _snapshotDisp = {
+                        tipo: d.tipo,
+                        marca: d.marca,
+                        modelo: d.modelo,
+                        serial: d.serial || '',
+                        mac: d.mac || '',
+                        patrimonio: d.patrimonio || '',
+                        forma: d.forma || '',
+                        canales: String(d.canales || 16),
+                    };
+
                     MM.abrir('modal-editar-disp');
                     // etiqueta del botón cerrar: "Volver" si viene desde Ver activo del canal
                     const btnCerrarDisp = document.querySelector('#modal-editar-disp .btn-cancel');
@@ -2889,12 +2904,26 @@
                     };
 
                     const obj = _sanDisp({ ...base, id: _editandoDispId, mac: macs[0] || '' });
+                    // detectar cambios respecto al snapshot
+                    const nuevoSnap = {
+                        tipo: obj.tipo,
+                        marca: obj.marca,
+                        modelo: obj.modelo,
+                        serial: obj.serial || '',
+                        mac: obj.mac || '',
+                        patrimonio: obj.patrimonio || '',
+                        forma: obj.forma || '',
+                        canales: String(obj.canales || 16),
+                    };
+                    const huboCambios = JSON.stringify(nuevoSnap) !== JSON.stringify(_snapshotDisp);
+                    if (!huboCambios) { MM.cerrar('modal-editar-disp'); _editandoDispId = null; _snapshotDisp = null; return; }
+
                     const idx = _data.dispositivos.findIndex(x => x.id === _editandoDispId);
                     if (idx !== -1) _data.dispositivos[idx] = obj;
                     _sincronizarGrabadores(_editandoDispId);
                     toast('Dispositivo actualizado', 'success');
 
-                    guardar(); render(); MM.cerrar('modal-editar-disp'); _editandoDispId = null;
+                    guardar(); render(); MM.cerrar('modal-editar-disp'); _editandoDispId = null; _snapshotDisp = null;
                 },
 
                 editarAsignacionCamara() {
@@ -2994,6 +3023,14 @@
                         .reduce((max, c) => Math.max(max, c.canal), 0);
                     _poblarSelectorGrabador(prefijo, g.dispositivoId || null, _maxCanalOcupado);
 
+                    // snapshot para detectar cambios al guardar
+                    _snapshotGrab = {
+                        descripcion: g.descripcion,
+                        ip: g.ip || '',
+                        lugar: g.lugar || '',
+                        dispositivoId: g.dispositivoId || '',
+                    };
+
                     // deshabilitar botón eliminar si tiene canales ocupados
                     const ocupados = g.canales_data.filter(c => c.dispositivoId).length;
                     const btnElimGrab = document.querySelector('#modal-editar-grab .btn-delete');
@@ -3048,12 +3085,22 @@
                     };
 
                     const idx = _data.grabadores.findIndex(x => x.id === _editandoGrabId);
+                    // detectar cambios respecto al snapshot
+                    const nuevoSnapGrab = {
+                        descripcion: datos.descripcion,
+                        ip: datos.ip || '',
+                        lugar: datos.lugar || '',
+                        dispositivoId: datos.dispositivoId || '',
+                    };
+                    const huboCambiosGrab = JSON.stringify(nuevoSnapGrab) !== JSON.stringify(_snapshotGrab);
+                    if (!huboCambiosGrab) { MM.cerrar('modal-editar-grab'); _editandoGrabId = null; _snapshotGrab = null; return; }
+
                     if (idx !== -1) {
                         datos.canales_data = _data.grabadores[idx].canales_data;
                         _data.grabadores[idx] = _sanGrab(datos);
                     }
                     toast('Grabador actualizado', 'success');
-                    guardar(); render(); MM.cerrar('modal-editar-grab'); _editandoGrabId = null;
+                    guardar(); render(); MM.cerrar('modal-editar-grab'); _editandoGrabId = null; _snapshotGrab = null;
                 },
 
                 async eliminarGrabador() {
@@ -3121,6 +3168,18 @@
                     _canalDispHighlight = -1;
 
                     MM.abrir('modal-canal');
+
+                    // snapshot para detectar cambios al guardar
+                    _snapshotCanal = {
+                        dispositivoId: slot?.dispositivoId || '',
+                        descripcion:   slot?.descripcion  || '',
+                        ip:            slot?.ip           || '',
+                        puerto:        slot?.puerto       || '',
+                        edificio:      slot?.edificio     || '',
+                        piso:          slot?.piso         || '',
+                        rack:          slot?.rack         || '',
+                        comentarios:   slot?.comentarios  || '',
+                    };
 
                     document.getElementById('canal-descripcion').value = slot?.descripcion || '';
                     document.getElementById('canal-ip').value = slot?.ip || '';
@@ -3282,17 +3341,34 @@
                     }
                     dispInput.classList.remove('error');
                     if (!validarCampoIP('canal-ip')) return;
-                    slot.dispositivoId = document.getElementById('sel-canal-dispositivo').value || null;
-                    slot.descripcion = document.getElementById('canal-descripcion').value.trim();
-                    slot.ip = document.getElementById('canal-ip').value.trim();
-                    slot.puerto = document.getElementById('canal-puerto').value.trim();
-                    slot.edificio = document.getElementById('canal-edificio').value.trim();
-                    slot.piso = document.getElementById('canal-piso').value.trim();
-                    slot.rack = document.getElementById('canal-rack').value.trim();
-                    slot.comentarios = document.getElementById('canal-comentarios').value.trim();
+                    const nuevoSnapCanal = {
+                        dispositivoId: document.getElementById('sel-canal-dispositivo').value || '',
+                        descripcion:   document.getElementById('canal-descripcion').value.trim(),
+                        ip:            document.getElementById('canal-ip').value.trim(),
+                        puerto:        document.getElementById('canal-puerto').value.trim(),
+                        edificio:      document.getElementById('canal-edificio').value.trim(),
+                        piso:          document.getElementById('canal-piso').value.trim(),
+                        rack:          document.getElementById('canal-rack').value.trim(),
+                        comentarios:   document.getElementById('canal-comentarios').value.trim(),
+                    };
+                    const huboCambiosCanal = JSON.stringify(nuevoSnapCanal) !== JSON.stringify(_snapshotCanal);
+                    if (!huboCambiosCanal) { MM.cerrar('modal-canal'); _editandoCanalGrabId = null; _editandoCanalN = null; _snapshotCanal = null; return; }
+
+                    slot.dispositivoId = nuevoSnapCanal.dispositivoId || null;
+                    slot.descripcion   = nuevoSnapCanal.descripcion;
+                    slot.ip            = nuevoSnapCanal.ip;
+                    slot.puerto        = nuevoSnapCanal.puerto;
+                    slot.edificio      = nuevoSnapCanal.edificio;
+                    slot.piso          = nuevoSnapCanal.piso;
+                    slot.rack          = nuevoSnapCanal.rack;
+                    slot.comentarios   = nuevoSnapCanal.comentarios;
                     guardar(); render(); MM.cerrar('modal-canal');
-                    toast(slot.dispositivoId ? 'Dispositivo asignado' : 'Canal actualizado', 'success');
-                    _editandoCanalGrabId = null; _editandoCanalN = null;
+                    // mensaje según qué cambió
+                    const fueAsignado   = !_snapshotCanal.dispositivoId && nuevoSnapCanal.dispositivoId;
+                    const fueDesasignado = _snapshotCanal.dispositivoId && !nuevoSnapCanal.dispositivoId;
+                    const msg = fueAsignado ? 'Dispositivo asignado' : fueDesasignado ? 'Canal liberado' : 'Canal actualizado';
+                    toast(msg, 'success');
+                    _editandoCanalGrabId = null; _editandoCanalN = null; _snapshotCanal = null;
                 },
 
                 // ---- Importar / Exportar ----
@@ -3521,6 +3597,29 @@
 
             // atajo de teclado: tecla + abre el modal de agregar dispositivo
             // tecla A-Z: ir a activos y enfocar búsqueda
+            // Enter en modales: dispara el guardado del modal activo
+            document.addEventListener('keydown', e => {
+                if (e.key !== 'Enter') return;
+                // solo si hay un modal abierto y el foco está en un input/select (no textarea)
+                if (!document.body.classList.contains('modal-open')) return;
+                const tag = document.activeElement?.tagName;
+                if (tag === 'TEXTAREA') return; // textarea necesita Enter para salto de línea
+                // no disparar si el foco está en un botón (ya maneja su propio click)
+                if (tag === 'BUTTON') return;
+                const modalAbierto = document.querySelector('.modal.show');
+                if (!modalAbierto) return;
+                const accion = {
+                    'modal-nuevo-disp':   () => UI.guardarNuevoDispositivo(),
+                    'modal-editar-disp':  () => UI.guardarEdicionDispositivo(),
+                    'modal-nuevo-grab':   () => UI.guardarNuevoGrabador(),
+                    'modal-editar-grab':  () => UI.guardarEdicionGrabador(),
+                    'modal-canal':        () => UI.guardarAsignacionCanal(),
+                    'modal-tipos-dispositivo': () => UI.agregarTipoCustom(),
+                    'modal-confirmar':    () => document.getElementById('modal-confirmar-ok')?.click(),
+                }[modalAbierto.id];
+                if (accion) { e.preventDefault(); accion(); }
+            });
+
             document.addEventListener('keydown', e => {
                 const tag = document.activeElement?.tagName;
                 const enInput = tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA';
@@ -3602,7 +3701,7 @@
 
 <!--
 // ====================================================================
-//         NOTAS CCTV ACTIVOS VERSION 169
+//         NOTAS CCTV ACTIVOS VERSION 149
 // ====================================================================
 
  - PENDIENTE (futuras iteraciones):
