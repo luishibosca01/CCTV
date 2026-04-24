@@ -1,0 +1,3251 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self';
+        script-src 'self' 'unsafe-inline';
+        style-src 'self' 'unsafe-inline';
+        img-src 'self' data: blob:;
+        font-src 'self' data:;
+        connect-src 'self' https://api.github.com; 
+        object-src 'none';
+        base-uri 'none';
+        form-action 'none';
+        frame-ancestors 'none';
+        upgrade-insecure-requests;">
+    <meta name="referrer" content="no-referrer">
+    <title>CCTV — Control de Activos v154</title>
+
+    <style>
+        /* ============================================================
+           VARIABLES DE COLOR  (idénticas a Horarios)
+        ============================================================ */
+        :root {
+            --bg-body: #ffffff;
+            --bg-card: #f0f4f9;
+            --bg-header: #ffffff;
+            --text-main: #1f1f1f;
+            --text-muted: #444746;
+            --text-disabled: #444746a2;
+            --border: #dde3ea;
+            --input-bg: #dde3ea;
+            --c-blue: rgba(76, 114, 172, 0.8);
+            --c-green: rgba(76, 172, 140, 0.8);
+            --c-red: rgba(172, 90, 76, 0.8);
+            --c-purple: rgba(129, 76, 172, 0.8);
+            --c-gold: rgba(172, 155, 76, 0.8);
+            --c-orange: rgba(210, 120, 50, 0.8);
+            --c-gray-btn: #dde3ea;
+            --c-white: #ffffff;
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            --radius: 20px;
+            --hover: brightness(0.9);
+        }
+
+        body.dark-mode {
+            --bg-body: #131314;
+            --bg-card: #1e1f20;
+            --bg-header: #131314f6;
+            --text-main: #e3e3e3;
+            --text-muted: #b4b4b4;
+            --text-disabled: #b4b4b4a2;
+            --border: #313333;
+            --input-bg: #313333;
+            --c-gray-btn: #313333;
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            --hover: brightness(1.2);
+        }
+
+        body.modal-open {
+            overflow: hidden !important;
+        }
+
+        /* ============================================================
+           RESET & BASE
+        ============================================================ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html {
+            scrollbar-gutter: stable;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: var(--bg-body);
+            color: var(--text-main);
+            transition: background 0.3s, color 0.3s;
+            overflow-y: auto;
+        }
+
+        /* ============================================================
+           LAYOUT
+        ============================================================ */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0.5rem;
+        }
+
+        /* ============================================================
+           HEADER  (idéntico a Horarios)
+        ============================================================ */
+        .header {
+            background: var(--bg-header);
+            backdrop-filter: blur(10px);
+            padding: 0.6rem;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 90;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.25rem;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-shrink: 0;
+            margin-right: auto;
+            margin-left: 1rem;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* ============================================================
+           CARD  (idéntico a Horarios)
+        ============================================================ */
+        .card,
+        .modal-content {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 1.5rem 0.75rem;
+            margin-bottom: 1rem;
+            box-shadow: var(--shadow);
+            color: var(--text-main);
+        }
+
+        .card h2 {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-main);
+        }
+
+        /* ============================================================
+           FORMULARIOS  (idéntico a Horarios)
+        ============================================================ */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin: 0 0 0.25rem 0.5rem;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 1rem;
+            background: var(--input-bg);
+            color: var(--text-main);
+            height: 48px;
+            transition: border-color 0.2s, background 0.3s;
+        }
+
+        input:disabled,
+        select:disabled {
+            background-color: var(--bg-card);
+            color: var(--text-disabled);
+            opacity: 1;
+            -webkit-text-fill-color: var(--text-disabled);
+            cursor: not-allowed;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+        }
+
+        input.error {
+            border-color: var(--c-red);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        .form-row-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        /* ============================================================
+           BOTONES  (idéntico a Horarios)
+        ============================================================ */
+        button {
+            width: 100%;
+            padding: 0.875rem;
+            border: 1px solid transparent;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            color: var(--text-main);
+            background: var(--c-gray-btn);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        button:disabled {
+            background: transparent;
+            cursor: not-allowed;
+            transform: none;
+            color: var(--text-disabled);
+        }
+
+        .icon-btn {
+            width: auto;
+            padding: 0.5rem;
+            min-width: 44px;
+            height: 44px;
+            background: transparent;
+            touch-action: manipulation;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+            align-items: center;
+        }
+
+        /* variantes de color — igual que Horarios usa --c-* */
+        .btn-edit {
+            background: var(--c-blue);
+            color: var(--c-white);
+        }
+
+        .btn-delete {
+            background: var(--c-red);
+            color: var(--c-white);
+        }
+
+        .btn-backup {
+            background: var(--c-green);
+            color: var(--c-white);
+        }
+
+        .btn-cancel {
+            background: var(--c-gray-btn);
+        }
+
+        /* hovers — idéntico a Horarios */
+        @media (hover: hover) and (pointer: fine) {
+
+            .btn-edit:hover:not(:disabled),
+            .btn-delete:hover:not(:disabled),
+            .btn-backup:hover:not(:disabled),
+            .btn-cancel:hover:not(:disabled),
+            .icon-btn:hover:not(:disabled) {
+                filter: var(--hover);
+            }
+        }
+
+        /* ============================================================
+           ICONS
+        ============================================================ */
+        .icon {
+            width: 1.2em;
+            height: 1.2em;
+            vertical-align: text-bottom;
+            fill: currentColor;
+            stroke: currentColor;
+            stroke-width: 0;
+            flex-shrink: 0;
+        }
+
+        .icon-line {
+            stroke-width: 2;
+            fill: none;
+        }
+
+        /* ============================================================
+           TABS  (estilo propio pero con variables de Horarios)
+        ============================================================ */
+        .tabs {
+            display: flex;
+            gap: 0;
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 0.3rem;
+            margin-bottom: 1rem;
+            box-shadow: var(--shadow);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 0.55rem 0.25rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            background: transparent;
+            border: none;
+            border-radius: calc(var(--radius) - 4px);
+            color: var(--text-muted);
+            height: auto;
+            transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+            gap: 0.3rem;
+        }
+
+        .tab-btn.activa {
+            background: var(--bg-body);
+            color: var(--text-main);
+            box-shadow: var(--shadow);
+        }
+
+        /* ============================================================
+           TOAST  (idéntico a Horarios)
+        ============================================================ */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            transition: opacity 0.3s, transform 0.3s;
+            background: #1f2937;
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: var(--radius);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            white-space: pre-line;
+            pointer-events: none;
+            backdrop-filter: blur(3px);
+            width: calc(100% - 4rem);
+            max-width: 400px;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+            pointer-events: auto;
+        }
+
+        .toast.success {
+            background: var(--c-green);
+        }
+
+        .toast.error,
+        .toast.warning {
+            background: var(--c-red);
+        }
+
+        .toast.info {
+            background: var(--c-blue);
+        }
+
+        /* ============================================================
+           MODAL  (idéntico a Horarios)
+        ============================================================ */
+        .modal {
+            display: flex;
+            visibility: hidden;
+            opacity: 0;
+            pointer-events: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            padding: 0.25rem;
+            backdrop-filter: blur(10px);
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .modal.show {
+            visibility: visible;
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            transform: translateY(24px) scale(0.96);
+            transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease;
+            opacity: 0;
+            max-width: 480px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal.show .modal-content {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+        }
+
+        .modal h3 {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* ============================================================
+           LISTA DE DISPOSITIVOS  (mismo patrón que registro-item)
+        ============================================================ */
+        .dispositivo-item {
+            border: 1px solid var(--border);
+            border-left: 4px solid transparent;
+            border-radius: var(--radius);
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            background: var(--input-bg);
+            gap: 0.5rem;
+        }
+
+        /* border-left por estado (sobreescribe tipo) */
+        .dispositivo-item.estado-produccion  { border-left-color: var(--c-blue); }
+        .dispositivo-item.estado-disponible  { border-left-color: var(--c-green); }
+        .dispositivo-item.estado-averiado    { border-left-color: var(--c-red); }
+        .dispositivo-item.estado-baja        { border-left-color: var(--c-purple); }
+        .dispositivo-item.estado-desafectado { border-left-color: var(--text-muted); }
+
+        .dispositivo-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .dispositivo-nombre {
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 0.2rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .dispositivo-meta {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+            align-items: center;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--c-white);
+            border-radius: var(--radius);
+            padding: 0.1rem 0.55rem;
+            white-space: nowrap;
+        }
+
+        .badge-camara {
+            background: var(--c-blue);
+        }
+
+        .badge-nvr {
+            background: var(--c-green);
+        }
+
+        .badge-dvr {
+            background: var(--c-orange);
+        }
+
+        .badge-otro {
+            background: var(--c-gold);
+        }
+
+        /* badge por estado */
+        .badge-estado-produccion  { background: var(--c-blue); }
+        .badge-estado-disponible  { background: var(--c-green); }
+        .badge-estado-averiado    { background: var(--c-red); }
+        .badge-estado-baja        { background: var(--c-purple); }
+        .badge-estado-desafectado { background: transparent; color: var(--text-muted); border: 1px solid var(--text-muted); }
+
+        @media (hover: hover) and (pointer: fine) {
+            .dispositivo-item:hover {
+                filter: var(--hover);
+            }
+        }
+
+        /* ============================================================
+           PRODUCCIÓN — grilla de canales
+        ============================================================ */
+        .nvr-card {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--input-bg);
+            margin-bottom: 0.75rem;
+            overflow: hidden;
+        }
+
+        .nvr-card-header {
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-card);
+        }
+
+        .nvr-card-header-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .nvr-card-nombre {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .nvr-card-meta {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-top: 0.1rem;
+        }
+
+        .nvr-canales-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 0.5rem;
+            padding: 0.75rem;
+        }
+
+        .nvr-canales-grid.collapsed {
+            display: none;
+        }
+
+        .nvr-chevron {
+            flex-shrink: 0;
+            width: 20px;
+            height: 20px;
+            stroke: var(--text-muted);
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            transition: transform 0.2s ease;
+        }
+
+        .nvr-card.collapsed .nvr-chevron {
+            transform: rotate(-90deg);
+        }
+
+        .nvr-card.collapsed .nvr-card-header {
+            border-bottom: none;
+        }
+
+        .canal-slot {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 0.55rem 0.65rem;
+            background: var(--bg-card);
+            min-height: 62px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+            cursor: pointer;
+            transition: filter 0.15s;
+        }
+
+        .canal-slot.ocupado {
+            border-left: 3px solid var(--c-blue);
+        }
+
+        .canal-slot.vacio {
+            border-style: dashed;
+            opacity: 0.65;
+        }
+
+        @media (hover: hover) and (pointer: fine) {
+            .canal-slot:hover {
+                filter: var(--hover);
+            }
+        }
+
+        .canal-numero {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+
+        .canal-dispositivo-nombre {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text-main);
+            line-height: 1.2;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+        }
+
+        .canal-dispositivo-ip {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+        }
+
+        .canal-vacio-label {
+            font-size: 0.78rem;
+            color: var(--text-disabled);
+            margin-top: auto;
+        }
+
+        /* ============================================================
+           DASHBOARD  — stat chips
+        ============================================================ */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-chip {
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .stat-chip-valor {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-main);
+            line-height: 1;
+        }
+
+        .stat-chip-label {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        /* ============================================================
+           LISTA DE DISTRIBUCIÓN POR TIPO (dashboard)
+        ============================================================ */
+        .dash-3col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        @media (max-width: 560px) {
+            .dash-3col {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .dash-3col .card {
+            margin-bottom: 0;
+        }
+
+        .tipo-row {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.88rem;
+        }
+
+        .tipo-row:last-child {
+            border-bottom: none;
+        }
+
+        .tipo-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .tipo-row-nombre {
+            flex: 1;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .tipo-row-count {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        /* ============================================================
+           EMPTY STATE
+        ============================================================ */
+        .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 3rem 1rem;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .empty-state svg {
+            width: 2.5rem;
+            height: 2.5rem;
+            margin-bottom: 0.75rem;
+            opacity: 0.35;
+            display: block;
+            margin: 0 auto 0.75rem;
+        }
+
+        /* ============================================================
+           SCROLLBAR  (idéntico a Horarios)
+        ============================================================ */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-body);
+            border-radius: var(--radius);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: var(--radius);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* ============================================================
+           ANIMACIONES  (idéntico a Horarios)
+        ============================================================ */
+        @keyframes slideDownFade {
+            from {
+                opacity: 0;
+                transform: translateY(-12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .anim-in {
+            animation: slideDownFade 0.22s ease;
+        }
+
+        .no-anim .anim-in {
+            animation: none;
+        }
+
+        .lista-2col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0 0.75rem;
+            align-items: start;
+        }
+
+        @media (max-width: 640px) {
+            .lista-2col {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* filtros de búsqueda — toggle row */
+        .filtro-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 0.75rem;
+            background: var(--input-bg);
+            border-radius: calc(var(--radius) - 4px);
+            cursor: pointer;
+            gap: 0.75rem;
+        }
+        .filtro-label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-main);
+            cursor: pointer;
+            flex: 1;
+        }
+        .filtro-toggle {
+            position: relative;
+            display: inline-block;
+            width: 28px;
+            height: 16px;
+            flex-shrink: 0;
+            vertical-align: middle;
+        }
+        .filtro-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+        .filtro-toggle-track {
+            position: absolute;
+            inset: 0;
+            border-radius: 16px;
+            background: var(--border);
+            transition: background 0.2s;
+        }
+        .filtro-toggle input:checked + .filtro-toggle-track { background: var(--c-blue); }
+        .filtro-toggle-track::after {
+            content: '';
+            position: absolute;
+            width: 10px; height: 10px;
+            left: 3px; top: 3px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.2s;
+        }
+        .filtro-toggle input:checked + .filtro-toggle-track::after { transform: translateX(12px); }
+
+        /* badge indicador activo en botón filtros */
+        #btn-filtros-busqueda.tiene-desactivados svg { stroke: var(--c-blue); }
+
+                /* modal confirmar */
+        #modal-confirmar .modal-content {
+            max-width: 360px;
+        }
+
+        /* modal importar/exportar */
+        #nombre-archivo {
+            font-size: 0.82rem;
+            color: var(--c-green);
+            text-align: center;
+            margin-top: 0.4rem;
+            min-height: 1.2em;
+        }
+
+        /* select canal en modal */
+        #sel-canal-dispositivo option:disabled {
+            color: var(--text-disabled);
+        }
+
+        .canal-disp-item {
+            padding: 0.6rem 0.85rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            border-bottom: 1px solid var(--border);
+            line-height: 1.35;
+        }
+
+        .canal-disp-item:last-child {
+            border-bottom: none;
+        }
+
+        .canal-disp-item:hover,
+        .canal-disp-item.highlighted {
+            background: var(--input-bg);
+        }
+
+        .canal-disp-item.ocupado {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        .canal-disp-item-mac {
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .canal-disp-item-sub {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-top: 0.1rem;
+        }
+
+        .canal-disp-item-vaciobtn {
+            color: var(--text-muted);
+            font-style: italic;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Flash anti-parpadeo tema oscuro (idéntico a Horarios) -->
+    <script>
+        (function () {
+            try {
+                var t = localStorage.getItem('cctv_tema');
+                if (t === 'true' || t === null) document.body.classList.add('dark-mode');
+            } catch (e) { }
+        })();
+    </script>
+
+    <!-- ====== SVG SPRITES ====== -->
+    <svg style="display:none">
+        <symbol id="icon-camera" viewBox="0 0 24 24">
+            <path d="M23 7l-7 5 7 5V7z" />
+            <rect x="1" y="5" width="15" height="14" rx="2" />
+        </symbol>
+        <symbol id="icon-server" viewBox="0 0 24 24">
+            <rect x="2" y="2" width="20" height="8" rx="2" />
+            <rect x="2" y="14" width="20" height="8" rx="2" />
+            <line x1="6" y1="6" x2="6.01" y2="6" />
+            <line x1="6" y1="18" x2="6.01" y2="18" />
+        </symbol>
+        <symbol id="icon-grid" viewBox="0 0 24 24">
+            <rect x="3" y="3" width="7" height="7" />
+            <rect x="14" y="3" width="7" height="7" />
+            <rect x="14" y="14" width="7" height="7" />
+            <rect x="3" y="14" width="7" height="7" />
+        </symbol>
+        <symbol id="icon-plus" viewBox="0 0 24 24">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+        </symbol>
+        <symbol id="icon-edit" viewBox="0 0 24 24">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+        </symbol>
+        <symbol id="icon-trash" viewBox="0 0 24 24">
+            <polyline points="3 6 5 6 21 6" />
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+            <path d="M10 11v6" />
+            <path d="M14 11v6" />
+            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+        </symbol>
+        <symbol id="icon-undo" viewBox="0 0 24 24">
+            <path d="M3 7v6h6" class="icon-line" stroke="currentColor"></path>
+            <path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13" class="icon-line" stroke="currentColor"></path>
+        </symbol>
+        <symbol id="icon-redo" viewBox="0 0 24 24">
+            <path d="M21 7v6h-6" class="icon-line" stroke="currentColor"></path>
+            <path d="M3 17a9 9 0 019-9 9 9 0 016 2.3L21 13" class="icon-line" stroke="currentColor"></path>
+        </symbol>
+        <symbol id="icon-sun" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="5" />
+            <line x1="12" y1="1" x2="12" y2="3" />
+            <line x1="12" y1="21" x2="12" y2="23" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line x1="1" y1="12" x2="3" y2="12" />
+            <line x1="21" y1="12" x2="23" y2="12" />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+        </symbol>
+        <symbol id="icon-moon" viewBox="0 0 24 24">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+        </symbol>
+        <symbol id="icon-download" viewBox="0 0 24 24">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+        </symbol>
+        <symbol id="icon-upload" viewBox="0 0 24 24">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="17 8 12 3 7 8" />
+            <line x1="12" y1="3" x2="12" y2="15" />
+        </symbol>
+        <symbol id="icon-alert" viewBox="0 0 24 24">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+            <line x1="12" y1="9" x2="12" y2="13" />
+            <line x1="12" y1="17" x2="12.01" y2="17" />
+        </symbol>
+        <symbol id="icon-save" viewBox="0 0 24 24">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" class="icon-line"
+                stroke="currentColor"></path>
+            <polyline points="17 21 17 13 7 13 7 21" class="icon-line" stroke="currentColor"></polyline>
+            <polyline points="7 3 7 8 15 8" class="icon-line" stroke="currentColor"></polyline>
+        </symbol>
+        <symbol id="icon-link" viewBox="0 0 24 24">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+        </symbol>
+        <symbol id="icon-settings" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="3" />
+            <path
+                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+        </symbol>
+        <symbol id="icon-cancelar" viewBox="0 0 24 24">
+            <line x1="18" y1="6" x2="6" y2="18" class="icon-line" stroke="currentColor"></line>
+            <line x1="6" y1="6" x2="18" y2="18" class="icon-line" stroke="currentColor"></line>
+        </symbol>
+    </svg>
+
+    <!-- ====== HEADER ====== -->
+    <header class="header">
+
+
+        <h1>
+            <svg class="icon icon-line">
+                <use href="#icon-camera" />
+            </svg>
+            CCTV
+        </h1>
+        <div class="header-buttons">
+            <button class="icon-btn" onclick="UI.abrirAjustes()" title="Ajustes">
+                <svg class="icon icon-line">
+                    <use href="#icon-settings" />
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- ====== CONTENIDO ====== -->
+    <div class="container" style="margin-top:0.5rem">
+
+        <!-- TABS -->
+        <div class="tabs">
+            <button class="tab-btn activa" id="tab-dashboard" onclick="UI.cambiarTab('dashboard')">
+                <svg class="icon icon-line" style="width:.95em;height:.95em">
+                    <use href="#icon-grid" />
+                </svg>
+                Dashboard
+            </button>
+            <button class="tab-btn" id="tab-activos" onclick="UI.cambiarTab('activos')">
+                <svg class="icon icon-line" style="width:.95em;height:.95em">
+                    <use href="#icon-camera" />
+                </svg>
+                Activos
+            </button>
+            <button class="tab-btn" id="tab-produccion" onclick="UI.cambiarTab('produccion')">
+                <svg class="icon icon-line" style="width:.95em;height:.95em">
+                    <use href="#icon-server" />
+                </svg>
+                Producción
+            </button>
+        </div>
+
+        <!-- ===== BARRA DE BÚSQUEDA ===== -->
+        <div id="barra-busqueda" style="margin-bottom:0.75rem;position:relative">
+            <input type="text" id="input-busqueda" placeholder="Buscar por tipo, MAC, descripcion de canal…"
+                oninput="UI.filtrarActivos()" style="padding-left:2.5rem;padding-right:4.5rem">
+            <svg style="position:absolute;left:0.75rem;top:50%;transform:translateY(-50%);width:1.1rem;height:1.1rem;stroke:var(--text-muted);fill:none;stroke-width:2;stroke-linecap:round;pointer-events:none"
+                viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <button id="btn-limpiar-busqueda" onclick="UI.limpiarBusqueda()"
+                style="display:none;position:absolute;right:2.25rem;top:50%;transform:translateY(-50%);width:28px;height:28px;min-width:unset;padding:0;background:transparent;border:none">
+                <svg style="width:1rem;height:1rem;stroke:var(--text-muted);fill:none;stroke-width:2.5;stroke-linecap:round"
+                    viewBox="0 0 24 24">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+            </button>
+            <button id="btn-filtros-busqueda" onclick="UI.abrirFiltrosBusqueda()" title="Personalizar búsqueda"
+                style="position:absolute;right:0.35rem;top:50%;transform:translateY(-50%);width:28px;height:28px;min-width:unset;padding:0;background:transparent;border:none">
+                <svg style="width:1rem;height:1rem;stroke:var(--text-muted);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"
+                    viewBox="0 0 24 24">
+                    <line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- ===== PANEL DASHBOARD ===== -->
+        <div id="panel-dashboard">
+            <div class="card">
+                <h2><svg class="icon icon-line">
+                        <use href="#icon-grid" />
+                    </svg> Resumen general</h2>
+                <div id="dash-disp-tree"></div>
+            </div>
+            <div class="dash-3col">
+                <div class="card">
+                    <h2><svg class="icon icon-line">
+                            <use href="#icon-server" />
+                        </svg> Grabadores</h2>
+                    <div id="dash-grabadores"></div>
+                </div>
+                <div class="card">
+                    <h2><svg class="icon icon-line">
+                            <use href="#icon-camera" />
+                        </svg> Cámaras</h2>
+                    <div id="dash-camaras"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== PANEL ACTIVOS ===== -->
+        <div id="panel-activos" style="display:none">
+            <div class="card">
+                <h2>
+                    <svg class="icon icon-line">
+                        <use href="#icon-camera" />
+                    </svg>
+                    Dispositivos
+                    <span id="contador-dispositivos" style="font-size:0.78rem;font-weight:600;color:var(--text-muted);background:var(--input-bg);border-radius:99px;padding:0.1rem 0.6rem;margin-left:0.25rem"></span>
+                    <button class="icon-btn btn-edit" onclick="UI.abrirNuevoDispositivo()" title="Agregar dispositivo"
+                        style="margin-left:auto;width:auto">
+                        <svg class="icon icon-line">
+                            <use href="#icon-plus" />
+                        </svg>
+                    </button>
+                </h2>
+                <div id="lista-dispositivos"></div>
+            </div>
+        </div>
+
+        <!-- ===== PANEL PRODUCCIÓN ===== -->
+        <div id="panel-produccion" style="display:none">
+            <div class="card">
+                <h2>
+                    <svg class="icon icon-line">
+                        <use href="#icon-server" />
+                    </svg>
+                    Grabadores (NVR / DVR)
+                    <button class="icon-btn btn-edit" onclick="UI.abrirNuevoGrabador()" title="Agregar grabador"
+                        style="margin-left:auto;width:auto">
+                        <svg class="icon icon-line">
+                            <use href="#icon-plus" />
+                        </svg>
+                    </button>
+                </h2>
+                <div id="lista-grabadores"></div>
+            </div>
+        </div>
+
+    </div><!-- /container -->
+
+    <!-- ====== TOAST ====== -->
+    <!-- ============================================================
+         MODAL — Ajustes
+    ============================================================ -->
+    <div class="modal" id="modal-ajustes">
+        <div class="modal-content">
+            <h3>
+                <svg class="icon icon-line">
+                    <use href="#icon-settings" />
+                </svg>
+                Ajustes
+            </h3>
+
+            <!-- Datos -->
+            <div style="margin-bottom:1.25rem">
+                <div
+                    style="font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:0.5rem;padding:0 0.25rem">
+                    Datos</div>
+                <div class="btn-group">
+                    <button onclick="UI.abrirImportarDesdeAjustes()"
+                        style="justify-content:center;gap:0.75rem;background:var(--input-bg);border:1px solid var(--border)">
+                        <svg class="icon icon-line">
+                            <use href="#icon-upload" />
+                        </svg>
+                        Importar
+                    </button>
+                </div>
+                <div class="btn-group">
+                    <button onclick="UI.exportarJSON()"
+                        style="justify-content:center;gap:0.75rem;background:var(--input-bg);border:1px solid var(--border)">
+                        <svg class="icon icon-line">
+                            <use href="#icon-download" />
+                        </svg>
+                        Exportar
+                    </button>
+                </div>
+                <div class="btn-group">
+                    <button onclick="UI.borrarTodosLosDatos()" style="justify-content:center;gap:0.75rem">
+                        <svg class="icon icon-line">
+                            <use href="#icon-trash" />
+                        </svg>
+                        Borrar todos los datos
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tipos de dispositivo -->
+            <div style="margin-bottom:1.25rem">
+                <div
+                    style="font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:0.5rem;padding:0 0.25rem">
+                    Tipos de dispositivo</div>
+                <div id="lista-tipos-custom" style="margin-bottom:0.5rem"></div>
+                <div style="display:flex;gap:0.5rem;align-items:center">
+                    <input type="text" id="nuevo-tipo-label" placeholder="Ej: Router, PC, Joystick…" maxlength="30"
+                        style="flex:1">
+                    <button onclick="UI.agregarTipoCustom()" class="icon-btn">
+                        <svg class="icon icon-line">
+                            <use href="#icon-plus" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="btn-group">
+                <button class="btn-cancel" onclick="UI.cerrarAjustes()">
+                    <svg class="icon icon-line">
+                        <use href="#icon-cancelar" />
+                    </svg>Cerrar</button>
+                <button id="icon-btn" onclick="UI.alternarTema()">
+                    <svg class="icon icon-line" id="icono-tema">
+                        <use href="#icon-moon" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== BOTÓN SCROLL TOP ====== -->
+    <button id="btn-scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Ir arriba"
+        style="display:none;position:fixed;bottom:1.5rem;right:1.25rem;z-index:80;width:44px;height:44px;min-width:unset;padding:0;border-radius:50%;background:var(--c-blue);color:white;box-shadow:0 2px 8px rgba(0,0,0,0.25);opacity:0;transition:opacity 0.25s,transform 0.25s;transform:translateY(8px)">
+        <svg style="width:1.1rem;height:1.1rem;stroke:white;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24">
+            <polyline points="18 15 12 9 6 15"/>
+        </svg>
+    </button>
+
+    <div id="toast" class="toast"></div>
+
+    <!-- ============================================================
+         MODAL — Nuevo Dispositivo
+    ============================================================ -->
+    <div class="modal" id="modal-nuevo-disp">
+        <div class="modal-content">
+            <h3><svg class="icon icon-line">
+                    <use href="#icon-camera" />
+                </svg> Nuevo dispositivo</h3>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Tipo *</label>
+                    <select id="nuevo-disp-tipo" onchange="UI.onDispTipoChange('nuevo-disp')">
+                        <option value="">Seleccionar…</option>
+                    </select>
+                </div>
+                <div class="form-group" id="nuevo-disp-forma-group" style="display:none">
+                    <label>Forma</label>
+                    <select id="nuevo-disp-forma">
+                        <option value="">Seleccionar…</option>
+                        <option value="domo">Domo</option>
+                        <option value="bullet">Bullet</option>
+                        <option value="turret">Turret</option>
+                        <option value="minidomo">Mini domo</option>
+                        <option value="minibullet">Mini bullet</option>
+                        <option value="domo-ptz">Domo PTZ</option>
+                    </select>
+                </div>
+                <div class="form-group" id="nuevo-disp-canales-group" style="display:none">
+                    <label>Cantidad de canales *</label>
+                    <input type="number" id="nuevo-disp-canales" placeholder="Ej: 16" min="1" max="256" value="16">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Marca</label>
+                    <input type="text" id="nuevo-disp-marca" placeholder="Ej: Hikvision" maxlength="50">
+                </div>
+                <div class="form-group">
+                    <label>Modelo</label>
+                    <input type="text" id="nuevo-disp-modelo" placeholder="Ej: DS-2CD2143G2" maxlength="60">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>MAC</label>
+                    <input type="text" id="nuevo-disp-mac" placeholder="Ej: AA:BB:CC:DD:EE:FF, 11:22:33:44:55:66"
+                        maxlength="500">
+                </div>
+                <div class="form-group">
+                    <label>Serial</label>
+                    <input type="text" id="nuevo-disp-serial" placeholder="Ej: DS2CD2143-20241001" maxlength="80">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Patrimonio</label>
+                <input type="text" id="nuevo-disp-patrimonio" placeholder="Ej: PAT-00123" maxlength="60">
+            </div>
+
+            <div class="btn-group">
+                <button class="btn-edit" onclick="UI.guardarNuevoDispositivo()">
+                    <svg class="icon icon-line">
+                        <use href="#icon-save" />
+                    </svg> Guardar
+                </button>
+                <button class="btn-cancel" onclick="UI.cerrarModalNuevoDispositivo()">
+                    <svg class="icon icon-line">
+                        <use href="#icon-cancelar" />
+                    </svg>Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         MODAL — Editar Dispositivo
+    ============================================================ -->
+    <div class="modal" id="modal-editar-disp">
+        <div class="modal-content">
+            <h3><svg class="icon icon-line">
+                    <use href="#icon-camera" />
+                </svg> Editar dispositivo</h3>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Tipo *</label>
+                    <select id="editar-disp-tipo" onchange="UI.onDispTipoChange('editar-disp')">
+                        <option value="">Seleccionar…</option>
+                    </select>
+                </div>
+                <div class="form-group" id="editar-disp-forma-group" style="display:none">
+                    <label>Forma</label>
+                    <select id="editar-disp-forma">
+                        <option value="">Seleccionar…</option>
+                        <option value="domo">Domo</option>
+                        <option value="bullet">Bullet</option>
+                        <option value="turret">Turret</option>
+                        <option value="minidomo">Mini domo</option>
+                        <option value="minibullet">Mini bullet</option>
+                        <option value="domo-ptz">Domo PTZ</option>
+                    </select>
+                </div>
+                <div class="form-group" id="editar-disp-canales-group" style="display:none">
+                    <label>Cantidad de canales *</label>
+                    <input type="number" id="editar-disp-canales" placeholder="Ej: 16" min="1" max="256" value="16">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Marca</label>
+                    <input type="text" id="editar-disp-marca" placeholder="Ej: Hikvision" maxlength="50">
+                </div>
+                <div class="form-group">
+                    <label>Modelo</label>
+                    <input type="text" id="editar-disp-modelo" placeholder="Ej: DS-2CD2143G2" maxlength="60">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>MAC</label>
+                    <input type="text" id="editar-disp-mac" placeholder="Ej: AA:BB:CC:DD:EE:FF" maxlength="500">
+                </div>
+                <div class="form-group">
+                    <label>Serial</label>
+                    <input type="text" id="editar-disp-serial" placeholder="Ej: DS2CD2143-20241001" maxlength="80">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Patrimonio</label>
+                <input type="text" id="editar-disp-patrimonio" placeholder="Ej: PAT-00123" maxlength="60">
+            </div>
+
+            <div class="btn-group">
+                <button class="btn-edit" onclick="UI.guardarEdicionDispositivo()">
+                    <svg class="icon icon-line">
+                        <use href="#icon-save" />
+                    </svg> Guardar
+                </button>
+                <button class="btn-delete" onclick="UI.eliminarDispositivo()">
+                    <svg class="icon icon-line">
+                        <use href="#icon-trash" />
+                    </svg> Eliminar
+                </button>
+            </div>
+            <div class="btn-group">
+                <button class="btn-backup" id="btn-editar-asignacion" onclick="UI.editarAsignacionCamara()"
+                    style="display:none">
+                    <svg class="icon icon-line">
+                        <use href="#icon-link" />
+                    </svg> Editar asignación
+                </button>
+            </div>
+            <div class="btn-group">
+                <button class="btn-cancel" onclick="UI.cerrarModalEditarDispositivo()">
+                    <svg class="icon icon-line">
+                        <use href="#icon-cancelar" />
+                    </svg>Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         MODAL — Nuevo Grabador
+    ============================================================ -->
+    <div class="modal" id="modal-nuevo-grab">
+        <div class="modal-content">
+            <h3><svg class="icon icon-line">
+                    <use href="#icon-server" />
+                </svg> Nuevo grabador</h3>
+
+            <div class="form-group">
+                <label>Descripción *</label>
+                <input type="text" id="nuevo-grab-nombre" placeholder="Ej: NVR-Planta Baja" maxlength="80">
+            </div>
+
+            <div class="form-group">
+                <label>Dispositivo (NVR / DVR) *</label>
+                <select id="nuevo-grab-dispositivo-id">
+                    <option value="">Seleccionar…</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>IP</label>
+                    <input type="text" id="nuevo-grab-ip" placeholder="Ej: 192.168.1.10" maxlength="45">
+                </div>
+                <div class="form-group">
+                    <label>Lugar</label>
+                    <input type="text" id="nuevo-grab-lugar" placeholder="Ej: Sala de servidores" maxlength="80">
+                </div>
+            </div>
+            <div class="btn-group">
+                <button class="btn-edit" onclick="UI.guardarNuevoGrabador()">
+                    <svg class="icon icon-line">
+                        <use href="#icon-save" />
+                    </svg> Guardar
+                </button>
+                <button class="btn-cancel" onclick="UI.cerrarModalNuevoGrabador()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         MODAL — Editar Grabador
+    ============================================================ -->
+    <div class="modal" id="modal-editar-grab">
+        <div class="modal-content">
+            <h3><svg class="icon icon-line">
+                    <use href="#icon-server" />
+                </svg> Editar grabador</h3>
+
+            <div class="form-group">
+                <label>Descripción *</label>
+                <input type="text" id="editar-grab-nombre" placeholder="Ej: NVR-Planta Baja" maxlength="80">
+            </div>
+
+            <div class="form-group">
+                <label>Dispositivo (NVR / DVR) *</label>
+                <select id="editar-grab-dispositivo-id">
+                    <option value="">Seleccionar…</option>
+                </select>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>IP</label>
+                    <input type="text" id="editar-grab-ip" placeholder="Ej: 192.168.1.10" maxlength="45">
+                </div>
+                <div class="form-group">
+                    <label>Lugar</label>
+                    <input type="text" id="editar-grab-lugar" placeholder="Ej: Sala de servidores" maxlength="80">
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn-edit" onclick="UI.guardarEdicionGrabador()">
+                    <svg class="icon icon-line">
+                        <use href="#icon-save" />
+                    </svg> Guardar
+                </button>
+                <button class="btn-delete" onclick="UI.eliminarGrabador()">
+                    <svg class="icon icon-line">
+                        <use href="#icon-trash" />
+                    </svg> Eliminar
+                </button>
+            </div>
+            <div class="btn-group">
+                <button class="btn-cancel" onclick="UI.cerrarModalEditarGrabador()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         MODAL — Asignar dispositivo a canal
+    ============================================================ -->
+    <div class="modal" id="modal-canal">
+        <div class="modal-content">
+            <h3><svg class="icon icon-line">
+                    <use href="#icon-link" />
+                </svg>
+                <span id="modal-canal-titulo">Canal 1</span>
+            </h3>
+
+            <div class="form-group">
+                <label>Descripción</label>
+                <input type="text" id="canal-descripcion" placeholder="Ej: Cámara entrada principal" maxlength="80">
+            </div>
+
+            <div class="form-group">
+                <label>Dispositivo asignado</label>
+                <div id="canal-disp-combobox" style="position:relative">
+                    <input type="text" id="canal-disp-input" placeholder="Buscar por MAC, modelo…" maxlength="100"
+                        autocomplete="off" spellcheck="false" oninput="UI._canalDispFiltrar()"
+                        onfocus="UI._canalDispFiltrar()" onkeydown="UI._canalDispKeydown(event)">
+                    <input type="hidden" id="sel-canal-dispositivo">
+                    <div id="canal-disp-dropdown" style="
+                        display:none;
+                        position:absolute;
+                        top:calc(100% + 4px);
+                        left:0; right:0;
+                        background:var(--bg-card);
+                        border:1px solid var(--border);
+                        border-radius:12px;
+                        box-shadow:0 4px 16px rgba(0,0,0,0.15);
+                        max-height:220px;
+                        overflow-y:auto;
+                        z-index:200;
+                    "></div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>IP</label>
+                    <input type="text" id="canal-ip" placeholder="Ej: 192.168.1.50" maxlength="45">
+                </div>
+                <div class="form-group">
+                    <label>Puerto</label>
+                    <input type="text" id="canal-puerto" placeholder="Ej: 554" maxlength="10">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Lugar</label>
+                <input type="text" id="canal-lugar" placeholder="Ej: Entrada principal" maxlength="80">
+            </div>
+
+            <div class="form-group">
+                <label>Comentarios</label>
+                <textarea id="canal-comentarios" placeholder="Notas adicionales…" rows="2" maxlength="300"
+                    style="resize:vertical;width:100%;box-sizing:border-box;padding:0.5rem;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:inherit;font-size:0.9rem"></textarea>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn-edit" onclick="UI.guardarAsignacionCanal()">
+                    <svg class="icon icon-line">
+                        <use href="#icon-save" />
+                    </svg> Guardar
+                </button>
+                <button class="btn-delete" onclick="UI.limpiarAsignacionCanal()">
+                    <svg class="icon icon-line">
+                        <use href="#icon-trash" />
+                    </svg> Limpiar
+                </button>
+            </div>
+            <div class="btn-group">
+                <button id="btn-canal-cancelar" class="btn-cancel" onclick="UI.cerrarModalCanal()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         MODAL — Importar
+    ============================================================ -->
+    <div class="modal" id="modal-importar">
+        <div class="modal-content">
+            <h3><svg class="icon icon-line">
+                    <use href="#icon-upload" />
+                </svg> Importar datos</h3>
+
+            <div class="form-group">
+                <input type="file" id="file-import" accept=".json" style="display:none">
+                <button class="btn-backup" onclick="document.getElementById('file-import').click()">
+                    <svg class="icon icon-line">
+                        <use href="#icon-upload" />
+                    </svg>
+                    Seleccionar archivo JSON
+                </button>
+                <div id="nombre-archivo"></div>
+            </div>
+
+            <hr style="border:0;border-top:1px solid var(--border);margin:1rem 0">
+
+            <div style="display:flex;flex-direction:column;gap:0.75rem">
+                <button id="btn-combinar" class="btn-backup" onclick="UI.importarDatos('merge')" disabled>
+                    <svg class="icon icon-line">
+                        <use href="#icon-link" />
+                    </svg> Combinar
+                </button>
+                <button id="btn-reemplazar" class="btn-delete" onclick="UI.importarDatos('replace')" disabled>
+                    <svg class="icon icon-line">
+                        <use href="#icon-alert" />
+                    </svg> Reemplazar todo
+                </button>
+                <button class="btn-cancel" onclick="UI.cerrarImportar()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         MODAL — Confirmar
+    ============================================================ -->
+    <div class="modal" id="modal-filtros-busqueda">
+        <div class="modal-content" style="max-width:360px">
+            <h3>
+                <svg class="icon icon-line"><use href="#icon-search"/></svg>
+                Campos de búsqueda
+            </h3>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+                <p style="font-size:0.85rem;color:var(--text-muted);line-height:1.4;margin:0">
+                    Campos a filtrar
+                </p>
+                <button onclick="UI.toggleTodosFiltros()" id="btn-toggle-all-filtros"
+                    style="width:auto;padding:0.3rem 0.75rem;font-size:0.8rem;min-width:9rem;flex-shrink:0;margin-left:0.75rem">
+                    Desactivar todo
+                </button>
+            </div>
+            <div id="filtros-busqueda-lista" style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.25rem"></div>
+            <button class="btn-cancel" onclick="UI.cerrarFiltrosBusqueda()">Cerrar</button>
+        </div>
+    </div>
+        <div class="modal" id="modal-confirmar">
+        <div class="modal-content">
+            <h3><svg class="icon icon-line">
+                    <use href="#icon-alert" />
+                </svg> Confirmar</h3>
+            <p id="modal-confirmar-texto" style="color:var(--text-muted);line-height:1.5;margin-bottom:1.25rem"></p>
+            <div class="btn-group">
+                <button class="btn-delete" id="modal-confirmar-ok">
+                    <svg class="icon icon-line">
+                        <use href="#icon-trash" />
+                    </svg>
+                    <span id="modal-confirmar-label">Confirmar</span>
+                </button>
+                <button class="btn-cancel" id="modal-confirmar-cancel">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ============================================================
+         JAVASCRIPT
+    ============================================================ -->
+    <script>
+        (() => {
+            'use strict';
+
+            // ==============================================================
+            // SECURITY & UTILS  (tomado de Horarios)
+            // ==============================================================
+            const S = (() => {
+                const MAX_JSON = 4 * 1024 * 1024;
+                const SCHEMA_V = 1;
+
+                function sanitize(str, max = 200) {
+                    if (typeof str !== 'string') return '';
+                    return str
+                        .replace(/[<>"'`]/g, '')
+                        .replace(/javascript:/gi, '')
+                        .replace(/data:/gi, '')
+                        .replace(/on\w+\s*=/gi, '')
+                        .replace(/[\x00-\x1F\x7F]/g, '')
+                        .trim()
+                        .substring(0, max);
+                }
+
+                function genId() {
+                    if (window.crypto?.getRandomValues) {
+                        const a = new Uint32Array(4);
+                        crypto.getRandomValues(a);
+                        return Array.from(a, n => n.toString(36)).join('');
+                    }
+                    return Date.now().toString(36) + Math.random().toString(36).slice(2);
+                }
+
+                async function sha256(data) {
+                    const buf = new TextEncoder().encode(JSON.stringify(data));
+                    const hash = await crypto.subtle.digest('SHA-256', buf);
+                    return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+                }
+
+                function fechaISO() {
+                    const d = new Date(), p = n => String(n).padStart(2, '0');
+                    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+                }
+
+                function deepClone(o) {
+                    try { return structuredClone(o); }
+                    catch { return JSON.parse(JSON.stringify(o)); }
+                }
+
+                // Parse seguro contra prototype pollution (idéntico a Horarios)
+                function safeParse(json) {
+                    return JSON.parse(json, (k, v) => {
+                        if (['__proto__', 'constructor', 'prototype'].includes(k)) return undefined;
+                        return v;
+                    });
+                }
+
+                const TIPOS_BUILTIN = {
+                    camara: { label: 'Cámara', emoji: '📹', badge: 'badge-camara', dot: 'var(--c-blue)', builtin: true },
+                    nvr: { label: 'NVR', emoji: '📟', badge: 'badge-nvr', dot: 'var(--c-green)', builtin: true },
+                    dvr: { label: 'DVR', emoji: '📼', badge: 'badge-dvr', dot: 'var(--c-orange)', builtin: true },
+                };
+
+                // tipos custom: se cargan desde localStorage y se fusionan
+                const KEY_TIPOS = 'cctv_tipos_custom';
+                let TIPOS = { ...TIPOS_BUILTIN };
+
+                function cargarTipos() {
+                    try {
+                        const raw = localStorage.getItem(KEY_TIPOS);
+                        if (!raw) return;
+                        const custom = JSON.parse(raw);
+                        if (typeof custom !== 'object' || Array.isArray(custom)) return;
+                        Object.entries(custom).forEach(([k, v]) => {
+                            if (TIPOS_BUILTIN[k]) return; // no pisar builtins
+                            if (typeof v.label !== 'string' || typeof v.emoji !== 'string') return;
+                            TIPOS[k] = { label: v.label, emoji: v.emoji, badge: 'badge-otro', dot: 'var(--c-gold)', builtin: false };
+                        });
+                    } catch { /* silent */ }
+                }
+
+                function guardarTipos() {
+                    const custom = {};
+                    Object.entries(TIPOS).forEach(([k, v]) => {
+                        if (!v.builtin) custom[k] = { label: v.label, emoji: v.emoji };
+                    });
+                    localStorage.setItem(KEY_TIPOS, JSON.stringify(custom));
+                }
+
+                cargarTipos();
+
+                return { sanitize, genId, sha256, fechaISO, deepClone, safeParse, MAX_JSON, SCHEMA_V, TIPOS_BUILTIN, get TIPOS() { return TIPOS; }, guardarTipos, cargarTipos };
+            })();
+
+            // ==============================================================
+            // MODAL MANAGER  (idéntico a Horarios)
+            // ==============================================================
+            const MM = (() => {
+                let _mdDown = false;
+
+                function _onMD(e) { _mdDown = e.target === e.currentTarget; }
+                function _onClick(e) {
+                    if (!_mdDown) return;
+                    if (e.target === e.currentTarget) cerrar(e.target.id);
+                }
+
+                function abrir(id, cb) {
+                    const m = document.getElementById(id); if (!m) return;
+                    m.classList.add('show');
+                    document.body.classList.add('modal-open');
+                    setTimeout(() => {
+                        m.addEventListener('mousedown', _onMD);
+                        m.addEventListener('click', _onClick);
+                    }, 100);
+                    cb?.();
+                }
+
+                function cerrar(id, cb) {
+                    const m = document.getElementById(id); if (!m) return;
+                    m.classList.remove('show');
+                    document.body.classList.remove('modal-open');
+                    m.removeEventListener('mousedown', _onMD);
+                    m.removeEventListener('click', _onClick);
+                    cb?.();
+                }
+
+                function cerrarTodos() {
+                    document.querySelectorAll('.modal.show').forEach(m => {
+                        m.classList.remove('show');
+                        m.removeEventListener('mousedown', _onMD);
+                        m.removeEventListener('click', _onClick);
+                    });
+                    document.body.classList.remove('modal-open');
+                }
+
+                return { abrir, cerrar, cerrarTodos };
+            })();
+
+            // ==============================================================
+            // CONFIRM HELPER  (idéntico a Horarios)
+            // ==============================================================
+            function confirmarModal(texto, labelOk = 'Eliminar') {
+                return new Promise(resolve => {
+                    document.getElementById('modal-confirmar-texto').textContent = texto;
+                    document.getElementById('modal-confirmar-label').textContent = labelOk;
+                    const ok = document.getElementById('modal-confirmar-ok');
+                    const can = document.getElementById('modal-confirmar-cancel');
+                    function si() { cleanup(); resolve(true); }
+                    function no() { cleanup(); resolve(false); }
+                    function cleanup() {
+                        ok.removeEventListener('click', si);
+                        can.removeEventListener('click', no);
+                        MM.cerrar('modal-confirmar');
+                    }
+                    ok.addEventListener('click', si);
+                    can.addEventListener('click', no);
+                    MM.abrir('modal-confirmar');
+                });
+            }
+
+            // ==============================================================
+            // TOAST  (idéntico a Horarios)
+            // ==============================================================
+            let _toastTimer = null;
+            function toast(msg, tipo = 'success') {
+                const el = document.getElementById('toast'); if (!el) return;
+                el.textContent = msg;
+                el.className = `toast show ${tipo}`;
+                clearTimeout(_toastTimer);
+                _toastTimer = setTimeout(() => {
+                    el.classList.remove('show');
+                    setTimeout(() => { el.className = 'toast'; }, 300);
+                }, 3000);
+            }
+
+            // ==============================================================
+            // DATA  (localStorage)
+            // ==============================================================
+            const KEY = 'cctv_data_v1';
+            let _data = { dispositivos: [], grabadores: [] };
+
+            function cargar() {
+                try {
+                    const raw = localStorage.getItem(KEY);
+                    if (!raw) return;
+                    const d = S.safeParse(raw);
+                    _data.dispositivos = Array.isArray(d.dispositivos) ? d.dispositivos : [];
+                    _data.grabadores = Array.isArray(d.grabadores) ? d.grabadores : [];
+                } catch { _data = { dispositivos: [], grabadores: [] }; }
+            }
+
+            function guardar() {
+                try { localStorage.setItem(KEY, JSON.stringify(_data)); return true; }
+                catch { toast('Error al guardar (almacenamiento lleno)', 'error'); return false; }
+            }
+
+            // sanitiza un objeto dispositivo entrante
+            function _sanDisp(d) {
+                const tipo = S.TIPOS[d.tipo] ? d.tipo : 'otro';
+                const FORMAS = ['domo', 'bullet', 'turret', 'minidomo', 'minibullet', 'domo-ptz'];
+                const ESTADOS = ['', 'averiado', 'baja', 'desafectado'];
+                const obj = {
+                    id: d.id || S.genId(),
+                    tipo,
+                    estado: ESTADOS.includes(d.estado) ? d.estado : '',
+                    marca: S.sanitize(d.marca || '', 50),
+                    modelo: S.sanitize(d.modelo || '', 60),
+                    serial: S.sanitize(d.serial || '', 80),
+                    mac: S.sanitize(d.mac || '', 20),
+                    patrimonio: S.sanitize(d.patrimonio || '', 60),
+                };
+                if (tipo === 'camara') {
+                    const formaNorm = (d.forma || '').toLowerCase().replace(/\s+/g, '-');
+                    obj.forma = FORMAS.includes(formaNorm) ? formaNorm : '';
+                }
+                if (['nvr', 'dvr'].includes(tipo)) {
+                    const c = parseInt(d.canales);
+                    obj.canales = Number.isFinite(c) && c >= 1 && c <= 256 ? c : 16;
+                }
+                return obj;
+            }
+
+            // sanitiza un objeto grabador entrante
+            function _sanGrab(g) {
+                const canales = parseInt(g.canales ?? g.canales_n);
+                const n = Number.isFinite(canales) && canales >= 1 && canales <= 256 ? canales : 16;
+                const slots = [];
+                for (let i = 1; i <= n; i++) {
+                    const existente = Array.isArray(g.canales_data)
+                        ? g.canales_data.find(c => c.canal === i)
+                        : null;
+                    slots.push({
+                        canal: i,
+                        dispositivoId: existente?.dispositivoId || null,
+                        descripcion: S.sanitize(existente?.descripcion || '', 80),
+                        ip: S.sanitize(existente?.ip || '', 45),
+                        puerto: S.sanitize(existente?.puerto || '', 10),
+                        lugar: S.sanitize(existente?.lugar || '', 80),
+                        comentarios: S.sanitize(existente?.comentarios || '', 300),
+                    });
+                }
+                return {
+                    id: g.id || S.genId(),
+                    descripcion: S.sanitize(g.descripcion || '', 80),
+                    tipo: ['nvr', 'dvr'].includes(g.tipo) ? g.tipo : 'nvr',
+                    marca: S.sanitize(g.marca || '', 50),
+                    modelo: S.sanitize(g.modelo || '', 60),
+                    ip: S.sanitize(g.ip || '', 45),
+                    lugar: S.sanitize(g.lugar || '', 80),
+                    mac: S.sanitize(g.mac || '', 20),
+                    dispositivoId: g.dispositivoId || null,
+                    canales_n: n,
+                    canales_data: slots,
+                };
+            }
+
+            // ==============================================================
+            // ESC
+            // ==============================================================
+            document.addEventListener('keydown', e => {
+                if (e.key !== 'Escape') return;
+                const input = document.getElementById('input-busqueda');
+                const enBusqueda = document.activeElement === input;
+                if (enBusqueda) {
+                    if (input.value) {
+                        // primer Escape: limpiar
+                        UI.limpiarBusqueda();
+                    } else {
+                        // segundo Escape (campo ya vacío): quitar foco
+                        input.blur();
+                    }
+                    return; // no cerrar modales al mismo tiempo
+                }
+                MM.cerrarTodos();
+            });
+
+            // ==============================================================
+            // ESCAPE HTML  (idéntico a Horarios)
+            // ==============================================================
+            function esc(s) {
+                return s == null ? '' : String(s)
+                    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;');
+            }
+
+            // Valida una dirección IPv4 según el estándar:
+            // 4 octetos decimales 0-255, sin ceros a la izquierda, separados por puntos.
+            // Devuelve true si el string es vacío (campo opcional) o si es una IP válida.
+            function validarIPv4(ip) {
+                if (!ip) return true; // campo opcional: vacío = válido
+                const partes = ip.split('.');
+                if (partes.length !== 4) return false;
+                return partes.every(p => {
+                    if (!/^\d+$/.test(p)) return false;       // solo dígitos
+                    if (p.length > 1 && p[0] === '0') return false; // sin ceros a la izquierda
+                    const n = Number(p);
+                    return n >= 0 && n <= 255;
+                });
+            }
+
+            // Valida una dirección MAC según el estándar IEEE 802 (EUI-48):
+            // 6 grupos de 2 dígitos hexadecimales, separados por ':' o '-'.
+            // Acepta mayúsculas y minúsculas. Vacío = válido (campo opcional).
+            // También acepta el formato especial "sinrelevarXXX" (1 a 3 dígitos, ej: sinrelevarn1, sinrelevarn12, sinrelevarn123).
+            function validarMAC(mac) {
+                if (!mac) return true;
+                if (/^sinrelevarn?\d{1,3}$/i.test(mac)) return true;
+                return /^([0-9A-Fa-f]{2}[:\-]){5}[0-9A-Fa-f]{2}$/.test(mac);
+            }
+
+            function validarCampoMAC(elementId) {
+                const el = document.getElementById(elementId);
+                const raw = el?.value.trim() || '';
+                if (!raw) { el.classList.remove('error'); return true; } // vacío = válido
+                const tokens = raw.split(',').map(t => t.trim()).filter(Boolean);
+                const invalidos = tokens.filter(t => !validarMAC(t));
+                if (invalidos.length) {
+                    el.classList.add('error');
+                    toast(`MAC inválida: "${invalidos[0]}"`, 'error');
+                    return false;
+                }
+                el.classList.remove('error');
+                return true;
+            }
+
+            function validarCampoIP(elementId) {
+                const el = document.getElementById(elementId);
+                const ip = el?.value.trim() || '';
+                if (!validarIPv4(ip)) {
+                    el.classList.add('error');
+                    toast(`IP inválida: "${ip}"`, 'error');
+                    return false;
+                }
+                el.classList.remove('error');
+                return true;
+            }
+
+            // ==============================================================
+            // RENDER
+            // ==============================================================
+            function render() {
+                renderDashboard();
+                renderActivos();
+                renderProduccion();
+            }
+
+            /* ---------- DASHBOARD ---------- */
+            function renderDashboard() {
+                const disps = _data.dispositivos;
+                const grabs = _data.grabadores;
+
+                const nGrabadores = disps.filter(d => ['nvr', 'dvr'].includes(d.tipo)).length;
+                const nCamaras = disps.filter(d => d.tipo === 'camara').length;
+                const nOtros = disps.filter(d => !['nvr', 'dvr', 'camara'].includes(d.tipo)).length;
+
+                // resumen general — filas simples
+                (() => {
+                    const rows = [
+                        { label: 'Dispositivos totales', n: disps.length,  color: 'var(--text-main)',  dot: null },
+                        { label: 'Cámaras',              n: nCamaras,      color: 'var(--c-blue)',     dot: 'var(--c-blue)' },
+                        { label: 'Grabadores',           n: nGrabadores,   color: 'var(--c-green)',    dot: 'var(--c-green)' },
+                        { label: 'Otros',                n: nOtros,        color: 'var(--c-gold)',     dot: 'var(--c-gold)' },
+                    ];
+                    document.getElementById('dash-disp-tree').innerHTML =
+                        rows.map((r, i) => `
+                        <div style="display:flex;align-items:center;gap:0.75rem;padding:0.65rem 0.25rem;${i < rows.length-1 ? 'border-bottom:1px solid var(--border)' : ''}">
+                            ${r.dot ? `<div style="width:8px;height:8px;border-radius:50%;background:${r.dot};flex-shrink:0"></div>` : '<div style="width:8px;height:8px;flex-shrink:0"></div>'}
+                            <span style="flex:1;font-size:0.88rem;font-weight:600;color:var(--text-muted)">${r.label}</span>
+                            <span style="font-size:1.4rem;font-weight:700;color:${r.color};line-height:1">${r.n}</span>
+                        </div>`).join('');
+                })();
+
+                                                // chips de canales — eliminados
+
+
+                // grabadores resumen
+                document.getElementById('dash-grabadores').innerHTML = grabs.length === 0
+                    ? `<div style="color:var(--text-disabled);font-size:0.85rem">Sin grabadores en producción</div>`
+                    : grabs.map(g => {
+                        const ocup = g.canales_data.filter(c => c.dispositivoId).length;
+                        const libre = g.canales_n - ocup;
+                        const pct = Math.round((ocup / g.canales_n) * 100);
+                        return `<div style="padding:0.6rem 0;border-bottom:1px solid var(--border)">
+                        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.3rem">
+                            <span style="font-weight:700;font-size:0.92rem">${esc(g.descripcion)}</span>
+                            <span class="badge badge-${g.tipo}">${g.tipo.toUpperCase()}</span>
+                            <span style="margin-left:auto;font-size:0.78rem;color:var(--text-muted)">${g.ip ? esc(g.ip) : ''}</span>
+                        </div>
+                        <div style="font-size:0.8rem;color:var(--text-muted)">${ocup}/${g.canales_n} canales ocupados · ${libre} libres</div>
+                        <div style="height:4px;background:var(--border);border-radius:99px;margin-top:0.4rem;overflow:hidden">
+                            <div style="height:100%;width:${pct}%;background:var(--c-blue);border-radius:99px;transition:width 0.4s"></div>
+                        </div>
+                    </div>`;
+                    }).join('');
+
+                // cámaras resumen
+                const camarasDisps = disps.filter(d => d.tipo === 'camara');
+                // "en producción" = asignadas a al menos un canal de algún grabador
+                const idsEnProduccion = new Set(
+                    grabs.flatMap(g => g.canales_data.filter(c => c.dispositivoId).map(c => c.dispositivoId))
+                );
+                const enProd = camarasDisps.filter(d => idsEnProduccion.has(d.id)).length;
+                const disponibles = camarasDisps.length - enProd;
+
+                document.getElementById('dash-camaras').innerHTML = `
+                <div style="display:flex;flex-direction:column;gap:0.6rem">
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;border-bottom:1px solid var(--border)">
+                        <span style="font-size:0.88rem;color:var(--text-muted);font-weight:600">Total</span>
+                        <span style="font-size:1.2rem;font-weight:700">${camarasDisps.length}</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;border-bottom:1px solid var(--border)">
+                        <span style="font-size:0.88rem;color:var(--text-muted);font-weight:600">En producción</span>
+                        <span style="font-size:1.2rem;font-weight:700;color:var(--c-blue)">${enProd}</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0">
+                        <span style="font-size:0.88rem;color:var(--text-muted);font-weight:600">Disponibles</span>
+                        <span style="font-size:1.2rem;font-weight:700;color:var(--c-green)">${disponibles}</span>
+                    </div>
+                    ${camarasDisps.length > 0 ? `
+                    <div style="height:4px;background:var(--border);border-radius:99px;overflow:hidden">
+                        <div style="height:100%;width:${camarasDisps.length ? Math.round((enProd / camarasDisps.length) * 100) : 0}%;background:var(--c-blue);border-radius:99px;transition:width 0.4s"></div>
+                    </div>` : ''}
+                    ${camarasDisps.length === 0 ? `<div style="color:var(--text-disabled);font-size:0.85rem">Sin cámaras registradas</div>` : ''}
+                </div>`;
+            }
+
+            /* ---------- ACTIVOS ---------- */
+            function renderActivos() {
+                const lista = document.getElementById('lista-dispositivos');
+                const disps = _data.dispositivos;
+                const query = (document.getElementById('input-busqueda')?.value || '').trim().toLowerCase();
+                lista.classList.toggle('no-anim', !!query);
+
+                if (disps.length === 0) {
+                    lista.innerHTML = `<div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+                    Sin dispositivos registrados.<br>Usá el botón <strong>+</strong> para agregar uno.
+                </div>`;
+                    const contador = document.getElementById('contador-dispositivos');
+                    if (contador) contador.textContent = '0';
+                    return;
+                }
+
+                const orden = { nvr: 0, dvr: 1, switch: 2, otro: 3, camara: 4 };
+                const dispLabel = d => d.mac || d.serial || '';
+                let sorted = [...disps].sort((a, b) => (orden[a.tipo] ?? 9) - (orden[b.tipo] ?? 9) || dispLabel(a).localeCompare(dispLabel(b)));
+
+                // índice: dispositivoId → { grab, slot } para búsqueda rápida
+                const asignaciones = {};
+                _data.grabadores.forEach(g => {
+                    if (g.dispositivoId) {
+                        asignaciones[g.dispositivoId] = { tipo: 'grabador', grab: g };
+                    }
+                    g.canales_data.forEach(c => {
+                        if (c.dispositivoId) {
+                            asignaciones[c.dispositivoId] = { tipo: 'canal', grab: g, slot: c };
+                        }
+                    });
+                });
+
+                // filtrar y ordenar por relevancia si hay query
+                if (query) {
+                    const tokens = query.split(/\s+/).filter(Boolean);
+
+                    // Calcula score de relevancia (menor = más relevante).
+                    // Por cada token se toma el mejor nivel de match posible.
+                    function scoreDispositivo(d) {
+                        const asigD = asignaciones[d.id];
+                        const hayCanal = _busqActivos.has('canal') && asigD?.tipo === 'canal'
+                            ? (asigD.slot.descripcion || '').toLowerCase() : '';
+                        const tipoKey   = _busqActivos.has('tipo') ? d.tipo.toLowerCase() : '';
+                        const tipoLabel = _busqActivos.has('tipo') ? (S.TIPOS[d.tipo]?.label || '').toLowerCase() : '';
+                        const camposMap = { mac: d.mac, serial: d.serial, marca: d.marca, modelo: d.modelo, patrimonio: d.patrimonio, forma: d.forma };
+                        const campos    = Object.entries(camposMap)
+                            .filter(([k, v]) => v && _busqActivos.has(k))
+                            .map(([, v]) => v.toLowerCase());
+
+                        let total = 0;
+                        for (const t of tokens) {
+                            const re = new RegExp('(?<![a-z0-9])' + t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![a-z0-9])', 'i');
+                            if (tipoKey && tipoKey === t)                             { total += 0; continue; } // tipo exacto
+                            if (tipoLabel && tipoLabel === t)                         { total += 1; continue; } // label exacto
+                            if (tipoKey && (re.test(tipoKey) || re.test(tipoLabel)))  { total += 2; continue; } // palabra en tipo
+                            if (campos.some(c => re.test(c)))                         { total += 3; continue; } // palabra en campo
+                            if (campos.some(c => c.includes(t)))                      { total += 4; continue; } // substring en campo
+                            if (hayCanal && re.test(hayCanal))                        { total += 5; continue; } // palabra en canal
+                            if (hayCanal && hayCanal.includes(t))                     { total += 6; continue; } // substring en canal
+                            return Infinity; // token no encontrado → excluir
+                        }
+                        return total;
+                    }
+
+                    sorted = sorted
+                        .map(d => ({ d, score: scoreDispositivo(d) }))
+                        .filter(({ score }) => score < Infinity)
+                        .sort((a, b) => a.score - b.score)
+                        .map(({ d }) => d);
+                }
+
+                if (sorted.length === 0) {
+                    lista.innerHTML = `<div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    Sin resultados para "<strong>${esc(query)}</strong>".
+                </div>`;
+                    document.getElementById('contador-dispositivos').textContent = '0';
+                    return;
+                }
+
+                // actualizar contador
+                const contador = document.getElementById('contador-dispositivos');
+                if (contador) {
+                    contador.textContent = query
+                        ? `${sorted.length} / ${disps.length}`
+                        : sorted.length;
+                }
+
+                function renderItem(d) {
+                    const tc = S.TIPOS[d.tipo] || { emoji: '📦', label: d.tipo, badge: 'badge-otro' };
+                    const titulo = d.mac || d.serial || '—';
+                    const subtitulo = d.modelo ? esc(d.modelo) : '';
+                    // estado: averiado/baja/desafectado vienen del campo; produccion/disponible se derivan
+                    const estadoClase = d.estado
+                        ? `estado-${d.estado}`
+                        : (asignaciones[d.id] ? 'estado-produccion' : 'estado-disponible');
+                    let asignInfo = '';
+                    const asig = asignaciones[d.id];
+                    if (asig) {
+                        if (asig.tipo === 'canal') {
+                            const partes = [esc(asig.grab.descripcion), `CANAL ${asig.slot.canal}`];
+                            if (asig.slot.ip) partes.push(esc(asig.slot.ip));
+                            const desc = asig.slot.descripcion ? `<div>${esc(asig.slot.descripcion)}</div>` : '';
+                            asignInfo = `${desc}<div>${partes.join(' · ')}</div>`;
+                        } else {
+                            const partes = [esc(asig.grab.descripcion)];
+                            if (asig.grab.ip) partes.push(esc(asig.grab.ip));
+                            asignInfo = partes.join(' · ');
+                        }
+                    }
+                    return `<div class="dispositivo-item tipo-${esc(d.tipo)} ${estadoClase} anim-in"
+                        onclick="UI.abrirEditarDispositivo('${esc(d.id)}')">
+                    <div class="dispositivo-info">
+                        <div class="dispositivo-nombre">${tc.emoji} ${esc(titulo)}</div>
+                        <div class="dispositivo-meta">
+                            <span class="badge badge-${estadoClase}">${d.tipo === 'camara' && d.forma ? d.forma.replace(/-/g, ' ') : tc.label}</span>
+                            ${subtitulo ? `<span>${subtitulo}</span>` : ''}
+                            ${d.serial && d.mac ? `<span>S/N: ${esc(d.serial)}</span>` : ''}
+                            ${d.patrimonio ? `<span>PAT: ${esc(d.patrimonio)}</span>` : ''}
+                        </div>
+                    </div>
+                    ${asignInfo ? `<div style="font-size:0.78rem;color:var(--text-muted);text-align:right;flex-shrink:0;max-width:40%;line-height:1.35">${asignInfo}</div>` : ''}
+                </div>`;
+                }
+
+                // reparto intercalado: col1 = índices pares (A,C,E…), col2 = índices impares (B,D,F…)
+                const col1 = sorted.filter((_, i) => i % 2 === 0).map(renderItem).join('');
+                const col2 = sorted.filter((_, i) => i % 2 === 1).map(renderItem).join('');
+                lista.innerHTML = `<div class="lista-2col"><div>${col1}</div><div>${col2}</div></div>`;
+            }
+
+            /* ---------- PRODUCCIÓN ---------- */
+            function renderProduccion() {
+                const lista = document.getElementById('lista-grabadores');
+                const grabs = _data.grabadores;
+
+                if (grabs.length === 0) {
+                    lista.innerHTML = `<div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/></svg>
+                    Sin grabadores registrados.<br>Usá el botón <strong>+</strong> para agregar uno.
+                </div>`;
+                    return;
+                }
+
+                lista.innerHTML = grabs.map(g => {
+                    const canalesHtml = g.canales_data.map(c => {
+                        const disp = c.dispositivoId ? _data.dispositivos.find(d => d.id === c.dispositivoId) : null;
+                        if (disp) {
+                            const tituloCanal = c.descripcion || disp.mac || disp.serial || '—';
+                            return `<div class="canal-slot ocupado" data-canal="${c.canal}" onclick="UI.abrirAsignarCanal(this.closest('[data-grab-id]').dataset.grabId, +this.dataset.canal)">
+                            <div class="canal-numero">CANAL ${c.canal}</div>
+                            <div class="canal-dispositivo-nombre">${esc(tituloCanal)}</div>
+                            ${c.lugar ? `<div class="canal-dispositivo-ip">${esc(c.lugar)}</div>` : ''}
+                        </div>`;
+                        } else {
+                            return `<div class="canal-slot vacio" data-canal="${c.canal}" onclick="UI.abrirAsignarCanal(this.closest('[data-grab-id]').dataset.grabId, +this.dataset.canal)">
+                            <div class="canal-numero">CANAL ${c.canal}</div>
+                            <div class="canal-vacio-label">— Vacío —</div>
+                        </div>`;
+                        }
+                    }).join('');
+
+                    const collapsed = !_grabExpanded.has(g.id);
+                    return `<div class="nvr-card anim-in${collapsed ? ' collapsed' : ''}" data-grab-id="${esc(g.id)}">
+                    <div class="nvr-card-header" onclick="UI.toggleGrabColapse(this.closest('[data-grab-id]').dataset.grabId)">
+                        <div class="nvr-card-header-info">
+                            <div class="nvr-card-nombre">
+                                ${g.tipo === 'nvr' ? '📟' : '📼'} ${esc(g.descripcion)}
+                                <span class="badge badge-${g.tipo}" style="margin-left:0.3rem">${g.tipo.toUpperCase()}</span>
+                            </div>
+                            <div class="nvr-card-meta">
+                                ${g.marca ? esc(g.marca) + ' ' : ''}${g.modelo ? esc(g.modelo) : ''}
+                                ${g.ip ? ' · ' + esc(g.ip) : ''}
+                                · ${g.canales_n} canales
+                            </div>
+                        </div>
+                        <svg class="nvr-chevron" viewBox="0 0 24 24"><use href="#icon-chevron-down"/></svg>
+                        <button class="icon-btn" style="flex-shrink:0" onclick="event.stopPropagation();UI.abrirEditarGrabador(this.closest('[data-grab-id]').dataset.grabId)">
+                            <svg class="icon icon-line"><use href="#icon-edit"/></svg>
+                        </button>
+                    </div>
+                    <div class="nvr-canales-grid${collapsed ? ' collapsed' : ''}">${canalesHtml}</div>
+                </div>`;
+                }).join('');
+            }
+
+            // ==============================================================
+            // UI — CONTROLADOR PÚBLICO
+            // ==============================================================
+            let _editandoDispId = null;
+            let _editandoGrabId = null;
+            let _editandoCanalGrabId = null;
+            let _editandoCanalN = null;
+            let _canalDesdeDispId = null; // dispId cuando el canal se abrió desde "Editar asignación"
+            let _canalDispOcupados = new Set();
+            let _canalDispHighlight = -1;
+            let _tabActual = 'dashboard';
+            const KEY_EXPANDED = 'cctv_grab_expanded';
+            // Set de IDs expandidos (abiertos). Por defecto todos cerrados.
+            const _grabExpanded = (() => {
+                try {
+                    const saved = JSON.parse(localStorage.getItem(KEY_EXPANDED) || 'null');
+                    const UNA_HORA = 60 * 60 * 1000;
+                    if (saved && Array.isArray(saved.ids) && (Date.now() - saved.ts) < UNA_HORA) {
+                        localStorage.setItem(KEY_EXPANDED, JSON.stringify({ ids: saved.ids, ts: Date.now() }));
+                        return new Set(saved.ids);
+                    }
+                } catch (_) {}
+                localStorage.removeItem(KEY_EXPANDED);
+                return new Set();
+            })();
+
+            // Campos de búsqueda habilitados (sin persistencia, default todo activo)
+            const BUSQ_CAMPOS = [
+                { id: 'tipo',       label: 'Tipo de dispositivo' },
+                { id: 'mac',        label: 'MAC' },
+                { id: 'serial',     label: 'Serial' },
+                { id: 'marca',      label: 'Marca' },
+                { id: 'modelo',     label: 'Modelo' },
+                { id: 'patrimonio', label: 'Patrimonio' },
+                { id: 'forma',      label: 'Forma (cámara)' },
+                { id: 'canal',      label: 'Descripción de canal' },
+            ];
+            const _busqActivos = new Set(BUSQ_CAMPOS.map(f => f.id));
+
+                        const UI = {
+
+                // ---- Tema ----
+                alternarTema() {
+                    const oscuro = document.body.classList.toggle('dark-mode');
+                    localStorage.setItem('cctv_tema', String(oscuro));
+                    const use = document.querySelector('#icono-tema use');
+                    if (use) use.setAttribute('href', oscuro ? '#icon-sun' : '#icon-moon');
+                    const label = document.getElementById('label-tema');
+                    if (label) label.textContent = oscuro ? 'Modo claro' : 'Modo oscuro';
+
+                },
+
+                // ---- Ajustes ----
+                abrirAjustes() {
+                    // sync tema
+                    const oscuro = document.body.classList.contains('dark-mode');
+                    const use = document.querySelector('#icono-tema use');
+                    if (use) use.setAttribute('href', oscuro ? '#icon-sun' : '#icon-moon');
+                    const label = document.getElementById('label-tema');
+                    if (label) label.textContent = oscuro ? 'Modo claro' : 'Modo oscuro';
+                    UI._renderTiposCustom();
+                    MM.abrir('modal-ajustes');
+                },
+
+                abrirFiltrosBusqueda() {
+                    const lista = document.getElementById('filtros-busqueda-lista');
+                    lista.innerHTML = BUSQ_CAMPOS.map(f => `
+                        <div class="filtro-row" onclick="event.stopPropagation();document.getElementById('filtro-cb-${f.id}').click()">
+                            <span class="filtro-label">${f.label}</span>
+                            <span class="filtro-toggle" onclick="event.stopPropagation()">
+                                <input type="checkbox" id="filtro-cb-${f.id}"
+                                    ${_busqActivos.has(f.id) ? 'checked' : ''}
+                                    onchange="UI._onFiltroChange('${f.id}', this.checked)">
+                                <span class="filtro-toggle-track"></span>
+                            </span>
+                        </div>`).join('');
+                    MM.abrir('modal-filtros-busqueda');
+                },
+
+                cerrarFiltrosBusqueda() {
+                    MM.cerrar('modal-filtros-busqueda');
+                },
+
+                _onFiltroChange(id, activo) {
+                    if (activo) _busqActivos.add(id);
+                    else _busqActivos.delete(id);
+                    const btn = document.getElementById('btn-filtros-busqueda');
+                    btn.classList.toggle('tiene-desactivados', _busqActivos.size < BUSQ_CAMPOS.length);
+                    const btnAll = document.getElementById('btn-toggle-all-filtros');
+                    if (btnAll) btnAll.textContent = _busqActivos.size === BUSQ_CAMPOS.length ? 'Desactivar todo' : 'Activar todo';
+                    renderActivos();
+                },
+
+                toggleTodosFiltros() {
+                    const todosActivos = _busqActivos.size === BUSQ_CAMPOS.length;
+                    if (todosActivos) {
+                        // dejar al menos uno activo no tiene sentido, desactivar todos
+                        _busqActivos.clear();
+                    } else {
+                        BUSQ_CAMPOS.forEach(f => _busqActivos.add(f.id));
+                    }
+                    // re-renderizar checkboxes
+                    document.querySelectorAll('[id^="filtro-cb-"]').forEach(cb => {
+                        cb.checked = _busqActivos.has(cb.id.replace('filtro-cb-', ''));
+                    });
+                    const btn = document.getElementById('btn-filtros-busqueda');
+                    btn.classList.toggle('tiene-desactivados', _busqActivos.size < BUSQ_CAMPOS.length);
+                    const btnAll = document.getElementById('btn-toggle-all-filtros');
+                    if (btnAll) btnAll.textContent = _busqActivos.size === BUSQ_CAMPOS.length ? 'Desactivar todo' : 'Activar todo';
+                    renderActivos();
+                },
+
+                                cerrarAjustes() {
+                    MM.cerrar('modal-ajustes');
+                },
+
+                abrirImportarDesdeAjustes() {
+                    MM.cerrar('modal-ajustes');
+                    setTimeout(() => UI.abrirImportar(), 150);
+                },
+
+                async borrarTodosLosDatos() {
+                    const ok = await confirmarModal('¿Borrar todos los dispositivos y grabadores? Esta acción no se puede deshacer.', 'Borrar todo');
+                    if (!ok) return;
+                    _data = { dispositivos: [], grabadores: [] };
+                    guardar();
+                    render();
+                    MM.cerrar('modal-ajustes');
+                    toast('Todos los datos fueron eliminados', 'success');
+                },
+
+                _renderTiposCustom() {
+                    const cont = document.getElementById('lista-tipos-custom');
+                    if (!cont) return;
+                    const custom = Object.entries(S.TIPOS).filter(([, v]) => !v.builtin);
+                    if (!custom.length) {
+                        cont.innerHTML = `<div style="font-size:0.85rem;color:var(--text-disabled);padding:0.25rem 0.25rem 0.5rem">Sin tipos personalizados</div>`;
+                        return;
+                    }
+                    cont.innerHTML = custom.map(([k, v]) => `
+                        <div style="display:flex;align-items:center;gap:0.5rem;padding:0.35rem 0;border-bottom:1px solid var(--border)">
+                            <span style="font-size:1.1rem;width:28px;text-align:center">${v.emoji}</span>
+                            <span style="flex:1;font-size:0.9rem">${esc(v.label)}</span>
+                            <button onclick="UI.eliminarTipoCustom('${esc(k)}')" class="icon-btn btn-delete" style="width:32px;height:32px;min-width:unset;color:white" title="Eliminar tipo">
+                                <svg class="icon icon-line" style="width:14px;height:14px"><use href="#icon-trash"/></svg>
+                            </button>
+                        </div>`).join('');
+                },
+
+                agregarTipoCustom() {
+                    const labelEl = document.getElementById('nuevo-tipo-label');
+                    const label = S.sanitize(labelEl.value.trim(), 30);
+                    if (!label) { labelEl.classList.add('error'); toast('Ingresá un nombre para el tipo', 'error'); return; }
+                    const key = label.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '') || S.genId().slice(0, 8);
+                    if (S.TIPOS[key]) { toast(`Ya existe un tipo "${S.TIPOS[key].label}"`, 'error'); return; }
+                    S.TIPOS[key] = { label, emoji: '📦', badge: 'badge-otro', dot: 'var(--c-gold)', builtin: false };
+                    S.guardarTipos();
+                    labelEl.value = '';
+                    labelEl.classList.remove('error');
+                    UI._renderTiposCustom();
+                    toast(`Tipo "${label}" agregado`, 'success');
+                },
+
+                async eliminarTipoCustom(key) {
+                    if (S.TIPOS_BUILTIN[key]) return;
+                    const enUso = _data.dispositivos.some(d => d.tipo === key);
+                    if (enUso) { toast('No se puede eliminar: hay dispositivos con este tipo', 'error'); return; }
+                    const ok = await confirmarModal(`¿Eliminar el tipo "${S.TIPOS[key]?.label}"?`);
+                    if (!ok) return;
+                    delete S.TIPOS[key];
+                    S.guardarTipos();
+                    UI._renderTiposCustom();
+                    toast('Tipo eliminado', 'success');
+                },
+
+                // ---- Tabs ----
+                cambiarTab(tab) {
+                    _tabActual = tab;
+                    ['dashboard', 'activos', 'produccion'].forEach(t => {
+                        document.getElementById('panel-' + t).style.display = t === tab ? '' : 'none';
+                        document.getElementById('tab-' + t).classList.toggle('activa', t === tab);
+                    });
+                    localStorage.setItem('cctv_tab', JSON.stringify({ tab, ts: Date.now() }));
+                },
+
+                // ---- Búsqueda en activos ----
+                filtrarActivos() {
+                    const input = document.getElementById('input-busqueda');
+                    const btnX = document.getElementById('btn-limpiar-busqueda');
+                    if (btnX) btnX.style.display = input.value ? '' : 'none';
+                    renderActivos();
+                },
+
+                limpiarBusqueda() {
+                    const input = document.getElementById('input-busqueda');
+                    input.value = '';
+                    document.getElementById('btn-limpiar-busqueda').style.display = 'none';
+                    input.focus();
+                    renderActivos();
+                },
+                toggleGrabColapse(id) {
+                    if (_grabExpanded.has(id)) {
+                        _grabExpanded.delete(id);
+                    } else {
+                        _grabExpanded.add(id);
+                    }
+                    localStorage.setItem(KEY_EXPANDED, JSON.stringify({ ids: [..._grabExpanded], ts: Date.now() }));
+                    const card = document.querySelector(`.nvr-card[data-grab-id="${CSS.escape(id)}"]`);
+                    const grid = card?.querySelector('.nvr-canales-grid');
+                    if (!card || !grid) return;
+                    const col = !_grabExpanded.has(id);
+                    card.classList.toggle('collapsed', col);
+                    grid.classList.toggle('collapsed', col);
+                },
+
+                // ---- Dispositivos ----
+                onDispTipoChange(prefijo) {
+                    const tipo = document.getElementById(`${prefijo}-tipo`).value;
+                    document.getElementById(`${prefijo}-forma-group`).style.display = tipo === 'camara' ? '' : 'none';
+                    document.getElementById(`${prefijo}-canales-group`).style.display = ['nvr', 'dvr'].includes(tipo) ? '' : 'none';
+                    if (tipo !== 'camara') document.getElementById(`${prefijo}-forma`).value = '';
+                },
+
+                abrirNuevoDispositivo() {
+                    _editandoDispId = null;
+                    _limpiarFormDisp('nuevo-disp');
+                    _poblarSelectTipo('nuevo-disp', null);
+                    MM.abrir('modal-nuevo-disp');
+                },
+
+                cerrarModalNuevoDispositivo() {
+                    MM.cerrar('modal-nuevo-disp');
+                },
+
+                guardarNuevoDispositivo() {
+                    const prefijo = 'nuevo-disp';
+                    const tipo = document.getElementById(`${prefijo}-tipo`).value;
+                    const macRaw = document.getElementById(`${prefijo}-mac`).value.trim();
+                    const serial = document.getElementById(`${prefijo}-serial`).value.trim();
+                    const macs = macRaw ? macRaw.split(',').map(t => t.trim()).filter(Boolean) : [];
+
+                    if (!tipo) { document.getElementById(`${prefijo}-tipo`).classList.add('error'); toast('Seleccioná un tipo', 'error'); return; }
+                    if (!validarCampoMAC(`${prefijo}-mac`)) return;
+                    if (!macs.length && !serial) {
+                        document.getElementById(`${prefijo}-mac`).classList.add('error');
+                        document.getElementById(`${prefijo}-serial`).classList.add('error');
+                        toast('Ingresá al menos MAC o Serial', 'error');
+                        return;
+                    }
+
+                    const otrosDisps = _data.dispositivos;
+                    for (const m of macs) {
+                        const mNorm = m.toUpperCase();
+                        const dup = otrosDisps.find(x => x.mac && x.mac.toUpperCase() === mNorm);
+                        if (dup) {
+                            document.getElementById(`${prefijo}-mac`).classList.add('error');
+                            const label = [dup.marca, dup.modelo].filter(Boolean).join(' ') || dup.serial || dup.id;
+                            toast(`MAC duplicada: ${m} — ya existe en "${label}"`, 'error');
+                            return;
+                        }
+                    }
+
+                    const base = {
+                        tipo,
+                        marca: document.getElementById(`${prefijo}-marca`).value.trim(),
+                        modelo: document.getElementById(`${prefijo}-modelo`).value.trim(),
+                        serial,
+                        forma: document.getElementById(`${prefijo}-forma`).value,
+                        canales: document.getElementById(`${prefijo}-canales`).value,
+                        patrimonio: document.getElementById(`${prefijo}-patrimonio`).value.trim(),
+                    };
+
+                    if (macs.length > 1) {
+                        macs.forEach(mac => _data.dispositivos.push(_sanDisp({ ...base, mac })));
+                        toast(`${macs.length} dispositivos agregados`, 'success');
+                    } else {
+                        _data.dispositivos.push(_sanDisp({ ...base, mac: macs[0] || '' }));
+                        toast('Dispositivo agregado', 'success');
+                    }
+
+                    guardar(); render(); MM.cerrar('modal-nuevo-disp');
+                },
+
+                abrirEditarDispositivo(id) {
+                    const d = _data.dispositivos.find(x => x.id === id); if (!d) return;
+                    _editandoDispId = id;
+                    const prefijo = 'editar-disp';
+                    _poblarSelectTipo(prefijo, d.tipo);
+                    document.getElementById(`${prefijo}-marca`).value = d.marca;
+                    document.getElementById(`${prefijo}-modelo`).value = d.modelo;
+                    document.getElementById(`${prefijo}-serial`).value = d.serial || '';
+                    document.getElementById(`${prefijo}-mac`).value = d.mac || '';
+                    document.getElementById(`${prefijo}-patrimonio`).value = d.patrimonio || '';
+                    const esCamara = d.tipo === 'camara';
+                    document.getElementById(`${prefijo}-forma-group`).style.display = esCamara ? '' : 'none';
+                    document.getElementById(`${prefijo}-forma`).value = d.forma || '';
+                    const esGrab = ['nvr', 'dvr'].includes(d.tipo);
+                    document.getElementById(`${prefijo}-canales-group`).style.display = esGrab ? '' : 'none';
+                    document.getElementById(`${prefijo}-canales`).value = d.canales || 16;
+                    // Botón "Editar asignación": visible solo si es cámara asignada a un grabador
+                    const btnAsig = document.getElementById('btn-editar-asignacion');
+                    if (esCamara) {
+                        const asignada = _data.grabadores.some(g => g.canales_data.some(c => c.dispositivoId === id));
+                        btnAsig.style.display = asignada ? '' : 'none';
+                    } else {
+                        btnAsig.style.display = 'none';
+                    }
+                    MM.abrir('modal-editar-disp');
+                },
+
+                cerrarModalEditarDispositivo() {
+                    MM.cerrar('modal-editar-disp');
+                    _editandoDispId = null;
+                },
+
+                guardarEdicionDispositivo() {
+                    const prefijo = 'editar-disp';
+                    const tipo = document.getElementById(`${prefijo}-tipo`).value;
+                    const macRaw = document.getElementById(`${prefijo}-mac`).value.trim();
+                    const serial = document.getElementById(`${prefijo}-serial`).value.trim();
+                    const macs = macRaw ? macRaw.split(',').map(t => t.trim()).filter(Boolean) : [];
+
+                    if (!tipo) { document.getElementById(`${prefijo}-tipo`).classList.add('error'); toast('Seleccioná un tipo', 'error'); return; }
+                    if (!validarCampoMAC(`${prefijo}-mac`)) return;
+                    if (!macs.length && !serial) {
+                        document.getElementById(`${prefijo}-mac`).classList.add('error');
+                        document.getElementById(`${prefijo}-serial`).classList.add('error');
+                        toast('Ingresá al menos MAC o Serial', 'error');
+                        return;
+                    }
+
+                    const otrosDisps = _data.dispositivos.filter(x => x.id !== _editandoDispId);
+                    for (const m of macs) {
+                        const mNorm = m.toUpperCase();
+                        const dup = otrosDisps.find(x => x.mac && x.mac.toUpperCase() === mNorm);
+                        if (dup) {
+                            document.getElementById(`${prefijo}-mac`).classList.add('error');
+                            const label = [dup.marca, dup.modelo].filter(Boolean).join(' ') || dup.serial || dup.id;
+                            toast(`MAC duplicada: ${m} — ya existe en "${label}"`, 'error');
+                            return;
+                        }
+                    }
+
+                    const base = {
+                        tipo,
+                        marca: document.getElementById(`${prefijo}-marca`).value.trim(),
+                        modelo: document.getElementById(`${prefijo}-modelo`).value.trim(),
+                        serial,
+                        forma: document.getElementById(`${prefijo}-forma`).value,
+                        canales: document.getElementById(`${prefijo}-canales`).value,
+                        patrimonio: document.getElementById(`${prefijo}-patrimonio`).value.trim(),
+                    };
+
+                    const obj = _sanDisp({ ...base, id: _editandoDispId, mac: macs[0] || '' });
+                    const idx = _data.dispositivos.findIndex(x => x.id === _editandoDispId);
+                    if (idx !== -1) _data.dispositivos[idx] = obj;
+                    _sincronizarGrabadores(_editandoDispId);
+                    toast('Dispositivo actualizado', 'success');
+
+                    guardar(); render(); MM.cerrar('modal-editar-disp'); _editandoDispId = null;
+                },
+
+                editarAsignacionCamara() {
+                    if (!_editandoDispId) return;
+                    let grabId = null, nCanal = null;
+                    for (const g of _data.grabadores) {
+                        const slot = g.canales_data.find(c => c.dispositivoId === _editandoDispId);
+                        if (slot) { grabId = g.id; nCanal = slot.canal; break; }
+                    }
+                    if (!grabId) return;
+                    const dispId = _editandoDispId;
+                    MM.cerrar('modal-editar-disp');
+                    setTimeout(() => UI.abrirAsignarCanal(grabId, nCanal, dispId), 180);
+                },
+
+                async eliminarDispositivo() {
+                    if (!_editandoDispId) return;
+                    const d = _data.dispositivos.find(x => x.id === _editandoDispId);
+                    const ok = await confirmarModal(`¿Eliminar "${[d?.marca, d?.modelo].filter(Boolean).join(' ') || d?.mac || d?.serial || 'este dispositivo'}"?`);
+                    if (!ok) return;
+                    _data.grabadores.forEach(g => g.canales_data.forEach(c => { if (c.dispositivoId === _editandoDispId) c.dispositivoId = null; }));
+                    _data.dispositivos = _data.dispositivos.filter(x => x.id !== _editandoDispId);
+                    guardar(); render(); MM.cerrar('modal-editar-disp'); _editandoDispId = null;
+                    toast('Dispositivo eliminado', 'success');
+                },
+
+                // ---- Grabadores ----
+                abrirNuevoGrabador() {
+                    _editandoGrabId = null;
+                    _limpiarFormGrab('nuevo-grab');
+                    _poblarSelectorGrabador('nuevo-grab', null);
+                    MM.abrir('modal-nuevo-grab');
+                },
+
+                cerrarModalNuevoGrabador() {
+                    MM.cerrar('modal-nuevo-grab');
+                },
+
+                guardarNuevoGrabador() {
+                    const prefijo = 'nuevo-grab';
+                    const descripcion = document.getElementById(`${prefijo}-nombre`).value.trim();
+                    if (!descripcion) { document.getElementById(`${prefijo}-nombre`).classList.add('error'); toast('La descripción es obligatoria', 'error'); return; }
+                    const dispId = document.getElementById(`${prefijo}-dispositivo-id`).value;
+                    if (!dispId) { document.getElementById(`${prefijo}-dispositivo-id`).classList.add('error'); toast('Seleccioná un dispositivo', 'error'); return; }
+                    if (!validarCampoIP(`${prefijo}-ip`)) return;
+
+                    const disp = _data.dispositivos.find(x => x.id === dispId);
+                    if (!disp) { toast('Dispositivo no encontrado', 'error'); return; }
+
+                    const datos = {
+                        id: S.genId(),
+                        descripcion,
+                        tipo: disp.tipo,
+                        marca: disp.marca,
+                        modelo: disp.modelo,
+                        ip: document.getElementById(`${prefijo}-ip`).value.trim(),
+                        lugar: document.getElementById(`${prefijo}-lugar`).value.trim(),
+                        mac: disp.mac || '',
+                        canales: disp.canales || 16,
+                        dispositivoId: disp.id,
+                    };
+
+                    _data.grabadores.push(_sanGrab(datos));
+                    toast('Grabador agregado', 'success');
+                    guardar(); render(); MM.cerrar('modal-nuevo-grab');
+                },
+
+                abrirEditarGrabador(id) {
+                    const g = _data.grabadores.find(x => x.id === id); if (!g) return;
+                    _editandoGrabId = id;
+                    const prefijo = 'editar-grab';
+                    document.getElementById(`${prefijo}-nombre`).value = g.descripcion;
+                    document.getElementById(`${prefijo}-ip`).value = g.ip || '';
+                    document.getElementById(`${prefijo}-lugar`).value = g.lugar || '';
+                    _poblarSelectorGrabador(prefijo, g.dispositivoId || null);
+                    MM.abrir('modal-editar-grab');
+                },
+
+                cerrarModalEditarGrabador() {
+                    MM.cerrar('modal-editar-grab');
+                    _editandoGrabId = null;
+                },
+
+                guardarEdicionGrabador() {
+                    const prefijo = 'editar-grab';
+                    const descripcion = document.getElementById(`${prefijo}-nombre`).value.trim();
+                    if (!descripcion) { document.getElementById(`${prefijo}-nombre`).classList.add('error'); toast('La descripción es obligatoria', 'error'); return; }
+                    const dispId = document.getElementById(`${prefijo}-dispositivo-id`).value;
+                    if (!dispId) { document.getElementById(`${prefijo}-dispositivo-id`).classList.add('error'); toast('Seleccioná un dispositivo', 'error'); return; }
+                    if (!validarCampoIP(`${prefijo}-ip`)) return;
+
+                    const disp = _data.dispositivos.find(x => x.id === dispId);
+                    if (!disp) { toast('Dispositivo no encontrado', 'error'); return; }
+
+                    const datos = {
+                        id: _editandoGrabId,
+                        descripcion,
+                        tipo: disp.tipo,
+                        marca: disp.marca,
+                        modelo: disp.modelo,
+                        ip: document.getElementById(`${prefijo}-ip`).value.trim(),
+                        lugar: document.getElementById(`${prefijo}-lugar`).value.trim(),
+                        mac: disp.mac || '',
+                        canales: disp.canales || 16,
+                        dispositivoId: disp.id,
+                    };
+
+                    const idx = _data.grabadores.findIndex(x => x.id === _editandoGrabId);
+                    if (idx !== -1) {
+                        datos.canales_data = _data.grabadores[idx].canales_data;
+                        _data.grabadores[idx] = _sanGrab(datos);
+                    }
+                    toast('Grabador actualizado', 'success');
+                    guardar(); render(); MM.cerrar('modal-editar-grab'); _editandoGrabId = null;
+                },
+
+                async eliminarGrabador() {
+                    if (!_editandoGrabId) return;
+                    const g = _data.grabadores.find(x => x.id === _editandoGrabId);
+                    const ok = await confirmarModal(`¿Eliminar el grabador "${g?.descripcion}"? Los canales asignados quedarán sin grabador.`);
+                    if (!ok) return;
+                    _data.grabadores = _data.grabadores.filter(x => x.id !== _editandoGrabId);
+                    guardar(); render(); MM.cerrar('modal-editar-grab'); _editandoGrabId = null;
+                    toast('Grabador eliminado', 'success');
+                },
+
+                // ---- Asignación de canal ----
+                abrirAsignarCanal(grabId, nCanal, desdeDispId = null) {
+                    _editandoCanalGrabId = grabId;
+                    _editandoCanalN = nCanal;
+                    _canalDesdeDispId = desdeDispId || null;
+                    const g = _data.grabadores.find(x => x.id === grabId); if (!g) return;
+                    const slot = g.canales_data.find(c => c.canal === nCanal);
+
+                    document.getElementById('modal-canal-titulo').textContent = `Canal ${nCanal} — ${g.descripcion}`;
+
+                    // Botón cancelar/volver
+                    const btnCancel = document.getElementById('btn-canal-cancelar');
+
+                    if (btnCancel) {
+                        if (desdeDispId) {
+                            // Estructura para "Volver"
+                            btnCancel.innerHTML = `
+            <svg class="icon"><use xlink:href="#icon-undo"></use></svg>
+            <span>Volver</span>
+        `;
+                        } else {
+                            // Estructura para "Cancelar" con icon-cancelar
+                            btnCancel.innerHTML = `
+            <svg class="icon"><use xlink:href="#icon-cancelar"></use></svg>
+            <span>Cancelar</span>
+        `;
+                        }
+                    }
+
+                    // ocupados: dispositivos ya asignados en otros canales del mismo grabador
+                    _canalDispOcupados = new Set(
+                        g.canales_data
+                            .filter(c => c.canal !== nCanal && c.dispositivoId)
+                            .map(c => c.dispositivoId)
+                    );
+
+                    // inicializar combobox
+                    const hiddenSel = document.getElementById('sel-canal-dispositivo');
+                    const input = document.getElementById('canal-disp-input');
+                    hiddenSel.value = slot?.dispositivoId || '';
+                    if (slot?.dispositivoId) {
+                        const d = _data.dispositivos.find(x => x.id === slot.dispositivoId);
+                        input.value = d ? (d.mac || d.serial || d.id) : '';
+                    } else {
+                        input.value = '';
+                    }
+                    document.getElementById('canal-disp-dropdown').style.display = 'none';
+                    _canalDispHighlight = -1;
+
+                    MM.abrir('modal-canal');
+
+                    document.getElementById('canal-descripcion').value = slot?.descripcion || '';
+                    document.getElementById('canal-ip').value = slot?.ip || '';
+                    document.getElementById('canal-puerto').value = slot?.puerto || '';
+                    document.getElementById('canal-lugar').value = slot?.lugar || '';
+                    document.getElementById('canal-comentarios').value = slot?.comentarios || '';
+                },
+
+                // ---- Combobox dispositivo en canal ----
+                _canalDispFiltrar() {
+                    const query = document.getElementById('canal-disp-input').value.trim().toLowerCase();
+                    const dd = document.getElementById('canal-disp-dropdown');
+                    const hidden = document.getElementById('sel-canal-dispositivo');
+
+                    // si borró el texto, limpiar selección
+                    if (!query) hidden.value = '';
+
+                    const candidatos = _data.dispositivos
+                        .filter(d => !['nvr', 'dvr'].includes(d.tipo))
+                        .sort((a, b) => (a.mac || a.serial || '').localeCompare(b.mac || b.serial || ''));
+
+                    const filtrados = query
+                        ? candidatos.filter(d => {
+                            const haystack = [d.mac, d.serial, d.marca, d.modelo, d.patrimonio]
+                                .filter(Boolean).join(' ').toLowerCase();
+                            return haystack.includes(query);
+                        })
+                        : candidatos;
+
+                    if (!filtrados.length && query) {
+                        dd.innerHTML = `<div class="canal-disp-item canal-disp-item-vaciobtn">Sin resultados</div>`;
+                        dd.style.display = '';
+                        _canalDispHighlight = -1;
+                        return;
+                    }
+
+                    const items = [];
+
+                    // opción "vacío" siempre primera
+                    items.push(`<div class="canal-disp-item canal-disp-item-vaciobtn" data-id="" data-idx="0">— Vacío —</div>`);
+
+                    filtrados.forEach((d, i) => {
+                        const ocupado = _canalDispOcupados.has(d.id);
+                        const mac = esc(d.mac || d.serial || d.id);
+                        const sub = [d.marca, d.modelo, d.patrimonio ? `PAT: ${d.patrimonio}` : ''].filter(Boolean).join(' · ');
+                        const tipo = S.TIPOS[d.tipo];
+                        items.push(`<div class="canal-disp-item${ocupado ? ' ocupado' : ''}" data-id="${esc(d.id)}" data-mac="${esc(d.mac || d.serial || '')}" data-idx="${i + 1}" ${ocupado ? 'title="Ya asignado a otro canal"' : ''}>
+                            <div class="canal-disp-item-mac">${tipo?.emoji || ''} ${mac}${ocupado ? ' <span style=\'font-size:0.75rem\'>(ocupado)</span>' : ''}</div>
+                            ${sub ? `<div class="canal-disp-item-sub">${esc(sub)}</div>` : ''}
+                        </div>`);
+                    });
+
+                    dd.innerHTML = items.join('');
+                    dd.style.display = '';
+                    _canalDispHighlight = -1;
+
+                    dd.querySelectorAll('.canal-disp-item:not(.ocupado)').forEach(el => {
+                        el.addEventListener('mousedown', e => {
+                            e.preventDefault();
+                            UI._canalDispSeleccionar(el.dataset.id, el.dataset.mac);
+                        });
+                    });
+                },
+
+                _canalDispSeleccionar(id, mac) {
+                    document.getElementById('sel-canal-dispositivo').value = id || '';
+                    document.getElementById('canal-disp-input').value = id ? (mac || id) : '';
+                    document.getElementById('canal-disp-dropdown').style.display = 'none';
+                    _canalDispHighlight = -1;
+                },
+
+                _canalDispKeydown(e) {
+                    const dd = document.getElementById('canal-disp-dropdown');
+                    if (dd.style.display === 'none') return;
+                    const items = [...dd.querySelectorAll('.canal-disp-item:not(.ocupado)')];
+                    if (!items.length) return;
+
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        _canalDispHighlight = Math.min(_canalDispHighlight + 1, items.length - 1);
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        _canalDispHighlight = Math.max(_canalDispHighlight - 1, 0);
+                    } else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (_canalDispHighlight >= 0) {
+                            const el = items[_canalDispHighlight];
+                            UI._canalDispSeleccionar(el.dataset.id, el.dataset.mac);
+                        }
+                        return;
+                    } else if (e.key === 'Escape') {
+                        dd.style.display = 'none';
+                        _canalDispHighlight = -1;
+                        return;
+                    } else { return; }
+
+                    items.forEach((el, i) => el.classList.toggle('highlighted', i === _canalDispHighlight));
+                    if (_canalDispHighlight >= 0) items[_canalDispHighlight].scrollIntoView({ block: 'nearest' });
+                },
+
+                cerrarModalCanal() {
+                    MM.cerrar('modal-canal');
+                    const dispId = _canalDesdeDispId;
+                    _editandoCanalGrabId = null; _editandoCanalN = null; _canalDesdeDispId = null;
+                    if (dispId) setTimeout(() => UI.abrirEditarDispositivo(dispId), 180);
+                },
+
+                limpiarAsignacionCanal() {
+                    UI._canalDispSeleccionar('', '');
+                    document.getElementById('canal-descripcion').value = '';
+                    document.getElementById('canal-ip').value = '';
+                    document.getElementById('canal-puerto').value = '';
+                    document.getElementById('canal-lugar').value = '';
+                    document.getElementById('canal-comentarios').value = '';
+                },
+
+                guardarAsignacionCanal() {
+                    const g = _data.grabadores.find(x => x.id === _editandoCanalGrabId); if (!g) return;
+                    const slot = g.canales_data.find(c => c.canal === _editandoCanalN); if (!slot) return;
+                    if (!validarCampoIP('canal-ip')) return;
+                    slot.dispositivoId = document.getElementById('sel-canal-dispositivo').value || null;
+                    slot.descripcion = document.getElementById('canal-descripcion').value.trim();
+                    slot.ip = document.getElementById('canal-ip').value.trim();
+                    slot.puerto = document.getElementById('canal-puerto').value.trim();
+                    slot.lugar = document.getElementById('canal-lugar').value.trim();
+                    slot.comentarios = document.getElementById('canal-comentarios').value.trim();
+                    guardar(); render(); MM.cerrar('modal-canal');
+                    toast(slot.dispositivoId ? 'Dispositivo asignado' : 'Canal actualizado', 'success');
+                    _editandoCanalGrabId = null; _editandoCanalN = null;
+                },
+
+                // ---- Importar / Exportar ----
+                abrirImportar() {
+                    document.getElementById('file-import').value = '';
+                    document.getElementById('nombre-archivo').textContent = '';
+                    document.getElementById('btn-combinar').disabled = true;
+                    document.getElementById('btn-reemplazar').disabled = true;
+                    MM.abrir('modal-importar');
+                },
+
+                cerrarImportar() { MM.cerrar('modal-importar'); },
+
+                async importarDatos(modo) {
+                    const file = document.getElementById('file-import').files[0];
+                    if (!file) { toast('Seleccioná un archivo primero', 'error'); return; }
+                    if (file.size > S.MAX_JSON) { toast('Archivo demasiado grande', 'error'); return; }
+                    if (file.type !== 'application/json') { toast('Solo se permiten archivos JSON', 'error'); return; }
+
+                    const reader = new FileReader();
+                    reader.onload = async e => {
+                        try {
+                            const contenido = e.target.result;
+                            if (!contenido?.trim()) { toast('Archivo vacío', 'error'); return; }
+
+                            // parse seguro (idéntico a Horarios)
+                            const data = S.safeParse(contenido);
+
+                            if (!data || typeof data !== 'object' || Array.isArray(data)) {
+                                toast('Estructura de archivo inválida', 'error'); return;
+                            }
+
+                            // sanitizar primero, luego verificar hash sobre estructura canónica
+                            const newDisps = Array.isArray(data.dispositivos) ? data.dispositivos.map(_sanDisp) : [];
+                            const newGrabs = Array.isArray(data.grabadores) ? data.grabadores.map(_sanGrab) : [];
+
+                            // verificar hash si existe
+                            if (data.hash) {
+                                const calc = await S.sha256({ dispositivos: newDisps, grabadores: newGrabs });
+                                if (calc !== data.hash) {
+                                    const ok = await confirmarModal('El hash de integridad no coincide. El archivo puede haber sido modificado. ¿Importar de todas formas?', 'Importar');
+                                    if (!ok) return;
+                                }
+                            }
+
+                            // restaurar tipos custom del archivo
+                            if (data.tiposCustom && typeof data.tiposCustom === 'object' && !Array.isArray(data.tiposCustom)) {
+                                let tiposAgregados = 0;
+                                Object.entries(data.tiposCustom).forEach(([k, v]) => {
+                                    if (S.TIPOS_BUILTIN[k]) return; // nunca pisar builtins
+                                    if (typeof v?.label !== 'string' || !v.label) return;
+                                    if (modo === 'replace' || !S.TIPOS[k]) {
+                                        S.TIPOS[k] = { label: v.label, emoji: v.emoji || '📦', badge: 'badge-otro', dot: 'var(--c-gold)', builtin: false };
+                                        tiposAgregados++;
+                                    }
+                                });
+                                if (tiposAgregados) S.guardarTipos();
+                            }
+
+                            if (modo === 'replace') {
+                                _data.dispositivos = newDisps;
+                                _data.grabadores = newGrabs;
+                                toast('Datos reemplazados correctamente', 'success');
+                            } else {
+                                // merge: no duplicar por id
+                                const idsD = new Set(_data.dispositivos.map(d => d.id));
+                                const idsG = new Set(_data.grabadores.map(g => g.id));
+                                newDisps.forEach(d => { if (!idsD.has(d.id)) _data.dispositivos.push(d); });
+                                newGrabs.forEach(g => { if (!idsG.has(g.id)) _data.grabadores.push(g); });
+                                toast('Datos combinados correctamente', 'success');
+                            }
+
+                            guardar(); render(); MM.cerrar('modal-importar');
+                        } catch (err) {
+                            console.error(err);
+                            toast('Error al procesar el archivo', 'error');
+                        }
+                    };
+                    reader.readAsText(file);
+                },
+
+                async exportarJSON() {
+                    try {
+                        const disps = _data.dispositivos.map(_sanDisp);
+                        const grabs = _data.grabadores.map(_sanGrab);
+                        // exportar solo los tipos custom (los builtin se reconstruyen solos)
+                        const tiposCustom = {};
+                        Object.entries(S.TIPOS).forEach(([k, v]) => {
+                            if (!v.builtin) tiposCustom[k] = { label: v.label, emoji: v.emoji };
+                        });
+                        const payload = {
+                            dispositivos: disps,
+                            grabadores: grabs,
+                            tiposCustom,
+                            version: S.SCHEMA_V,
+                            fecha: S.fechaISO(),
+                            hash: await S.sha256({ dispositivos: disps, grabadores: grabs }),
+                        };
+                        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = Object.assign(document.createElement('a'), { href: url, download: `CCTV_${S.fechaISO().slice(0, 10)}.json` });
+                        a.click();
+                        URL.revokeObjectURL(url);
+                        toast('Datos exportados', 'success');
+                    } catch (err) {
+                        console.error(err);
+                        toast('Error al exportar', 'error');
+                    }
+                },
+            };
+
+            // ==============================================================
+            // HELPERS FORM
+            // ==============================================================
+
+            // Resincroniza los grabadores que tienen asignado el dispositivo con dispId:
+            // actualiza tipo, marca, modelo, mac y canales desde el dispositivo en vivo,
+            // preservando canales_data, descripcion, ip y lugar del grabador.
+            function _sincronizarGrabadores(dispId) {
+                const disp = _data.dispositivos.find(d => d.id === dispId);
+                if (!disp) return;
+                _data.grabadores.forEach((g, i) => {
+                    if (g.dispositivoId !== dispId) return;
+                    const datos = {
+                        ...g,
+                        tipo: disp.tipo,
+                        marca: disp.marca,
+                        modelo: disp.modelo,
+                        mac: disp.mac || '',
+                        canales: disp.canales || g.canales_n,
+                        canales_data: g.canales_data,
+                    };
+                    _data.grabadores[i] = _sanGrab(datos);
+                });
+            }
+
+            // Puebla el select de tipos de dispositivo con los tipos registrados
+            function _poblarSelectTipo(prefijo, seleccionado) {
+                const sel = document.getElementById(`${prefijo}-tipo`);
+                sel.innerHTML = '<option value="">Seleccionar…</option>';
+                Object.entries(S.TIPOS).forEach(([k, v]) => {
+                    const opt = document.createElement('option');
+                    opt.value = k;
+                    opt.textContent = `${v.emoji} ${v.label}`;
+                    if (k === seleccionado) opt.selected = true;
+                    sel.appendChild(opt);
+                });
+            }
+
+            // Puebla el selector de dispositivos NVR/DVR en el modal grabador.
+            // grabadoresEnUso: excluye dispositivos ya asignados a otro grabador,
+            // salvo el que se está editando actualmente.
+            function _poblarSelectorGrabador(prefijo, seleccionadoId) {
+                const sel = document.getElementById(`${prefijo}-dispositivo-id`);
+                const enUso = new Set(
+                    _data.grabadores
+                        .filter(g => g.dispositivoId && g.id !== _editandoGrabId)
+                        .map(g => g.dispositivoId)
+                );
+                sel.innerHTML = '<option value="">Seleccionar…</option>';
+                _data.dispositivos
+                    .filter(d => ['nvr', 'dvr'].includes(d.tipo))
+                    .sort((a, b) => (a.mac || a.serial || '').localeCompare(b.mac || b.serial || ''))
+                    .forEach(d => {
+                        const opt = document.createElement('option');
+                        opt.value = d.id;
+                        const canalesStr = d.canales ? ` · ${d.canales} ch` : '';
+                        const label = d.mac || d.serial || d.id;
+                        const marcaModelo = [d.marca, d.modelo].filter(Boolean).join(' ');
+                        opt.textContent = `${d.tipo === 'nvr' ? '📟' : '📼'} ${label}${marcaModelo ? ' · ' + marcaModelo : ''}${canalesStr}`;
+                        if (enUso.has(d.id)) { opt.disabled = true; opt.textContent += ' (en uso)'; }
+                        if (d.id === seleccionadoId) opt.selected = true;
+                        sel.appendChild(opt);
+                    });
+                if (sel.options.length === 1) {
+                    const opt = document.createElement('option');
+                    opt.disabled = true;
+                    opt.textContent = 'No hay NVR/DVR en activos';
+                    sel.appendChild(opt);
+                }
+            }
+
+            function _limpiarFormDisp(prefijo) {
+                [`${prefijo}-marca`, `${prefijo}-modelo`, `${prefijo}-serial`, `${prefijo}-mac`, `${prefijo}-patrimonio`].forEach(id => {
+                    const el = document.getElementById(id); if (el) { el.value = ''; el.classList.remove('error'); }
+                });
+                document.getElementById(`${prefijo}-tipo`).value = '';
+                document.getElementById(`${prefijo}-tipo`).classList.remove('error');
+                document.getElementById(`${prefijo}-forma`).value = '';
+                document.getElementById(`${prefijo}-forma-group`).style.display = 'none';
+                document.getElementById(`${prefijo}-canales`).value = '16';
+                document.getElementById(`${prefijo}-canales-group`).style.display = 'none';
+            }
+
+            function _limpiarFormGrab(prefijo) {
+                [`${prefijo}-nombre`, `${prefijo}-ip`, `${prefijo}-lugar`].forEach(id => {
+                    const el = document.getElementById(id); if (el) { el.value = ''; el.classList.remove('error'); }
+                });
+                document.getElementById(`${prefijo}-dispositivo-id`).value = '';
+            }
+
+            // limpiar clase error en inputs al escribir
+            document.addEventListener('input', e => { if (e.target.tagName === 'INPUT') e.target.classList.remove('error'); });
+
+            // cerrar dropdown combobox al hacer click fuera
+            document.addEventListener('mousedown', e => {
+                const cb = document.getElementById('canal-disp-combobox');
+                if (cb && !cb.contains(e.target)) {
+                    document.getElementById('canal-disp-dropdown').style.display = 'none';
+                    _canalDispHighlight = -1;
+                }
+            });
+
+            // file-import: mostrar nombre y habilitar botones
+            document.getElementById('file-import').addEventListener('change', function () {
+                const f = this.files[0];
+                document.getElementById('nombre-archivo').textContent = f ? f.name : '';
+                document.getElementById('btn-combinar').disabled = !f;
+                document.getElementById('btn-reemplazar').disabled = !f;
+            });
+
+            // atajo de teclado: tecla + abre el modal de agregar dispositivo
+            // tecla A-Z: ir a activos y enfocar búsqueda
+            document.addEventListener('keydown', e => {
+                const tag = document.activeElement?.tagName;
+                const enInput = tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA';
+                if (document.body.classList.contains('modal-open')) return;
+                // Escape: limpiar búsqueda desde cualquier lugar
+                if (e.key === 'Escape' && !enInput) {
+                    const input = document.getElementById('input-busqueda');
+                    if (input && input.value) { UI.limpiarBusqueda(); input.blur(); return; }
+                }
+                if (enInput) return;
+                if (e.key === '+' || e.key === '=') { UI.abrirNuevoDispositivo(); return; }
+                // letra A-Z (sin modificadores): ir a activos y buscar
+                if (e.key.length === 1 && /^[a-zA-Z0-9:]$/.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                    if (_tabActual !== 'activos') UI.cambiarTab('activos');
+                    const input = document.getElementById('input-busqueda');
+                    input.focus();
+                    // no llamamos preventDefault: el caracter cae naturalmente en el input
+                }
+            });
+
+            // ==============================================================
+            // BOTÓN SCROLL TOP
+            // ==============================================================
+            (() => {
+                const btn = document.getElementById('btn-scroll-top');
+                if (!btn) return;
+                function actualizarBoton() {
+                    const enPanel = _tabActual === 'activos' || _tabActual === 'produccion';
+                    const scrollSuficiente = window.scrollY > window.innerHeight * 0.85;
+                    if (enPanel && scrollSuficiente) {
+                        btn.style.display = '';
+                        requestAnimationFrame(() => {
+                            btn.style.opacity = '1';
+                            btn.style.transform = 'translateY(0)';
+                        });
+                    } else {
+                        btn.style.opacity = '0';
+                        btn.style.transform = 'translateY(8px)';
+                        setTimeout(() => {
+                            if (btn.style.opacity === '0') btn.style.display = 'none';
+                        }, 260);
+                    }
+                }
+                window.addEventListener('scroll', actualizarBoton, { passive: true });
+                // re-evaluar al cambiar de tab
+                const _cambiarTabOrig = UI.cambiarTab.bind(UI);
+                UI.cambiarTab = function(tab) {
+                    _cambiarTabOrig(tab);
+                    actualizarBoton();
+                };
+            })();
+
+            // ==============================================================
+            // ARRANQUE
+            // ==============================================================
+            window.UI = UI;
+            cargar();
+            render();
+
+            // restaurar pestaña activa (máximo 1 hora)
+            try {
+                const saved = JSON.parse(localStorage.getItem('cctv_tab') || 'null');
+                const TABS = ['dashboard', 'activos', 'produccion'];
+                const UNA_HORA = 60 * 60 * 1000;
+                if (saved && TABS.includes(saved.tab) && (Date.now() - saved.ts) < UNA_HORA) {
+                    UI.cambiarTab(saved.tab);
+                }
+            } catch (_) { }
+
+        })();
+    </script>
+</body>
+
+</html>
+
+<!--
+// ====================================================================
+//         NOTAS CCTV ACTIVOS VERSION 100
+// ====================================================================
+
+ - PENDIENTE (futuras iteraciones):
+   · Undo/redo
+   · Filtros y búsqueda en activos
+   · Estado del dispositivo (activo/baja/mantenimiento)
+   · Más campos (ubicación, fecha instalación, notas)
+   · Vista de árbol / diagrama de red
+
+-->
