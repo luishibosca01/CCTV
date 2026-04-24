@@ -1951,15 +1951,35 @@
             // ==============================================================
             // TOAST  (idéntico a Horarios)
             // ==============================================================
-            let _toastTimer = null;
+            const _toastQueue = [];
+            let _toastActivo = false;
+            let _toastUltimo = null; // { msg, tipo } del último mostrado
+
             function toast(msg, tipo = 'success') {
-                const el = document.getElementById('toast'); if (!el) return;
+                // descartar si es igual al último procesado
+                if (_toastUltimo && _toastUltimo.msg === msg && _toastUltimo.tipo === tipo) return;
+                // descartar si ya está en cola (evita duplicados encadenados)
+                if (_toastQueue.some(t => t.msg === msg && t.tipo === tipo)) return;
+                _toastQueue.push({ msg, tipo });
+                _procesarToastQueue();
+            }
+
+            function _procesarToastQueue() {
+                if (_toastActivo || _toastQueue.length === 0) return;
+                const { msg, tipo } = _toastQueue.shift();
+                _toastActivo = true;
+                _toastUltimo = { msg, tipo };
+                const el = document.getElementById('toast'); if (!el) { _toastActivo = false; return; }
                 el.textContent = msg;
                 el.className = `toast show ${tipo}`;
-                clearTimeout(_toastTimer);
-                _toastTimer = setTimeout(() => {
+                setTimeout(() => {
                     el.classList.remove('show');
-                    setTimeout(() => { el.className = 'toast'; }, 300);
+                    setTimeout(() => {
+                        el.className = 'toast';
+                        _toastActivo = false;
+                        _toastUltimo = null; // limpiar para que el mismo mensaje pueda mostrarse de nuevo
+                        _procesarToastQueue();
+                    }, 300);
                 }, 3000);
             }
 
@@ -3701,7 +3721,7 @@
 
 <!--
 // ====================================================================
-//         NOTAS CCTV ACTIVOS VERSION 149
+//         NOTAS CCTV ACTIVOS VERSION 173
 // ====================================================================
 
  - PENDIENTE (futuras iteraciones):
