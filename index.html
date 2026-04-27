@@ -16,7 +16,7 @@
         frame-ancestors 'none';
         upgrade-insecure-requests;">
     <meta name="referrer" content="no-referrer">
-    <title>CCTV — Control de Activos v154</title>
+    <title>CCTV — Control de Activos v190</title>
 
     <style>
         /* ============================================================
@@ -31,16 +31,26 @@
             --text-disabled: #444746a2;
             --border: #dde3ea;
             --input-bg: #dde3ea;
+            /* aliases semánticos usados en inline styles */
+            --surface: var(--bg-card);
+            --text: var(--text-main);
             --c-blue: rgba(76, 114, 172, 0.8);
             --c-green: rgba(76, 172, 140, 0.8);
             --c-red: rgba(172, 90, 76, 0.8);
             --c-purple: rgba(129, 76, 172, 0.8);
             --c-gold: rgba(172, 155, 76, 0.8);
             --c-orange: rgba(210, 120, 50, 0.8);
+            --c-blue-solid: rgb(76, 114, 172);
+            --c-green-solid: rgb(76, 172, 140);
+            --c-orange-solid: rgb(210, 120, 50);
+            --c-gold-solid: rgb(172, 155, 76);
             --c-gray-btn: #dde3ea;
             --c-white: #ffffff;
             --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             --radius: 20px;
+            --radius-sm: 12px;
+            --radius-pill: 999px;
+            --bg-toast: #1f2937;
             --hover: brightness(0.9);
         }
 
@@ -54,12 +64,13 @@
             --border: #313333;
             --input-bg: #313333;
             --c-gray-btn: #313333;
+            --bg-toast: #2d3748;
             --shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
             --hover: brightness(1.2);
         }
 
         body.modal-open {
-            overflow: hidden !important;
+            overflow: hidden;
         }
 
         /* ============================================================
@@ -146,6 +157,7 @@
             align-items: center;
             gap: 0.5rem;
             color: var(--text-main);
+            min-height: 44px;
         }
 
         /* ============================================================
@@ -274,16 +286,6 @@
         }
 
         /* hovers — idéntico a Horarios */
-        @media (hover: hover) and (pointer: fine) {
-
-            .btn-edit:hover:not(:disabled),
-            .btn-delete:hover:not(:disabled),
-            .btn-backup:hover:not(:disabled),
-            .btn-cancel:hover:not(:disabled),
-            .icon-btn:hover:not(:disabled) {
-                filter: var(--hover);
-            }
-        }
 
         /* ============================================================
            ICONS
@@ -345,8 +347,8 @@
             left: 50%;
             transform: translateX(-50%) translateY(80px);
             transition: opacity 0.3s, transform 0.3s;
-            background: #1f2937;
-            color: white;
+            background: var(--bg-toast);
+            color: var(--c-white);
             padding: 1rem 1.5rem;
             border-radius: var(--radius);
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
@@ -463,7 +465,7 @@
             border-left-color: var(--c-red);
         }
 
-        .dispositivo-item.estado-baja {
+        .dispositivo-item.estado-revisar {
             border-left-color: var(--c-purple);
         }
 
@@ -499,29 +501,40 @@
             align-items: center;
             font-size: 0.72rem;
             font-weight: 600;
-            color: var(--c-white);
             border-radius: var(--radius);
             padding: 0.1rem 0.55rem;
             white-space: nowrap;
         }
 
-        .badge-camara {
-            background: var(--c-blue);
+        /* badges de tipo: outline con texto principal */
+        .badge-camara,
+        .badge-nvr,
+        .badge-dvr,
+        .badge-otro {
+            background: transparent;
+            color: var(--text-main);
+            border: 1px solid var(--text-muted);
+            text-transform: uppercase;
         }
 
-        .badge-nvr {
+        /* badges filled (cabeceras grabador + estados con color) */
+        .badge-nvr-filled,
+        .badge-dvr-filled,
+        .badge-estado-produccion,
+        .badge-estado-disponible,
+        .badge-estado-averiado,
+        .badge-estado-revisar {
+            color: var(--c-white);
+        }
+
+        .badge-nvr-filled {
             background: var(--c-green);
         }
 
-        .badge-dvr {
+        .badge-dvr-filled {
             background: var(--c-orange);
         }
 
-        .badge-otro {
-            background: var(--c-gold);
-        }
-
-        /* badge por estado */
         .badge-estado-produccion {
             background: var(--c-blue);
         }
@@ -534,20 +547,15 @@
             background: var(--c-red);
         }
 
-        .badge-estado-baja {
+        .badge-estado-revisar {
             background: var(--c-purple);
         }
 
+        /* desafectado: outline con text-muted (igual que los de tipo pero sin uppercase) */
         .badge-estado-desafectado {
             background: transparent;
             color: var(--text-muted);
             border: 1px solid var(--text-muted);
-        }
-
-        @media (hover: hover) and (pointer: fine) {
-            .dispositivo-item:hover {
-                filter: var(--hover);
-            }
         }
 
         /* ============================================================
@@ -624,7 +632,7 @@
 
         .canal-slot {
             border: 1px solid var(--border);
-            border-radius: 12px;
+            border-radius: var(--radius-sm);
             padding: 0.55rem 0.65rem;
             background: var(--bg-card);
             height: 72px;
@@ -643,12 +651,6 @@
         .canal-slot.vacio {
             border-style: dashed;
             opacity: 0.65;
-        }
-
-        @media (hover: hover) and (pointer: fine) {
-            .canal-slot:hover {
-                filter: var(--hover);
-            }
         }
 
         .canal-numero {
@@ -679,6 +681,40 @@
             font-size: 0.78rem;
             color: var(--text-disabled);
             margin-top: auto;
+        }
+
+        /* botones de estado en modal editar dispositivo */
+        .btn-estado-disp {
+            width: auto;
+            height: auto;
+            padding: 0.6rem 0.5rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            gap: 0.35rem;
+            background: var(--c-gray-btn);
+            color: var(--text-main);
+            opacity: 0.5;
+            transition: opacity 0.15s, filter 0.15s;
+        }
+
+        .btn-estado-disp.activo {
+            opacity: 1;
+        }
+
+        .btn-estado-averiado.activo {
+            background: var(--c-red);
+            color: var(--c-white);
+        }
+
+        .btn-estado-revisar.activo {
+            background: var(--c-purple);
+            color: var(--c-white);
+        }
+
+        .btn-estado-desafectado.activo {
+            background: var(--c-gray-btn);
+            color: var(--text-muted);
+            border: 1px solid var(--text-muted);
         }
 
         /* ============================================================
@@ -764,6 +800,131 @@
             font-weight: 700;
             color: var(--text-main);
         }
+
+        /* ============================================================
+           DASHBOARD — mosaico de tipo clickeable
+        ============================================================ */
+        .stat-chip-tipo {
+            cursor: pointer;
+            transition: filter 0.15s, transform 0.15s, box-shadow 0.15s;
+            position: relative;
+        }
+
+        .stat-chip-tipo:active {
+            transform: scale(0.97);
+        }
+
+        .stat-chip-tipo.activo {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-chip-tipo .stat-chip-arrow {
+            position: absolute;
+            top: 0.6rem;
+            right: 0.6rem;
+            font-size: 0.65rem;
+            color: var(--text-disabled);
+            transition: transform 0.2s;
+        }
+
+        .stat-chip-tipo.activo .stat-chip-arrow {
+            transform: rotate(90deg);
+        }
+
+        /* ── Animación slide del resumen general ── */
+        #dash-disp-tree {
+            overflow: hidden;
+        }
+
+        .dash-slide-wrap {
+            display: flex;
+            width: 200%;
+            transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+            will-change: transform;
+        }
+
+        .dash-slide-wrap.en-detalle {
+            transform: translateX(-50%);
+        }
+
+        .dash-slide-panel {
+            width: 50%;
+            flex-shrink: 0;
+        }
+
+        /* chips de estado que entran desde la derecha: se animan individualmente */
+        .dash-slide-panel .stat-chip {
+            opacity: 0;
+            transform: translateY(6px);
+            transition: opacity 0.25s ease, transform 0.25s ease;
+        }
+
+        .dash-slide-wrap.en-detalle .dash-slide-panel:last-child .stat-chip {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* delays escalonados para los chips de estado */
+        .dash-slide-wrap.en-detalle .dash-slide-panel:last-child .stat-chip:nth-child(1) {
+            transition-delay: 0.12s;
+        }
+
+        .dash-slide-wrap.en-detalle .dash-slide-panel:last-child .stat-chip:nth-child(2) {
+            transition-delay: 0.18s;
+        }
+
+        .dash-slide-wrap.en-detalle .dash-slide-panel:last-child .stat-chip:nth-child(3) {
+            transition-delay: 0.24s;
+        }
+
+        .dash-slide-wrap.en-detalle .dash-slide-panel:last-child .stat-chip:nth-child(4) {
+            transition-delay: 0.30s;
+        }
+
+        .dash-slide-wrap.en-detalle .dash-slide-panel:last-child .stat-chip:nth-child(5) {
+            transition-delay: 0.36s;
+        }
+
+        /* al volver, los chips del panel izquierdo (tipos) también se animan */
+        .dash-slide-panel:first-child .stat-chip {
+            opacity: 0;
+            transform: translateY(6px);
+            transition: opacity 0.22s ease, transform 0.22s ease;
+        }
+
+        .dash-slide-wrap:not(.en-detalle) .dash-slide-panel:first-child .stat-chip {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .dash-slide-wrap:not(.en-detalle) .dash-slide-panel:first-child .stat-chip:nth-child(1) {
+            transition-delay: 0.10s;
+        }
+
+        .dash-slide-wrap:not(.en-detalle) .dash-slide-panel:first-child .stat-chip:nth-child(2) {
+            transition-delay: 0.15s;
+        }
+
+        .dash-slide-wrap:not(.en-detalle) .dash-slide-panel:first-child .stat-chip:nth-child(3) {
+            transition-delay: 0.20s;
+        }
+
+        .dash-slide-wrap:not(.en-detalle) .dash-slide-panel:first-child .stat-chip:nth-child(4) {
+            transition-delay: 0.25s;
+        }
+
+        .dash-slide-wrap:not(.en-detalle) .dash-slide-panel:first-child .stat-chip:nth-child(5) {
+            transition-delay: 0.30s;
+        }
+
+        .dash-slide-wrap:not(.en-detalle) .dash-slide-panel:first-child .stat-chip:nth-child(6) {
+            transition-delay: 0.35s;
+        }
+
+        .dash-slide-wrap:not(.en-detalle) .dash-slide-panel:first-child .stat-chip:nth-child(7) {
+            transition-delay: 0.40s;
+        }
+
 
         /* ============================================================
            EMPTY STATE
@@ -881,7 +1042,7 @@
         .filtro-toggle-track {
             position: absolute;
             inset: 0;
-            border-radius: 16px;
+            border-radius: var(--radius-pill);
             background: var(--border);
             transition: background 0.2s;
         }
@@ -897,7 +1058,7 @@
             height: 10px;
             left: 3px;
             top: 3px;
-            background: white;
+            background: var(--c-white);
             border-radius: 50%;
             transition: transform 0.2s;
         }
@@ -966,6 +1127,48 @@
         .canal-disp-item-vaciobtn {
             color: var(--text-muted);
             font-style: italic;
+        }
+
+        /* ============================================================
+           MODAL CONTENT — variante flex (sticky header/footer)
+        ============================================================ */
+        .modal-content--flex {
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        /* ============================================================
+           HOVERS (todos agrupados — solo pointer: fine)
+        ============================================================ */
+        @media (hover: hover) and (pointer: fine) {
+
+            .btn-edit:hover:not(:disabled),
+            .btn-delete:hover:not(:disabled),
+            .btn-backup:hover:not(:disabled),
+            .btn-cancel:hover:not(:disabled),
+            .icon-btn:hover:not(:disabled) {
+                filter: var(--hover);
+            }
+
+            .dispositivo-item:hover {
+                filter: var(--hover);
+            }
+
+            .canal-slot:hover {
+                filter: var(--hover);
+            }
+
+            .btn-estado-disp:hover:not(:disabled) {
+                filter: var(--hover);
+                opacity: 1;
+            }
+
+            .stat-chip-tipo:hover {
+                filter: var(--hover);
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+            }
         }
     </style>
 </head>
@@ -1069,6 +1272,17 @@
         <symbol id="icon-cancelar" viewBox="0 0 24 24">
             <line x1="18" y1="6" x2="6" y2="18" class="icon-line" stroke="currentColor"></line>
             <line x1="6" y1="6" x2="18" y2="18" class="icon-line" stroke="currentColor"></line>
+        </symbol>
+        <symbol id="icon-sliders" viewBox="0 0 24 24">
+            <line x1="4" y1="21" x2="4" y2="14" class="icon-line" stroke="currentColor"></line>
+            <line x1="4" y1="10" x2="4" y2="3" class="icon-line" stroke="currentColor"></line>
+            <line x1="12" y1="21" x2="12" y2="12" class="icon-line" stroke="currentColor"></line>
+            <line x1="12" y1="8" x2="12" y2="3" class="icon-line" stroke="currentColor"></line>
+            <line x1="20" y1="21" x2="20" y2="16" class="icon-line" stroke="currentColor"></line>
+            <line x1="20" y1="12" x2="20" y2="3" class="icon-line" stroke="currentColor"></line>
+            <line x1="1" y1="14" x2="7" y2="14" class="icon-line" stroke="currentColor"></line>
+            <line x1="9" y1="8" x2="15" y2="8" class="icon-line" stroke="currentColor"></line>
+            <line x1="17" y1="16" x2="23" y2="16" class="icon-line" stroke="currentColor"></line>
         </symbol>
         <symbol id="icon-external-link" viewBox="0 0 24 24">
             <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" fill="none" stroke="currentColor"
@@ -1185,9 +1399,15 @@
                     </svg>
                     Dispositivos
                     <span id="contador-dispositivos"
-                        style="font-size:0.78rem;font-weight:600;color:var(--text-muted);background:var(--input-bg);border-radius:99px;padding:0.1rem 0.6rem;margin-left:0.25rem"></span>
-                    <button class="icon-btn btn-edit" onclick="UI.abrirNuevoDispositivo()" title="Agregar dispositivo"
+                        style="font-size:0.78rem;font-weight:600;color:var(--text-muted);background:var(--input-bg);border-radius:var(--radius-pill);padding:0.1rem 0.6rem;margin-left:0.25rem"></span>
+                    <button class="icon-btn" onclick="UI.abrirVistaActivos()" title="Opciones de vista"
                         style="margin-left:auto;width:auto">
+                        <svg class="icon icon-line">
+                            <use href="#icon-sliders" />
+                        </svg>
+                    </button>
+                    <button class="icon-btn btn-edit" onclick="UI.abrirNuevoDispositivo()" title="Agregar dispositivo"
+                        style="width:auto">
                         <svg class="icon icon-line">
                             <use href="#icon-plus" />
                         </svg>
@@ -1270,7 +1490,9 @@
                 <div class="btn-group" style="margin-top:0">
                     <button onclick="UI.abrirTiposDispositivo()"
                         style="justify-content:center;gap:0.75rem;background:var(--input-bg);border:1px solid var(--border)">
-                        <svg class="icon icon-line"><use href="#icon-grid"/></svg>
+                        <svg class="icon icon-line">
+                            <use href="#icon-grid" />
+                        </svg>
                         Tipos de dispositivos
                     </button>
                 </div>
@@ -1293,24 +1515,33 @@
          MODAL — Tipos de dispositivo
     ============================================================ -->
     <div class="modal" id="modal-tipos-dispositivo">
-        <div class="modal-content" style="display:flex;flex-direction:column;padding:0;overflow:hidden">
-            <h3 style="padding:1.5rem 0.75rem 1rem;margin:0;position:sticky;top:0;background:var(--bg-card);z-index:2;border-bottom:1px solid var(--border)">
-                <svg class="icon icon-line"><use href="#icon-grid"/></svg>
+        <div class="modal-content modal-content--flex">
+            <h3
+                style="padding:1.5rem 0.75rem 1rem;margin:0;position:sticky;top:0;background:var(--bg-card);z-index:2;border-bottom:1px solid var(--border)">
+                <svg class="icon icon-line">
+                    <use href="#icon-grid" />
+                </svg>
                 Tipos de dispositivo
             </h3>
             <div style="flex:1;overflow-y:auto;padding:1rem 0.75rem">
                 <div id="lista-tipos-custom" style="margin-bottom:0.75rem"></div>
                 <div style="display:flex;gap:0.5rem;align-items:center">
-                    <input type="text" id="nuevo-tipo-label" placeholder="Ej: Router, PC, Joystick…" maxlength="30" style="flex:1">
+                    <input type="text" id="nuevo-tipo-label" placeholder="Ej: Router, PC, Joystick…" maxlength="30"
+                        style="flex:1">
                     <button onclick="UI.agregarTipoCustom()" class="icon-btn btn-edit" title="Agregar tipo">
-                        <svg class="icon icon-line"><use href="#icon-plus"/></svg>
+                        <svg class="icon icon-line">
+                            <use href="#icon-plus" />
+                        </svg>
                     </button>
                 </div>
             </div>
-            <div style="padding:0.75rem;border-top:1px solid var(--border);position:sticky;bottom:0;background:var(--bg-card);z-index:2">
+            <div
+                style="padding:0.75rem;border-top:1px solid var(--border);position:sticky;bottom:0;background:var(--bg-card);z-index:2">
                 <div class="btn-group" style="margin-top:0">
                     <button class="btn-cancel" onclick="UI.cerrarTiposDispositivo()">
-                        <svg class="icon icon-line"><use href="#icon-undo"/></svg>
+                        <svg class="icon icon-line">
+                            <use href="#icon-undo" />
+                        </svg>
                         Volver
                     </button>
                 </div>
@@ -1320,8 +1551,8 @@
 
     <!-- ====== BOTÓN SCROLL TOP ====== -->
     <button id="btn-scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Ir arriba"
-        style="display:none;position:fixed;bottom:1.5rem;right:1.25rem;z-index:80;width:44px;height:44px;min-width:unset;padding:0;border-radius:50%;background:var(--c-blue);color:white;box-shadow:0 2px 8px rgba(0,0,0,0.25);opacity:0;transition:opacity 0.25s,transform 0.25s;transform:translateY(8px)">
-        <svg style="width:1.1rem;height:1.1rem;stroke:white;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round"
+        style="display:none;position:fixed;bottom:1.5rem;right:1.25rem;z-index:80;width:44px;height:44px;min-width:unset;padding:0;border-radius:50%;background:var(--c-blue);color:var(--c-white);box-shadow:0 2px 8px rgba(0,0,0,0.25);opacity:0;transition:opacity 0.25s,transform 0.25s;transform:translateY(8px)">
+        <svg style="width:1.1rem;height:1.1rem;stroke:var(--c-white);fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round"
             viewBox="0 0 24 24">
             <polyline points="18 15 12 9 6 15" />
         </svg>
@@ -1410,7 +1641,7 @@
          MODAL — Editar Dispositivo
     ============================================================ -->
     <div class="modal" id="modal-editar-disp">
-        <div class="modal-content" style="display:flex;flex-direction:column;padding:0;overflow:hidden">
+        <div class="modal-content modal-content--flex">
             <h3
                 style="padding:1.5rem 0.75rem 1rem;margin:0;position:sticky;top:0;background:var(--bg-card);z-index:2;border-bottom:1px solid var(--border)">
                 <svg class="icon icon-line">
@@ -1452,7 +1683,7 @@
                     <div class="form-group">
                         <label>Marca</label>
                         <input type="text" id="editar-disp-marca" placeholder="Ej: Hikvision" maxlength="50">
-                    </div>                    
+                    </div>
                 </div>
 
                 <div class="form-row">
@@ -1483,6 +1714,29 @@
 
             <div
                 style="padding:0.75rem;border-top:1px solid var(--border);position:sticky;bottom:0;background:var(--bg-card);z-index:2;display:flex;flex-direction:column;gap:0.5rem">
+                <div class="btn-group" style="margin-top:0">
+                    <button id="btn-estado-averiado" class="icon-btn btn-estado-disp btn-estado-averiado"
+                        onclick="UI.toggleEstadoDisp('averiado')" title="Averiado" style="flex:1">
+                        <svg class="icon icon-line">
+                            <use href="#icon-alert" />
+                        </svg>
+                        Averiado
+                    </button>
+                    <button id="btn-estado-revisar" class="icon-btn btn-estado-disp btn-estado-revisar"
+                        onclick="UI.toggleEstadoDisp('revisar')" title="A revisar" style="flex:1">
+                        <svg class="icon icon-line">
+                            <use href="#icon-trash" />
+                        </svg>
+                        A revisar
+                    </button>
+                    <button id="btn-estado-desafectado" class="icon-btn btn-estado-disp btn-estado-desafectado"
+                        onclick="UI.toggleEstadoDisp('desafectado')" title="Desafectado" style="flex:1">
+                        <svg class="icon icon-line">
+                            <use href="#icon-cancelar" />
+                        </svg>
+                        Desafectado
+                    </button>
+                </div>
                 <div class="btn-group" style="margin-top:0">
                     <button class="btn-edit" onclick="UI.guardarEdicionDispositivo()">
                         <svg class="icon icon-line">
@@ -1601,7 +1855,7 @@
          MODAL — Asignar dispositivo a canal
     ============================================================ -->
     <div class="modal" id="modal-canal">
-        <div class="modal-content" style="display:flex;flex-direction:column;padding:0;overflow:hidden">
+        <div class="modal-content modal-content--flex">
             <h3
                 style="padding:1.5rem 0.75rem 1rem;margin:0;position:sticky;top:0;background:var(--bg-card);z-index:2;border-bottom:1px solid var(--border)">
                 <svg class="icon icon-line">
@@ -1633,7 +1887,7 @@
                                     left:0; right:0;
                                     background:var(--bg-card);
                                     border:1px solid var(--border);
-                                    border-radius:12px;
+                                    border-radius:var(--radius-sm);
                                     box-shadow:0 4px 16px rgba(0,0,0,0.15);
                                     max-height:220px;
                                     overflow-y:auto;
@@ -1679,7 +1933,7 @@
                 <div class="form-group">
                     <label>Comentarios</label>
                     <textarea id="canal-comentarios" placeholder="Notas adicionales…" rows="2" maxlength="300"
-                        style="resize:vertical;width:100%;box-sizing:border-box;padding:0.5rem;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:inherit;font-size:0.9rem"></textarea>
+                        style="resize:vertical;width:100%;box-sizing:border-box;padding:0.5rem;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-card);color:var(--text-main);font-family:inherit;font-size:0.9rem"></textarea>
                 </div>
             </div>
 
@@ -1739,6 +1993,29 @@
                 </button>
                 <button class="btn-cancel" onclick="UI.cerrarImportar()">Cancelar</button>
             </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         MODAL — Vista de activos
+    ============================================================ -->
+    <div class="modal" id="modal-vista-activos">
+        <div class="modal-content" style="max-width:360px">
+            <h3>
+                <svg class="icon icon-line">
+                    <use href="#icon-sliders" />
+                </svg>
+                Vista de activos
+            </h3>
+            <p style="font-size:0.85rem;color:var(--text-muted);line-height:1.5;margin-bottom:1.5rem">
+                Próximamente: opciones para personalizar cómo se muestran los dispositivos.
+            </p>
+            <button class="btn-cancel" onclick="UI.cerrarVistaActivos()">
+                <svg class="icon icon-line">
+                    <use href="#icon-cancelar" />
+                </svg>
+                Cerrar
+            </button>
         </div>
     </div>
 
@@ -2008,7 +2285,7 @@
             function _sanDisp(d) {
                 const tipo = S.TIPOS[d.tipo] ? d.tipo : 'otro';
                 const FORMAS = ['domo', 'bullet', 'turret', 'minidomo', 'minibullet', 'domo-ptz'];
-                const ESTADOS = ['', 'averiado', 'baja', 'desafectado'];
+                const ESTADOS = ['', 'averiado', 'revisar', 'desafectado'];
                 const obj = {
                     id: d.id || S.genId(),
                     tipo,
@@ -2158,38 +2435,131 @@
             }
 
             /* ---------- DASHBOARD ---------- */
+            // estado actualmente expandido en el resumen
+            let _dashTipoAbierto = null;
+
+            function _estadosDeDisps(dispsDelTipo, idsEnProd) {
+                // Devuelve objeto con conteos de estados para un array de dispositivos
+                const res = { produccion: 0, disponible: 0, averiado: 0, revisar: 0, desafectado: 0 };
+                dispsDelTipo.forEach(d => {
+                    if (d.estado === 'averiado') res.averiado++;
+                    else if (d.estado === 'revisar') res.revisar++;
+                    else if (d.estado === 'desafectado') res.desafectado++;
+                    else if (idsEnProd.has(d.id)) res.produccion++;
+                    else res.disponible++;
+                });
+                return res;
+            }
+
+            function _toggleTipoDetalle(tipoKey) {
+                _dashTipoAbierto = _dashTipoAbierto === tipoKey ? null : tipoKey;
+                renderDashboard();
+            }
+
             function renderDashboard() {
                 const disps = _data.dispositivos;
                 const grabs = _data.grabadores;
 
-                const nGrabadores = disps.filter(d => ['nvr', 'dvr'].includes(d.tipo)).length;
-                const nCamaras = disps.filter(d => d.tipo === 'camara').length;
-                const nOtros = disps.filter(d => !['nvr', 'dvr', 'camara'].includes(d.tipo)).length;
+                // IDs de dispositivos asignados a algún canal de grabador,
+                // más los dispositivos DVR/NVR vinculados directamente a un grabador
+                const idsEnProd = new Set([
+                    ...grabs.flatMap(g => g.canales_data.filter(c => c.dispositivoId).map(c => c.dispositivoId)),
+                    ...grabs.filter(g => g.dispositivoId).map(g => g.dispositivoId),
+                ]);
 
-                // resumen general — mosaicos
+                // ── Resumen general ──────────────────────────────────────
                 (() => {
-                    const idsEnProd = new Set(
-                        grabs.flatMap(g => g.canales_data.filter(c => c.dispositivoId).map(c => c.dispositivoId))
-                    );
-                    const tiles = [
-                        { label: 'Dispositivos en total', n: disps.length },
-                        { label: 'Cámaras en producción', n: disps.filter(d => d.tipo === 'camara' && idsEnProd.has(d.id)).length },
-                        { label: 'Grabadores operativos', n: grabs.length },
+                    const tiposConDisps = new Set(disps.map(d => d.tipo));
+                    const tiposBuitin = Object.keys(S.TIPOS_BUILTIN);
+                    const tiposCustom = Object.keys(S.TIPOS).filter(k => !S.TIPOS_BUILTIN[k] && tiposConDisps.has(k)).sort();
+                    const tiposOrden = [...tiposBuitin, ...tiposCustom];
+
+                    const ESTADOS_DEFS = [
+                        { key: 'produccion', label: 'En producción' },
+                        { key: 'disponible', label: 'Disponibles' },
+                        { key: 'averiado', label: 'Averiados' },
+                        { key: 'revisar', label: 'A revisar' },
+                        { key: 'desafectado', label: 'Desafectados' },
                     ];
-                    document.getElementById('dash-disp-tree').innerHTML =
-                        `<div class="dashboard-grid">` +
-                        tiles.map(t => `
+
+                    // ── Panel izquierdo: total + tipos ──
+                    const chipTotal = `
+                    <div class="stat-chip">
+                        <div class="stat-chip-valor">${disps.length}</div>
+                        <div class="stat-chip-label">Dispositivos en total</div>
+                    </div>`;
+
+                    const chipsTipo = tiposOrden.map(tipoKey => {
+                        const tc = S.TIPOS[tipoKey];
+                        if (!tc) return '';
+                        const n = disps.filter(d => d.tipo === tipoKey).length;
+                        const esActivo = _dashTipoAbierto === tipoKey;
+                        return `
+                        <div class="stat-chip stat-chip-tipo${esActivo ? ' activo' : ''}" onclick="_toggleTipoDetalle('${tipoKey}')">
+                            <div class="stat-chip-valor">${n}</div>
+                            <div class="stat-chip-label">${tc.emoji} ${tc.label}s</div>
+                            <span class="stat-chip-arrow">▶</span>
+                        </div>`;
+                    }).join('');
+
+                    const panelIzq = `<div class="dashboard-grid">${chipTotal}${chipsTipo}</div>`;
+
+                    // ── Panel derecho: chip seleccionado + estados ──
+                    let panelDer = '<div class="dashboard-grid"></div>';
+                    if (_dashTipoAbierto && S.TIPOS[_dashTipoAbierto]) {
+                        const tc = S.TIPOS[_dashTipoAbierto];
+                        const n = disps.filter(d => d.tipo === _dashTipoAbierto).length;
+                        const dispsDelTipo = disps.filter(d => d.tipo === _dashTipoAbierto);
+                        const est = { produccion: 0, disponible: 0, averiado: 0, revisar: 0, desafectado: 0 };
+                        dispsDelTipo.forEach(d => {
+                            if (d.estado === 'averiado') est.averiado++;
+                            else if (d.estado === 'revisar') est.revisar++;
+                            else if (d.estado === 'desafectado') est.desafectado++;
+                            else if (idsEnProd.has(d.id)) est.produccion++;
+                            else est.disponible++;
+                        });
+
+                        const chipSeleccionado = `
+                        <div class="stat-chip stat-chip-tipo activo" onclick="_toggleTipoDetalle('${_dashTipoAbierto}')">
+                            <div class="stat-chip-valor">${n}</div>
+                            <div class="stat-chip-label">${tc.emoji} ${tc.label}s</div>
+                            <span class="stat-chip-arrow">▶</span>
+                        </div>`;
+
+                        const chipsEstado = ESTADOS_DEFS.map(e => `
                         <div class="stat-chip">
-                            <div class="stat-chip-valor">${t.n}</div>
-                            <div class="stat-chip-label">${t.label}</div>
-                        </div>`).join('') +
-                        `</div>`;
+                            <div class="stat-chip-valor">${est[e.key]}</div>
+                            <div class="stat-chip-label">${e.label}</div>
+                        </div>`).join('');
+
+                        panelDer = `<div class="dashboard-grid">${chipSeleccionado}${chipsEstado}</div>`;
+                    }
+
+                    const contenedor = document.getElementById('dash-disp-tree');
+                    const enDetalle = !!(_dashTipoAbierto && S.TIPOS[_dashTipoAbierto]);
+
+                    // primera vez: construir estructura, luego solo actualizar contenido y clase
+                    let wrap = contenedor.querySelector('.dash-slide-wrap');
+                    if (!wrap) {
+                        contenedor.innerHTML = `<div class="dash-slide-wrap">
+                            <div class="dash-slide-panel">${panelIzq}</div>
+                            <div class="dash-slide-panel">${panelDer}</div>
+                        </div>`;
+                        wrap = contenedor.querySelector('.dash-slide-wrap');
+                        // forzar reflow para que la transición inicial no se salte
+                        wrap.getBoundingClientRect();
+                    } else {
+                        wrap.querySelector('.dash-slide-panel:first-child').innerHTML = panelIzq;
+                        wrap.querySelector('.dash-slide-panel:last-child').innerHTML = panelDer;
+                    }
+
+                    // aplicar clase con un pequeño delay para que el DOM pinte primero
+                    requestAnimationFrame(() => {
+                        wrap.classList.toggle('en-detalle', enDetalle);
+                    });
                 })();
 
-                // chips de canales — eliminados
-
-
-                // grabadores resumen
+                // ── Grabadores resumen ───────────────────────────────────
                 document.getElementById('dash-grabadores').innerHTML = grabs.length === 0
                     ? `<div style="color:var(--text-disabled);font-size:0.85rem">Sin grabadores en producción</div>`
                     : grabs.map(g => {
@@ -2199,23 +2569,19 @@
                         return `<div style="padding:0.6rem 0;border-bottom:1px solid var(--border)">
                         <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.3rem">
                             <span style="font-weight:700;font-size:0.92rem">${esc(g.descripcion)}</span>
-                            <span class="badge badge-${g.tipo}">${g.tipo.toUpperCase()}</span>
+                            <span class="badge badge-${g.tipo}-filled">${g.tipo.toUpperCase()}</span>
                             <span style="margin-left:auto;font-size:0.78rem;color:var(--text-muted)">${g.ip ? esc(g.ip) : ''}</span>
                         </div>
                         <div style="font-size:0.8rem;color:var(--text-muted)">${ocup}/${g.canales_n} canales ocupados · ${libre} libres</div>
-                        <div style="height:4px;background:var(--border);border-radius:99px;margin-top:0.4rem;overflow:hidden">
-                            <div style="height:100%;width:${pct}%;background:var(--c-blue);border-radius:99px;transition:width 0.4s"></div>
+                        <div style="height:4px;background:var(--border);border-radius:var(--radius-pill);margin-top:0.4rem;overflow:hidden">
+                            <div style="height:100%;width:${pct}%;background:var(--c-blue);border-radius:var(--radius-pill);transition:width 0.4s"></div>
                         </div>
                     </div>`;
                     }).join('');
 
-                // cámaras resumen
+                // ── Cámaras resumen ──────────────────────────────────────
                 const camarasDisps = disps.filter(d => d.tipo === 'camara');
-                // "en producción" = asignadas a al menos un canal de algún grabador
-                const idsEnProduccion = new Set(
-                    grabs.flatMap(g => g.canales_data.filter(c => c.dispositivoId).map(c => c.dispositivoId))
-                );
-                const enProd = camarasDisps.filter(d => idsEnProduccion.has(d.id)).length;
+                const enProd = camarasDisps.filter(d => idsEnProd.has(d.id)).length;
                 const disponibles = camarasDisps.length - enProd;
 
                 document.getElementById('dash-camaras').innerHTML = `
@@ -2233,8 +2599,8 @@
                         <span style="font-size:1.2rem;font-weight:700;color:var(--c-green)">${disponibles}</span>
                     </div>
                     ${camarasDisps.length > 0 ? `
-                    <div style="height:4px;background:var(--border);border-radius:99px;overflow:hidden">
-                        <div style="height:100%;width:${camarasDisps.length ? Math.round((enProd / camarasDisps.length) * 100) : 0}%;background:var(--c-blue);border-radius:99px;transition:width 0.4s"></div>
+                    <div style="height:4px;background:var(--border);border-radius:var(--radius-pill);overflow:hidden">
+                        <div style="height:100%;width:${camarasDisps.length ? Math.round((enProd / camarasDisps.length) * 100) : 0}%;background:var(--c-blue);border-radius:var(--radius-pill);transition:width 0.4s"></div>
                     </div>` : ''}
                     ${camarasDisps.length === 0 ? `<div style="color:var(--text-disabled);font-size:0.85rem">Sin cámaras registradas</div>` : ''}
                 </div>`;
@@ -2291,6 +2657,22 @@
                             .filter(([k, v]) => v && _busqActivos.has(k))
                             .map(([, v]) => v.toLowerCase());
 
+                        // estado efectivo + aliases de búsqueda
+                        let estadoTextos = [];
+                        if (_busqActivos.has('estado')) {
+                            const estadoEfectivo = d.estado
+                                ? d.estado                          // averiado | revisar | desafectado
+                                : (asigD ? 'produccion' : 'disponible');
+                            const ESTADO_ALIAS = {
+                                produccion: ['produccion', 'producción', 'operativo', 'en produccion', 'en producción'],
+                                disponible: ['disponible'],
+                                averiado: ['averiado'],
+                                revisar: ['revisar', 'a revisar'],
+                                desafectado: ['desafectado'],
+                            };
+                            estadoTextos = ESTADO_ALIAS[estadoEfectivo] || [estadoEfectivo];
+                        }
+
                         let total = 0;
                         for (const t of tokens) {
                             const re = new RegExp('(?<![a-z0-9])' + t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![a-z0-9])', 'i');
@@ -2301,6 +2683,8 @@
                             if (campos.some(c => c.includes(t))) { total += 4; continue; } // substring en campo
                             if (hayCanal && re.test(hayCanal)) { total += 5; continue; } // palabra en canal
                             if (hayCanal && hayCanal.includes(t)) { total += 6; continue; } // substring en canal
+                            if (estadoTextos.some(s => s === t)) { total += 1; continue; } // estado exacto
+                            if (estadoTextos.some(s => s.includes(t))) { total += 2; continue; } // substring estado
                             return Infinity; // token no encontrado → excluir
                         }
                         return total;
@@ -2334,10 +2718,11 @@
                     const tc = S.TIPOS[d.tipo] || { emoji: '📦', label: d.tipo, badge: 'badge-otro' };
                     const titulo = d.mac || d.serial || '—';
                     const subtitulo = d.modelo ? esc(d.modelo) : '';
-                    // estado: averiado/baja/desafectado vienen del campo; produccion/disponible se derivan
                     const estadoClase = d.estado
                         ? `estado-${d.estado}`
                         : (asignaciones[d.id] ? 'estado-produccion' : 'estado-disponible');
+                    // badge de tipo/forma: siempre muestra el tipo (nunca el estado)
+                    const tipoBadgeLabel = (d.tipo === 'camara' && d.forma ? d.forma.replace(/-/g, ' ') : tc.label).toUpperCase();
                     let asignInfo = '';
                     const asig = asignaciones[d.id];
                     if (asig) {
@@ -2352,18 +2737,37 @@
                             asignInfo = partes.join(' · ');
                         }
                     }
+                    // el badge de estado va a la derecha, en el lugar de asignInfo
+                    // solo se omite cuando está en producción (asignInfo ya muestra los datos del grabador)
+                    const ESTADO_BADGE_INFO = {
+                        averiado: { label: 'Averiado', clase: 'badge-estado-averiado' },
+                        revisar: { label: 'A revisar', clase: 'badge-estado-revisar' },
+                        desafectado: { label: 'Desafectado', clase: 'badge-estado-desafectado' },
+                        disponible: { label: 'Disponible', clase: 'badge-estado-disponible' },
+                    };
+                    const estadoEfectivo = d.estado || (asig ? 'produccion' : 'disponible');
+                    const estadoBadgeInfo = ESTADO_BADGE_INFO[estadoEfectivo]; // null cuando es 'produccion'
+                    const estadoBadgeHtml = estadoBadgeInfo
+                        ? `<span class="badge ${estadoBadgeInfo.clase}" style="white-space:nowrap">${estadoBadgeInfo.label}</span>`
+                        : '';
+                    const derechaHtml = estadoBadgeHtml || asignInfo
+                        ? `<div style="font-size:0.78rem;color:var(--text-muted);text-align:right;flex-shrink:0;max-width:40%;line-height:1.35;overflow:hidden;display:flex;flex-direction:column;align-items:flex-end;gap:0.2rem">
+                            ${estadoBadgeHtml}
+                            ${asignInfo ? asignInfo.replace(/<div>/g, '<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">') : ''}
+                           </div>`
+                        : '';
                     return `<div class="dispositivo-item tipo-${esc(d.tipo)} ${estadoClase} anim-in"
                         onclick="UI.abrirEditarDispositivo('${esc(d.id)}')">
                     <div class="dispositivo-info">
                         <div class="dispositivo-nombre">${tc.emoji} ${esc(titulo)}</div>
                         <div class="dispositivo-meta">
-                            <span class="badge badge-${estadoClase}">${d.tipo === 'camara' && d.forma ? d.forma.replace(/-/g, ' ') : tc.label}</span>
+                            <span class="badge ${tc.badge || 'badge-otro'}">${tipoBadgeLabel}</span>
                             ${subtitulo ? `<span>${subtitulo}</span>` : ''}
                             ${d.serial && d.mac ? `<span>S/N: ${esc(d.serial)}</span>` : ''}
                             ${d.patrimonio ? `<span>PAT: ${esc(d.patrimonio)}</span>` : ''}
                         </div>
                     </div>
-                    ${asignInfo ? `<div style="font-size:0.78rem;color:var(--text-muted);text-align:right;flex-shrink:0;max-width:40%;line-height:1.35;overflow:hidden;display:flex;flex-direction:column;gap:0.1rem">${asignInfo.replace(/<div>/g, '<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">')}</div>` : ''}
+                    ${derechaHtml}
                 </div>`;
                 }
 
@@ -2410,7 +2814,7 @@
                         <div class="nvr-card-header-info">
                             <div class="nvr-card-nombre">
                                 ${g.tipo === 'nvr' ? '📟' : '📼'} ${esc(g.descripcion)}
-                                <span class="badge badge-${g.tipo}" style="margin-left:0.3rem">${g.tipo.toUpperCase()}</span>
+                                <span class="badge badge-${g.tipo}-filled" style="margin-left:0.3rem">${g.tipo.toUpperCase()}</span>
                             </div>
                             <div class="nvr-card-meta">
                                 ${g.marca ? esc(g.marca) + ' ' : ''}${g.modelo ? esc(g.modelo) : ''}
@@ -2432,6 +2836,7 @@
             // UI — CONTROLADOR PÚBLICO
             // ==============================================================
             let _editandoDispId = null;
+            let _estadoEditando = ''; // estado seleccionado en el modal editar dispositivo
             let _editandoGrabId = null;
             let _snapshotDisp = null;   // snapshot al abrir modal editar dispositivo
             let _snapshotGrab = null;   // snapshot al abrir modal editar grabador
@@ -2443,6 +2848,14 @@
             let _canalDispOcupados = new Set();
             let _canalDispHighlight = -1;
             let _tabActual = 'dashboard';
+
+            function _actualizarBotonesEstado(estadoActual) {
+                _estadoEditando = estadoActual;
+                ['averiado', 'revisar', 'desafectado'].forEach(e => {
+                    const btn = document.getElementById(`btn-estado-${e}`);
+                    if (btn) btn.classList.toggle('activo', estadoActual === e);
+                });
+            }
             const KEY_EXPANDED = 'cctv_grab_expanded';
             // Set de IDs expandidos (abiertos). Por defecto todos cerrados.
             const _grabExpanded = (() => {
@@ -2468,6 +2881,7 @@
                 { id: 'patrimonio', label: 'Patrimonio' },
                 { id: 'forma', label: 'Forma (cámara)' },
                 { id: 'canal', label: 'Descripción de canal' },
+                { id: 'estado', label: 'Estado' },
             ];
             const KEY_BUSQ = 'cctv_busq_activos';
             const _busqActivos = (() => {
@@ -2506,6 +2920,14 @@
                     const label = document.getElementById('label-tema');
                     if (label) label.textContent = oscuro ? 'Modo claro' : 'Modo oscuro';
                     MM.abrir('modal-ajustes');
+                },
+
+                abrirVistaActivos() {
+                    MM.abrir('modal-vista-activos');
+                },
+
+                cerrarVistaActivos() {
+                    MM.cerrar('modal-vista-activos');
                 },
 
                 abrirFiltrosBusqueda() {
@@ -2602,7 +3024,7 @@
                         <div style="display:flex;align-items:center;gap:0.5rem;padding:0.35rem 0;border-bottom:1px solid var(--border)">
                             <span style="font-size:1.1rem;width:28px;text-align:center">${v.emoji}</span>
                             <span style="flex:1;font-size:0.9rem">${esc(v.label)}</span>
-                            <button onclick="UI.eliminarTipoCustom('${esc(k)}')" class="icon-btn btn-delete" style="width:32px;height:32px;min-width:unset;color:white" title="Eliminar tipo">
+                            <button onclick="UI.eliminarTipoCustom('${esc(k)}')" class="icon-btn btn-delete" style="width:32px;height:32px;min-width:unset;color:var(--c-white)" title="Eliminar tipo">
                                 <svg class="icon icon-line" style="width:14px;height:14px"><use href="#icon-trash"/></svg>
                             </button>
                         </div>`).join('');
@@ -2794,16 +3216,16 @@
                     // aviso de restricciones
                     let avisoHtml = '';
                     if (enProduccionComoGrab && canalesOcupados > 0) {
-                        avisoHtml = `<div id="aviso-prod-disp" style="font-size:0.8rem;background:var(--input-bg);border-radius:12px;padding:0.6rem 0.75rem;margin-bottom:0.75rem;line-height:1.45">
+                        avisoHtml = `<div id="aviso-prod-disp" style="font-size:0.8rem;background:var(--input-bg);border-radius:var(--radius-sm);padding:0.6rem 0.75rem;margin-bottom:0.75rem;line-height:1.45">
                             ⚠️ Este grabador está en producción con <strong>${canalesOcupados} canal(es) ocupado(s)</strong>.<br>
                             No se puede cambiar el tipo, canales ni eliminar mientras tenga cámaras asignadas.
                         </div>`;
                     } else if (enProduccionComoGrab) {
-                        avisoHtml = `<div id="aviso-prod-disp" style="font-size:0.8rem;background:var(--input-bg);border-radius:12px;padding:0.6rem 0.75rem;margin-bottom:0.75rem;line-height:1.45">
+                        avisoHtml = `<div id="aviso-prod-disp" style="font-size:0.8rem;background:var(--input-bg);border-radius:var(--radius-sm);padding:0.6rem 0.75rem;margin-bottom:0.75rem;line-height:1.45">
                             ℹ️ Este grabador está en producción. No se puede eliminar
                         </div>`;
                     } else if (enProduccionComoCanal) {
-                        avisoHtml = `<div id="aviso-prod-disp" style="font-size:0.8rem;background:var(--input-bg);border-radius:12px;padding:0.6rem 0.75rem;margin-bottom:0.75rem;line-height:1.45">
+                        avisoHtml = `<div id="aviso-prod-disp" style="font-size:0.8rem;background:var(--input-bg);border-radius:var(--radius-sm);padding:0.6rem 0.75rem;margin-bottom:0.75rem;line-height:1.45">
                             ℹ️ Este dispositivo está asignado a un grabador en producción. No se puede eliminar
                         </div>`;
                     }
@@ -2829,6 +3251,7 @@
                     // snapshot para detectar cambios al guardar
                     _snapshotDisp = {
                         tipo: d.tipo,
+                        estado: d.estado || '',
                         marca: d.marca,
                         modelo: d.modelo,
                         serial: d.serial || '',
@@ -2837,6 +3260,18 @@
                         forma: d.forma || '',
                         canales: String(d.canales || 16),
                     };
+
+                    // ── Botones de estado ──
+                    _actualizarBotonesEstado(d.estado || '');
+
+                    // grabadores en producción: deshabilitar botones de estado
+                    ['averiado', 'revisar', 'desafectado'].forEach(e => {
+                        const btn = document.getElementById(`btn-estado-${e}`);
+                        if (btn) {
+                            btn.disabled = enProduccionComoGrab;
+                            btn.title = enProduccionComoGrab ? 'No se puede cambiar el estado: el grabador está en producción' : '';
+                        }
+                    });
 
                     MM.abrir('modal-editar-disp');
                     // etiqueta del botón cerrar: "Volver" si viene desde Ver activo del canal
@@ -2848,6 +3283,7 @@
 
                 cerrarModalEditarDispositivo() {
                     MM.cerrar('modal-editar-disp');
+                    _estadoEditando = '';
                     const volver = _volverDesdeCanal;
                     const grabId = _editandoCanalGrabId;
                     const canalN = _editandoCanalN;
@@ -2858,7 +3294,13 @@
                     }
                 },
 
-                guardarEdicionDispositivo() {
+                toggleEstadoDisp(estado) {
+                    // Si ya está activo, lo quita (vuelve a sin estado); si no, lo activa
+                    const nuevo = _estadoEditando === estado ? '' : estado;
+                    _actualizarBotonesEstado(nuevo);
+                },
+
+                async guardarEdicionDispositivo() {
                     const prefijo = 'editar-disp';
                     const tipo = document.getElementById(`${prefijo}-tipo`).value;
                     const macRaw = document.getElementById(`${prefijo}-mac`).value.trim();
@@ -2915,6 +3357,7 @@
 
                     const base = {
                         tipo,
+                        estado: _estadoEditando,
                         marca: document.getElementById(`${prefijo}-marca`).value.trim(),
                         modelo: document.getElementById(`${prefijo}-modelo`).value.trim(),
                         serial,
@@ -2927,6 +3370,7 @@
                     // detectar cambios respecto al snapshot
                     const nuevoSnap = {
                         tipo: obj.tipo,
+                        estado: obj.estado || '',
                         marca: obj.marca,
                         modelo: obj.modelo,
                         serial: obj.serial || '',
@@ -2937,6 +3381,28 @@
                     };
                     const huboCambios = JSON.stringify(nuevoSnap) !== JSON.stringify(_snapshotDisp);
                     if (!huboCambios) { toast('Sin cambios', 'info'); MM.cerrar('modal-editar-disp'); _editandoDispId = null; _snapshotDisp = null; return; }
+
+                    // ── Confirm desasignación de canal si el estado cambia a averiado/revisar/desafectado ──
+                    const estadosConDesasignacion = ['averiado', 'revisar', 'desafectado'];
+                    const esCamara = dispActual && !['nvr', 'dvr'].includes(dispActual.tipo);
+                    const estadoCambioAInactivo = estadosConDesasignacion.includes(_estadoEditando) &&
+                        !estadosConDesasignacion.includes(_snapshotDisp?.estado || '');
+                    if (esCamara && estadoCambioAInactivo) {
+                        // buscar si tiene canal asignado
+                        let grabConCanal = null, slotConCanal = null;
+                        for (const g of _data.grabadores) {
+                            const slot = g.canales_data.find(c => c.dispositivoId === _editandoDispId);
+                            if (slot) { grabConCanal = g; slotConCanal = slot; break; }
+                        }
+                        if (grabConCanal && slotConCanal) {
+                            const LABELS = { averiado: 'Averiado', revisar: 'A revisar', desafectado: 'Desafectado' };
+                            const msg = `Marcar como "${LABELS[_estadoEditando]}" quitará este dispositivo del Canal ${slotConCanal.canal} del ${grabConCanal.descripcion}\n ¿Confirmar?`;
+                            const ok = await confirmarModal(msg, 'Guardar');
+                            if (!ok) return;
+                            // desasignar: limpiar solo el dispositivoId del slot, conservar el resto
+                            slotConCanal.dispositivoId = '';
+                        }
+                    }
 
                     const idx = _data.dispositivos.findIndex(x => x.id === _editandoDispId);
                     if (idx !== -1) _data.dispositivos[idx] = obj;
@@ -3192,13 +3658,13 @@
                     // snapshot para detectar cambios al guardar
                     _snapshotCanal = {
                         dispositivoId: slot?.dispositivoId || '',
-                        descripcion:   slot?.descripcion  || '',
-                        ip:            slot?.ip           || '',
-                        puerto:        slot?.puerto       || '',
-                        edificio:      slot?.edificio     || '',
-                        piso:          slot?.piso         || '',
-                        rack:          slot?.rack         || '',
-                        comentarios:   slot?.comentarios  || '',
+                        descripcion: slot?.descripcion || '',
+                        ip: slot?.ip || '',
+                        puerto: slot?.puerto || '',
+                        edificio: slot?.edificio || '',
+                        piso: slot?.piso || '',
+                        rack: slot?.rack || '',
+                        comentarios: slot?.comentarios || '',
                     };
 
                     document.getElementById('canal-descripcion').value = slot?.descripcion || '';
@@ -3246,14 +3712,27 @@
                     // opción "vacío" siempre primera
                     items.push(`<div class="canal-disp-item canal-disp-item-vaciobtn" data-id="" data-idx="0">— Vacío —</div>`);
 
+                    const ESTADO_LABELS_DISP = { averiado: 'averiado', revisar: 'a revisar', desafectado: 'desafectado' };
                     filtrados.forEach((d, i) => {
                         const ocupado = _canalDispOcupados.has(d.id);
+                        const estadoInactivo = ESTADO_LABELS_DISP[d.estado] || '';
+                        const deshabilitado = ocupado || !!estadoInactivo;
                         const mac = esc(d.mac || d.serial || d.id);
                         const formaLabel = d.forma ? d.forma.replace(/-/g, ' ') : '';
                         const sub = [formaLabel, d.modelo].filter(Boolean).join(' · ');
                         const tipo = S.TIPOS[d.tipo];
-                        items.push(`<div class="canal-disp-item${ocupado ? ' ocupado' : ''}" data-id="${esc(d.id)}" data-mac="${esc(d.mac || d.serial || '')}" data-idx="${i + 1}" ${ocupado ? 'title="Ya asignado a otro canal"' : ''}>
-                            <div class="canal-disp-item-mac">${tipo?.emoji || ''} ${mac}${ocupado ? ' <span style=\'font-size:0.75rem\'>(ocupado)</span>' : ''}</div>
+                        const etiqueta = ocupado
+                            ? ' <span style=\'font-size:0.75rem\'>(ocupado)</span>'
+                            : estadoInactivo
+                                ? ` <span style='font-size:0.75rem'>(${estadoInactivo})</span>`
+                                : '';
+                        const titleAttr = ocupado
+                            ? 'title="Ya asignado a otro canal"'
+                            : estadoInactivo
+                                ? `title="No disponible: ${estadoInactivo}"`
+                                : '';
+                        items.push(`<div class="canal-disp-item${deshabilitado ? ' ocupado' : ''}" data-id="${esc(d.id)}" data-mac="${esc(d.mac || d.serial || '')}" data-idx="${i + 1}" ${titleAttr}>
+                            <div class="canal-disp-item-mac">${tipo?.emoji || ''} ${mac}${etiqueta}</div>
                             ${sub ? `<div class="canal-disp-item-sub">${esc(sub)}</div>` : ''}
                         </div>`);
                     });
@@ -3363,28 +3842,28 @@
                     if (!validarCampoIP('canal-ip')) return;
                     const nuevoSnapCanal = {
                         dispositivoId: document.getElementById('sel-canal-dispositivo').value || '',
-                        descripcion:   document.getElementById('canal-descripcion').value.trim(),
-                        ip:            document.getElementById('canal-ip').value.trim(),
-                        puerto:        document.getElementById('canal-puerto').value.trim(),
-                        edificio:      document.getElementById('canal-edificio').value.trim(),
-                        piso:          document.getElementById('canal-piso').value.trim(),
-                        rack:          document.getElementById('canal-rack').value.trim(),
-                        comentarios:   document.getElementById('canal-comentarios').value.trim(),
+                        descripcion: document.getElementById('canal-descripcion').value.trim(),
+                        ip: document.getElementById('canal-ip').value.trim(),
+                        puerto: document.getElementById('canal-puerto').value.trim(),
+                        edificio: document.getElementById('canal-edificio').value.trim(),
+                        piso: document.getElementById('canal-piso').value.trim(),
+                        rack: document.getElementById('canal-rack').value.trim(),
+                        comentarios: document.getElementById('canal-comentarios').value.trim(),
                     };
                     const huboCambiosCanal = JSON.stringify(nuevoSnapCanal) !== JSON.stringify(_snapshotCanal);
                     if (!huboCambiosCanal) { toast('Sin cambios', 'info'); MM.cerrar('modal-canal'); _editandoCanalGrabId = null; _editandoCanalN = null; _snapshotCanal = null; return; }
 
                     slot.dispositivoId = nuevoSnapCanal.dispositivoId || null;
-                    slot.descripcion   = nuevoSnapCanal.descripcion;
-                    slot.ip            = nuevoSnapCanal.ip;
-                    slot.puerto        = nuevoSnapCanal.puerto;
-                    slot.edificio      = nuevoSnapCanal.edificio;
-                    slot.piso          = nuevoSnapCanal.piso;
-                    slot.rack          = nuevoSnapCanal.rack;
-                    slot.comentarios   = nuevoSnapCanal.comentarios;
+                    slot.descripcion = nuevoSnapCanal.descripcion;
+                    slot.ip = nuevoSnapCanal.ip;
+                    slot.puerto = nuevoSnapCanal.puerto;
+                    slot.edificio = nuevoSnapCanal.edificio;
+                    slot.piso = nuevoSnapCanal.piso;
+                    slot.rack = nuevoSnapCanal.rack;
+                    slot.comentarios = nuevoSnapCanal.comentarios;
                     guardar(); render(); MM.cerrar('modal-canal');
                     // mensaje según qué cambió
-                    const fueAsignado   = !_snapshotCanal.dispositivoId && nuevoSnapCanal.dispositivoId;
+                    const fueAsignado = !_snapshotCanal.dispositivoId && nuevoSnapCanal.dispositivoId;
                     const fueDesasignado = _snapshotCanal.dispositivoId && !nuevoSnapCanal.dispositivoId;
                     const msg = fueAsignado ? 'Dispositivo asignado' : fueDesasignado ? 'Canal liberado' : 'Canal actualizado';
                     toast(msg, 'success');
@@ -3629,13 +4108,13 @@
                 const modalAbierto = document.querySelector('.modal.show');
                 if (!modalAbierto) return;
                 const accion = {
-                    'modal-nuevo-disp':   () => UI.guardarNuevoDispositivo(),
-                    'modal-editar-disp':  () => UI.guardarEdicionDispositivo(),
-                    'modal-nuevo-grab':   () => UI.guardarNuevoGrabador(),
-                    'modal-editar-grab':  () => UI.guardarEdicionGrabador(),
-                    'modal-canal':        () => UI.guardarAsignacionCanal(),
+                    'modal-nuevo-disp': () => UI.guardarNuevoDispositivo(),
+                    'modal-editar-disp': () => UI.guardarEdicionDispositivo(),
+                    'modal-nuevo-grab': () => UI.guardarNuevoGrabador(),
+                    'modal-editar-grab': () => UI.guardarEdicionGrabador(),
+                    'modal-canal': () => UI.guardarAsignacionCanal(),
                     'modal-tipos-dispositivo': () => UI.agregarTipoCustom(),
-                    'modal-confirmar':    () => document.getElementById('modal-confirmar-ok')?.click(),
+                    'modal-confirmar': () => document.getElementById('modal-confirmar-ok')?.click(),
                 }[modalAbierto.id];
                 if (accion) { e.preventDefault(); accion(); }
             });
@@ -3696,6 +4175,7 @@
             // ARRANQUE
             // ==============================================================
             window.UI = UI;
+            window._toggleTipoDetalle = _toggleTipoDetalle;
             cargar();
             render();
 
@@ -3721,14 +4201,13 @@
 
 <!--
 // ====================================================================
-//         NOTAS CCTV ACTIVOS VERSION 173
+//         NOTAS CCTV ACTIVOS VERSION 189
 // ====================================================================
 
  - PENDIENTE (futuras iteraciones):
    · Undo/redo
-   · Filtros y búsqueda en activos
-   · Estado del dispositivo (activo/baja/mantenimiento)
-   · Más campos (ubicación, fecha instalación, notas)
+   · Filtros de vista en activos   
+   · Más campos (fecha instalación)
    · Vista de árbol / diagrama de red
 
 -->
