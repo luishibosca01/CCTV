@@ -16,7 +16,7 @@
         frame-ancestors 'none';
         upgrade-insecure-requests;">
     <meta name="referrer" content="no-referrer">
-    <title>CCTV — Control de Activos v198</title>
+    <title>CCTV — Control de Activos v200</title>
 
     <style>
         /* ============================================================
@@ -1649,7 +1649,7 @@
             <h3
                 style="padding:1.5rem 0.75rem 1rem;margin:0;position:sticky;top:0;background:var(--bg-card);z-index:2;border-bottom:1px solid var(--border)">
                 <svg class="icon icon-line">
-                    <use href="#icon-camera" />
+                    <use href="#icon-edit" />
                 </svg> Editar dispositivo
             </h3>
 
@@ -1693,7 +1693,7 @@
                 <div class="form-row">
                     <div class="form-group" style="display:flex;align-items:flex-end;gap:0.4rem">
                         <div style="flex:1;min-width:0">
-                            <label>MAC (una sola)</label>
+                            <label>MAC</label>
                             <input type="text" id="editar-disp-mac" placeholder="Ej: AA:BB:CC:DD:EE:FF" maxlength="17">
                         </div>
                         <button id="btn-editar-asignacion" class="icon-btn btn-backup"
@@ -2491,11 +2491,11 @@
                     const tiposOrden = [...tiposBuitin, ...tiposCustom];
 
                     const ESTADOS_DEFS = [
-                        { key: 'produccion', label: 'En producción' },
-                        { key: 'disponible', label: 'Disponibles' },
-                        { key: 'averiado', label: 'Averiados' },
-                        { key: 'revisar', label: 'A revisar' },
-                        { key: 'desafectado', label: 'Desafectados' },
+                        { key: 'produccion',  label: 'En producción', color: 'var(--c-blue)'     },
+                        { key: 'disponible',  label: 'Disponibles',   color: 'var(--c-green)'    },
+                        { key: 'averiado',    label: 'Averiados',     color: 'var(--c-red)'      },
+                        { key: 'revisar',     label: 'A revisar',     color: 'var(--c-purple)'   },
+                        { key: 'desafectado', label: 'Desafectados',  color: 'var(--text-muted)' },
                     ];
 
                     // ── Panel izquierdo: total + tipos ──
@@ -2537,7 +2537,7 @@
 
                         const chipsEstado = ESTADOS_DEFS.map(e => `
                         <div class="stat-chip">
-                            <div class="stat-chip-valor">${est[e.key]}</div>
+                            <div class="stat-chip-valor" style="color:${e.color}">${est[e.key]}</div>
                             <div class="stat-chip-label">${e.label}</div>
                         </div>`).join('');
 
@@ -2628,12 +2628,16 @@
                     const conteoForma = {};
                     camarasDisps.forEach(d => {
                         const k = d.forma || '__sin_forma__';
-                        if (!conteoForma[k]) conteoForma[k] = { total: 0, prod: 0 };
+                        if (!conteoForma[k]) conteoForma[k] = { total: 0, prod: 0, averiado: 0, revisar: 0, desafectado: 0 };
                         conteoForma[k].total++;
-                        if (idsEnProd.has(d.id)) conteoForma[k].prod++;
+                        if      (d.estado === 'averiado')    conteoForma[k].averiado++;
+                        else if (d.estado === 'revisar')     conteoForma[k].revisar++;
+                        else if (d.estado === 'desafectado') conteoForma[k].desafectado++;
+                        else if (idsEnProd.has(d.id))        conteoForma[k].prod++;
                     });
+                    const _ceroForma = { total: 0, prod: 0, averiado: 0, revisar: 0, desafectado: 0 };
                     const filas = FORMAS_DEF
-                        .map(f => ({ label: f.label, ...( conteoForma[f.key] || { total: 0, prod: 0 }) }))
+                        .map(f => ({ label: f.label, ...(conteoForma[f.key] || _ceroForma) }))
                         .filter(f => f.total > 0);
                     if (conteoForma['__sin_forma__']?.total > 0)
                         filas.push({ label: 'Sin forma', ...conteoForma['__sin_forma__'] });
@@ -2641,19 +2645,28 @@
                     if (filas.length === 0) {
                         vistaHtml = `<div style="color:var(--text-disabled);font-size:0.85rem">Sin cámaras registradas</div>`;
                     } else {
-                        // encabezado de columnas
+                        const col = (txt, color) =>
+                            `<span style="font-size:0.72rem;font-weight:600;color:${color};width:2.8rem;text-align:right">${txt}</span>`;
                         const header = `
                         <div style="display:flex;justify-content:flex-end;gap:0.5rem;padding:0 0 0.3rem;border-bottom:1px solid var(--border);margin-bottom:0.1rem">
-                            <span style="font-size:0.72rem;font-weight:600;color:var(--text-disabled);width:2.8rem;text-align:right">TOTAL</span>
-                            <span style="font-size:0.72rem;font-weight:600;color:var(--text-disabled);width:2.8rem;text-align:right">PROD.</span>
-                            <span style="font-size:0.72rem;font-weight:600;color:var(--text-disabled);width:2.8rem;text-align:right">DISP.</span>
+                            ${col('TOTAL',  'var(--text-disabled)')}
+                            ${col('PROD.',  'var(--c-blue)')}
+                            ${col('DISP.',  'var(--c-green)')}
+                            ${col('AVER.',  'var(--c-red)')}
+                            ${col('REVIS.', 'var(--c-purple)')}
+                            ${col('DESAF.', 'var(--text-muted)')}
                         </div>`;
+                        const val = (n, color) =>
+                            `<span style="font-size:0.95rem;font-weight:700;width:2.8rem;text-align:right;color:${color}">${n}</span>`;
                         const rows = filas.map((f, i) => `
-                        <div style="display:flex;align-items:center;padding:0.45rem 0;${i < filas.length - 1 ? 'border-bottom:1px solid var(--border)' : ''}">
+                        <div style="display:flex;align-items:center;gap:0.5rem;padding:0.45rem 0;${i < filas.length - 1 ? 'border-bottom:1px solid var(--border)' : ''}">
                             <span style="flex:1;font-size:0.85rem;color:var(--text-muted);font-weight:600">${f.label}</span>
-                            <span style="font-size:1rem;font-weight:700;width:2.8rem;text-align:right">${f.total}</span>
-                            <span style="font-size:1rem;font-weight:700;width:2.8rem;text-align:right;color:var(--c-blue-solid)">${f.prod}</span>
-                            <span style="font-size:1rem;font-weight:700;width:2.8rem;text-align:right;color:var(--c-green-solid)">${f.total - f.prod}</span>
+                            ${val(f.total,                    'var(--text-main)')}
+                            ${val(f.prod,                     'var(--c-blue)')}
+                            ${val(f.total - f.prod - f.averiado - f.revisar - f.desafectado, 'var(--c-green)')}
+                            ${val(f.averiado,                 'var(--c-red)')}
+                            ${val(f.revisar,                  'var(--c-purple)')}
+                            ${val(f.desafectado,              'var(--text-muted)')}
                         </div>`).join('');
                         vistaHtml = header + rows;
                     }
@@ -4316,7 +4329,7 @@
 
 <!--
 // ====================================================================
-//         NOTAS CCTV ACTIVOS VERSION 198
+//         NOTAS CCTV ACTIVOS VERSION 200
 // ====================================================================
 
  - CAMBIOS:
