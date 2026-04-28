@@ -16,7 +16,7 @@
         frame-ancestors 'none';
         upgrade-insecure-requests;">
     <meta name="referrer" content="no-referrer">
-    <title>CCTV — Control de Activos v200</title>
+    <title>CCTV — Control de Activos v202</title>
 
     <style>
         /* ============================================================
@@ -106,7 +106,7 @@
         }
 
         /* ============================================================
-           HEADER  (idéntico a Horarios)
+           HEADER 
         ============================================================ */
         .header {
             background: var(--bg-header);
@@ -138,7 +138,7 @@
         }
 
         /* ============================================================
-           CARD  (idéntico a Horarios)
+           CARD 
         ============================================================ */
         .card,
         .modal-content {
@@ -161,7 +161,7 @@
         }
 
         /* ============================================================
-           FORMULARIOS  (idéntico a Horarios)
+           FORMULARIOS 
         ============================================================ */
         .form-group {
             margin-bottom: 1rem;
@@ -219,7 +219,7 @@
         }
 
         /* ============================================================
-           BOTONES  (idéntico a Horarios)
+           BOTONES 
         ============================================================ */
         button {
             width: 100%;
@@ -285,8 +285,6 @@
             background: var(--c-gray-btn);
         }
 
-        /* hovers — idéntico a Horarios */
-
         /* ============================================================
            ICONS
         ============================================================ */
@@ -339,7 +337,7 @@
         }
 
         /* ============================================================
-           TOAST  (idéntico a Horarios)
+           TOAST 
         ============================================================ */
         .toast {
             position: fixed;
@@ -385,7 +383,7 @@
         }
 
         /* ============================================================
-           MODAL  (idéntico a Horarios)
+           MODAL 
         ============================================================ */
         .modal {
             display: flex;
@@ -604,10 +602,15 @@
             grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
             gap: 0.5rem;
             padding: 0.75rem;
+            max-height: 2000px;
+            opacity: 1;
         }
 
         .nvr-canales-grid.collapsed {
-            display: none;
+            max-height: 0 !important;
+            opacity: 0;
+            padding-top: 0;
+            padding-bottom: 0;
         }
 
         .nvr-chevron {
@@ -955,7 +958,7 @@
         }
 
         /* ============================================================
-           SCROLLBAR  (idéntico a Horarios)
+           SCROLLBAR 
         ============================================================ */
         ::-webkit-scrollbar {
             width: 4px;
@@ -976,7 +979,7 @@
         }
 
         /* ============================================================
-           ANIMACIONES  (idéntico a Horarios)
+           ANIMACIONES 
         ============================================================ */
         @keyframes slideDownFade {
             from {
@@ -1005,10 +1008,45 @@
             align-items: start;
         }
 
+        .lista-1col {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0;
+            align-items: start;
+        }
+
         @media (max-width: 640px) {
             .lista-2col {
                 grid-template-columns: 1fr;
             }
+        }
+
+        /* ── Transición entre pestañas ── */
+        .tab-panel {
+            animation: none;
+        }
+        .tab-panel.tab-saliendo {
+            animation: tabFadeOut 0.18s ease forwards;
+            pointer-events: none;
+        }
+        .tab-panel.tab-entrando {
+            animation: tabFadeIn 0.22s ease forwards;
+        }
+        @keyframes tabFadeOut {
+            from { opacity: 1; transform: translateY(0); }
+            to   { opacity: 0; transform: translateY(6px); }
+        }
+        @keyframes tabFadeIn {
+            from { opacity: 0; transform: translateY(-6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── Expand/collapse grabadores animado ── */
+        .nvr-canales-grid {
+            transition: max-height 0.32s cubic-bezier(0.4,0,0.2,1),
+                        opacity    0.25s ease,
+                        padding    0.32s cubic-bezier(0.4,0,0.2,1);
+            overflow: hidden;
         }
 
         /* filtros de búsqueda — toggle row */
@@ -1171,7 +1209,7 @@
 </head>
 
 <body>
-    <!-- Flash anti-parpadeo tema oscuro (idéntico a Horarios) -->
+    <!-- Flash anti-parpadeo tema oscuro -->
     <script>
         (function () {
             try {
@@ -1282,6 +1320,15 @@
             <line x1="9" y1="8" x2="15" y2="8" class="icon-line" stroke="currentColor"></line>
             <line x1="17" y1="16" x2="23" y2="16" class="icon-line" stroke="currentColor"></line>
         </symbol>
+        <symbol id="icon-building" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <path d="M9 3v18"/>
+            <path d="M3 9h6"/>
+            <path d="M3 15h6"/>
+            <path d="M15 8h2"/>
+            <path d="M15 12h2"/>
+            <path d="M15 16h2"/>
+        </symbol>
         <symbol id="icon-external-link" viewBox="0 0 24 24">
             <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" fill="none" stroke="currentColor"
                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
@@ -1365,7 +1412,7 @@
         </div>
 
         <!-- ===== PANEL DASHBOARD ===== -->
-        <div id="panel-dashboard">
+        <div id="panel-dashboard" class="tab-panel">
             <div class="dash-2col">
                 <!-- columna izquierda: resumen general + grabadores -->
                 <div class="dash-col-left">
@@ -1395,7 +1442,7 @@
         </div>
 
         <!-- ===== PANEL ACTIVOS ===== -->
-        <div id="panel-activos" style="display:none">
+        <div id="panel-activos" class="tab-panel" style="display:none">
             <div class="card">
                 <h2>
                     <svg class="icon icon-line">
@@ -1422,7 +1469,7 @@
         </div>
 
         <!-- ===== PANEL PRODUCCIÓN ===== -->
-        <div id="panel-produccion" style="display:none">
+        <div id="panel-produccion" class="tab-panel" style="display:none">
             <div class="card">
                 <h2>
                     <svg class="icon icon-line">
@@ -1481,7 +1528,7 @@
                         <svg class="icon icon-line">
                             <use href="#icon-trash" />
                         </svg>
-                        Borrar todos los datos
+                        Restablecer
                     </button>
                 </div>
             </div>
@@ -1490,14 +1537,30 @@
             <div style="margin-bottom:1.25rem">
                 <div
                     style="font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:0.5rem;padding:0 0.25rem">
-                    Tipos de dispositivo</div>
+                    Tipos de dispositivos</div>
                 <div class="btn-group" style="margin-top:0">
                     <button onclick="UI.abrirTiposDispositivo()"
                         style="justify-content:center;gap:0.75rem;background:var(--input-bg);border:1px solid var(--border)">
                         <svg class="icon icon-line">
                             <use href="#icon-grid" />
                         </svg>
-                        Tipos de dispositivos
+                        Dispositivos
+                    </button>
+                </div>
+            </div>
+
+            <!-- Edificios -->
+            <div style="margin-bottom:1.25rem">
+                <div
+                    style="font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:0.5rem;padding:0 0.25rem">
+                    Ubicaciones</div>
+                <div class="btn-group" style="margin-top:0">
+                    <button onclick="UI.abrirEdificios()"
+                        style="justify-content:center;gap:0.75rem;background:var(--input-bg);border:1px solid var(--border)">
+                        <svg class="icon icon-line">
+                            <use href="#icon-building" />
+                        </svg>
+                        Edificios
                     </button>
                 </div>
             </div>
@@ -1525,7 +1588,7 @@
                 <svg class="icon icon-line">
                     <use href="#icon-grid" />
                 </svg>
-                Tipos de dispositivo
+                Dispositivos
             </h3>
             <div style="flex:1;overflow-y:auto;padding:1rem 0.75rem">
                 <div id="lista-tipos-custom" style="margin-bottom:0.75rem"></div>
@@ -1543,6 +1606,44 @@
                 style="padding:0.75rem;border-top:1px solid var(--border);position:sticky;bottom:0;background:var(--bg-card);z-index:2">
                 <div class="btn-group" style="margin-top:0">
                     <button class="btn-cancel" onclick="UI.cerrarTiposDispositivo()">
+                        <svg class="icon icon-line">
+                            <use href="#icon-undo" />
+                        </svg>
+                        Volver
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         MODAL — Edificios
+    ============================================================ -->
+    <div class="modal" id="modal-edificios">
+        <div class="modal-content modal-content--flex">
+            <h3
+                style="padding:1.5rem 0.75rem 1rem;margin:0;position:sticky;top:0;background:var(--bg-card);z-index:2;border-bottom:1px solid var(--border)">
+                <svg class="icon icon-line">
+                    <use href="#icon-building" />
+                </svg>
+                Edificios
+            </h3>
+            <div style="flex:1;overflow-y:auto;padding:1rem 0.75rem">
+                <div id="lista-edificios" style="margin-bottom:0.75rem"></div>
+                <div style="display:flex;gap:0.5rem;align-items:center">
+                    <input type="text" id="nuevo-edificio-nombre" placeholder="Ej: Torre A, Edificio Central…" maxlength="60"
+                        style="flex:1">
+                    <button onclick="UI.agregarEdificio()" class="icon-btn btn-edit" title="Agregar edificio">
+                        <svg class="icon icon-line">
+                            <use href="#icon-plus" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div
+                style="padding:0.75rem;border-top:1px solid var(--border);position:sticky;bottom:0;background:var(--bg-card);z-index:2">
+                <div class="btn-group" style="margin-top:0">
+                    <button class="btn-cancel" onclick="UI.cerrarEdificios()">
                         <svg class="icon icon-line">
                             <use href="#icon-undo" />
                         </svg>
@@ -1915,11 +2016,11 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Edificio</label>
-                        <input type="text" id="canal-edificio" placeholder="Ej: Torre A" maxlength="60">
+                        <select id="canal-edificio"></select>
                     </div>
                     <div class="form-group">
                         <label>Piso</label>
-                        <input type="text" id="canal-piso" placeholder="Ej: 3" maxlength="20">
+                        <input type="text" id="canal-piso" placeholder="Ej: PB, 3, -1, EP2" maxlength="4" oninput="UI._pisoFiltrar(this)">
                     </div>
                 </div>
 
@@ -2011,15 +2112,32 @@
                 </svg>
                 Vista de activos
             </h3>
-            <p style="font-size:0.85rem;color:var(--text-muted);line-height:1.5;margin-bottom:1.5rem">
-                Próximamente: opciones para personalizar cómo se muestran los dispositivos.
-            </p>
-            <button class="btn-cancel" onclick="UI.cerrarVistaActivos()">
-                <svg class="icon icon-line">
-                    <use href="#icon-cancelar" />
-                </svg>
-                Cerrar
-            </button>
+            <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.75rem">Columnas</p>
+            <div class="btn-group" style="margin-top:0">
+                <button id="btn-vista-1col" onclick="UI.setActivosColumnas(1)" style="flex:1;gap:0.4rem">
+                    <svg class="icon icon-line" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+                    1 columna
+                </button>
+                <button id="btn-vista-2col" onclick="UI.setActivosColumnas(2)" style="flex:1;gap:0.4rem">
+                    <svg class="icon icon-line" viewBox="0 0 24 24"><rect x="3" y="4" width="7" height="16" rx="2" stroke="currentColor" stroke-width="2" fill="none"/><rect x="14" y="4" width="7" height="16" rx="2" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+                    2 columnas
+                </button>
+            </div>
+            <p style="font-size:0.85rem;color:var(--text-muted);margin:1.25rem 0 0.75rem">Ordenar por</p>
+            <div class="btn-group" style="margin-top:0;flex-wrap:wrap">
+                <button id="btn-orden-tipo" onclick="UI.setActivosOrden('tipo')" style="flex:1;min-width:calc(50% - 0.25rem);font-size:0.875rem">Tipo</button>
+                <button id="btn-orden-estado" onclick="UI.setActivosOrden('estado')" style="flex:1;min-width:calc(50% - 0.25rem);font-size:0.875rem">Estado</button>
+                <button id="btn-orden-forma" onclick="UI.setActivosOrden('forma')" style="flex:1;min-width:calc(50% - 0.25rem);font-size:0.875rem">Forma</button>
+                <button id="btn-orden-marca" onclick="UI.setActivosOrden('marca')" style="flex:1;min-width:calc(50% - 0.25rem);font-size:0.875rem">Marca / Modelo</button>
+            </div>
+            <div class="btn-group">
+                <button class="btn-cancel" onclick="UI.cerrarVistaActivos()">
+                    <svg class="icon icon-line">
+                        <use href="#icon-cancelar" />
+                    </svg>
+                    Cerrar
+                </button>
+            </div>
         </div>
     </div>
 
@@ -2118,7 +2236,7 @@
                     catch { return JSON.parse(JSON.stringify(o)); }
                 }
 
-                // Parse seguro contra prototype pollution (idéntico a Horarios)
+                // Parse seguro contra prototype pollution
                 function safeParse(json) {
                     return JSON.parse(json, (k, v) => {
                         if (['__proto__', 'constructor', 'prototype'].includes(k)) return undefined;
@@ -2160,23 +2278,68 @@
 
                 cargarTipos();
 
-                return { sanitize, genId, sha256, fechaISO, deepClone, safeParse, MAX_JSON, SCHEMA_V, TIPOS_BUILTIN, get TIPOS() { return TIPOS; }, guardarTipos, cargarTipos };
+                // ── Edificios ──────────────────────────────────────────────
+                const KEY_EDIFICIOS = 'cctv_edificios';
+                let _edificios = [];
+
+                function cargarEdificios() {
+                    try {
+                        const raw = localStorage.getItem(KEY_EDIFICIOS);
+                        if (!raw) return;
+                        const parsed = safeParse(raw);
+                        if (Array.isArray(parsed)) {
+                            _edificios = parsed.filter(e => typeof e === 'string' && e.length > 0);
+                        }
+                    } catch { /* silent */ }
+                }
+
+                function guardarEdificios() {
+                    localStorage.setItem(KEY_EDIFICIOS, JSON.stringify(_edificios));
+                }
+
+                cargarEdificios();
+
+                return { sanitize, genId, sha256, fechaISO, deepClone, safeParse, MAX_JSON, SCHEMA_V, TIPOS_BUILTIN,
+                    get TIPOS() { return TIPOS; }, guardarTipos, cargarTipos,
+                    get edificios() { return _edificios; }, guardarEdificios, cargarEdificios };
             })();
 
             // ==============================================================
-            // MODAL MANAGER  (idéntico a Horarios)
+            // MODAL MANAGER
             // ==============================================================
             const MM = (() => {
                 let _mdDown = false;
+                // mapa id → función que ejecuta el cierre "correcto" (con vuelta al padre)
+                const _onCerrar = {};
 
                 function _onMD(e) { _mdDown = e.target === e.currentTarget; }
                 function _onClick(e) {
                     if (!_mdDown) return;
-                    if (e.target === e.currentTarget) cerrar(e.target.id);
+                    if (e.target === e.currentTarget) _cerrarConPadre(e.target.id);
                 }
 
-                function abrir(id, cb) {
+                // Cierra respetando la cadena: si hay un handler registrado lo usa, si no cierra directo
+                function _cerrarConPadre(id) {
+                    const fn = _onCerrar[id];
+                    if (fn) { fn(); } else { cerrar(id); }
+                }
+
+                // abrir(id, cb)  — cb es el callback de apertura (opcional, igual que antes)
+                // abrir(id, { cb, onEscape })  — onEscape es la función a llamar al cerrar con Escape/overlay
+                function abrir(id, optsOrCb) {
                     const m = document.getElementById(id); if (!m) return;
+                    let cb, onEscape;
+                    if (typeof optsOrCb === 'function') {
+                        cb = optsOrCb;
+                    } else if (optsOrCb && typeof optsOrCb === 'object') {
+                        cb = optsOrCb.cb;
+                        onEscape = optsOrCb.onEscape;
+                    }
+                    if (onEscape) {
+                        _onCerrar[id] = onEscape;
+                    } else {
+                        delete _onCerrar[id];
+                    }
                     m.classList.add('show');
                     document.body.classList.add('modal-open');
                     setTimeout(() => {
@@ -2188,6 +2351,7 @@
 
                 function cerrar(id, cb) {
                     const m = document.getElementById(id); if (!m) return;
+                    delete _onCerrar[id];
                     m.classList.remove('show');
                     document.body.classList.remove('modal-open');
                     m.removeEventListener('mousedown', _onMD);
@@ -2197,6 +2361,7 @@
 
                 function cerrarTodos() {
                     document.querySelectorAll('.modal.show').forEach(m => {
+                        delete _onCerrar[m.id];
                         m.classList.remove('show');
                         m.removeEventListener('mousedown', _onMD);
                         m.removeEventListener('click', _onClick);
@@ -2204,11 +2369,21 @@
                     document.body.classList.remove('modal-open');
                 }
 
-                return { abrir, cerrar, cerrarTodos };
+                // Escape global: cierra el modal más reciente respetando la cadena
+                function cerrarTop() {
+                    const abiertos = [...document.querySelectorAll('.modal.show')];
+                    if (!abiertos.length) return;
+                    // el "más reciente" es el último en el DOM con clase show que tenga handler, o el último visible
+                    const conHandler = abiertos.filter(m => _onCerrar[m.id]);
+                    const target = conHandler.length ? conHandler[conHandler.length - 1] : abiertos[abiertos.length - 1];
+                    _cerrarConPadre(target.id);
+                }
+
+                return { abrir, cerrar, cerrarTodos, cerrarTop };
             })();
 
             // ==============================================================
-            // CONFIRM HELPER  (idéntico a Horarios)
+            // CONFIRM HELPER 
             // ==============================================================
             function confirmarModal(texto, labelOk = 'Eliminar') {
                 return new Promise(resolve => {
@@ -2237,7 +2412,7 @@
             }
 
             // ==============================================================
-            // TOAST  (idéntico a Horarios)
+            // TOAST 
             // ==============================================================
             const _toastQueue = [];
             let _toastActivo = false;
@@ -2337,7 +2512,7 @@
                         ip: S.sanitize(existente?.ip || '', 45),
                         puerto: S.sanitize(existente?.puerto || '', 10),
                         edificio: S.sanitize(existente?.edificio || '', 60),
-                        piso: S.sanitize(existente?.piso || '', 20),
+                        piso: S.sanitize(existente?.piso || '', 4),
                         rack: S.sanitize(existente?.rack || '', 40),
                         comentarios: S.sanitize(existente?.comentarios || '', 300),
                     });
@@ -2374,11 +2549,14 @@
                     }
                     return; // no cerrar modales al mismo tiempo
                 }
-                MM.cerrarTodos();
+                // si hay modales abiertos, cerrar respetando la cadena de padres
+                if (document.querySelector('.modal.show')) {
+                    MM.cerrarTop();
+                }
             });
 
             // ==============================================================
-            // ESCAPE HTML  (idéntico a Horarios)
+            // ESCAPE HTML 
             // ==============================================================
             function esc(s) {
                 return s == null ? '' : String(s)
@@ -2453,6 +2631,10 @@
             let _dashTipoAbierto = null;
             // vista activa en la card de cámaras: 'forma' | 'edificio'
             let _dashCamarasVista = 'forma';
+            // columnas en la lista de activos: 1 | 2
+            let _activosColumnas = (() => { try { return parseInt(localStorage.getItem('cctv_activos_cols')) === 1 ? 1 : 2; } catch { return 2; } })();
+            // orden de la lista de activos: 'tipo' | 'estado' | 'forma' | 'marca'
+            let _activosOrden = (() => { try { const v = localStorage.getItem('cctv_activos_orden'); return ['tipo','estado','forma','marca'].includes(v) ? v : 'tipo'; } catch { return 'tipo'; } })();
 
             function _estadosDeDisps(dispsDelTipo, idsEnProd) {
                 // Devuelve objeto con conteos de estados para un array de dispositivos
@@ -2535,11 +2717,15 @@
                             <span class="stat-chip-arrow">▶</span>
                         </div>`;
 
-                        const chipsEstado = ESTADOS_DEFS.map(e => `
-                        <div class="stat-chip">
-                            <div class="stat-chip-valor" style="color:${e.color}">${est[e.key]}</div>
+                        const chipsEstado = ESTADOS_DEFS.map(e => {
+                            const n = est[e.key];
+                            const clickable = n > 0 ? `class="stat-chip stat-chip-tipo" style="cursor:pointer" onclick="UI.irAActivosConFiltro('${_dashTipoAbierto}','${e.key}')"` : `class="stat-chip"`;
+                            return `
+                        <div ${clickable}>
+                            <div class="stat-chip-valor" style="color:${e.color}">${n}</div>
                             <div class="stat-chip-label">${e.label}</div>
-                        </div>`).join('');
+                        </div>`;
+                        }).join('');
 
                         panelDer = `<div class="dashboard-grid">${chipSeleccionado}${chipsEstado}</div>`;
                     }
@@ -2727,7 +2913,25 @@
 
                 const orden = { nvr: 0, dvr: 1, switch: 2, otro: 3, camara: 4 };
                 const dispLabel = d => d.mac || d.serial || '';
-                let sorted = [...disps].sort((a, b) => (orden[a.tipo] ?? 9) - (orden[b.tipo] ?? 9) || dispLabel(a).localeCompare(dispLabel(b)));
+                const ordenEstado = { produccion: 0, disponible: 1, revisar: 2, averiado: 3, desafectado: 4 };
+                let sorted = [...disps].sort((a, b) => {
+                    if (_activosOrden === 'estado') {
+                        const eA = a.estado ? ordenEstado[a.estado] ?? 9 : 0;
+                        const eB = b.estado ? ordenEstado[b.estado] ?? 9 : 0;
+                        return eA - eB || dispLabel(a).localeCompare(dispLabel(b));
+                    }
+                    if (_activosOrden === 'forma') {
+                        const fA = a.tipo === 'camara' ? (a.forma || 'zzz') : ('aaa_' + (orden[a.tipo] ?? 9));
+                        const fB = b.tipo === 'camara' ? (b.forma || 'zzz') : ('aaa_' + (orden[b.tipo] ?? 9));
+                        return fA.localeCompare(fB) || dispLabel(a).localeCompare(dispLabel(b));
+                    }
+                    if (_activosOrden === 'marca') {
+                        const mA = ((a.marca || '') + ' ' + (a.modelo || '')).trim().toLowerCase() || 'zzz';
+                        const mB = ((b.marca || '') + ' ' + (b.modelo || '')).trim().toLowerCase() || 'zzz';
+                        return mA.localeCompare(mB) || dispLabel(a).localeCompare(dispLabel(b));
+                    }
+                    return (orden[a.tipo] ?? 9) - (orden[b.tipo] ?? 9) || dispLabel(a).localeCompare(dispLabel(b));
+                });
 
                 // índice: dispositivoId → { grab, slot } para búsqueda rápida
                 const asignaciones = {};
@@ -2837,24 +3041,25 @@
                         if (asig.tipo === 'canal') {
                             const partes = [esc(asig.grab.descripcion), `CANAL ${asig.slot.canal}`];
                             if (asig.slot.ip) partes.push(esc(asig.slot.ip));
-                            const desc = asig.slot.descripcion ? `<div>${esc(asig.slot.descripcion)}</div>` : '';
+                            const desc = asig.slot.descripcion
+                                ? `<div><span class="badge badge-estado-produccion" style="white-space:nowrap">${esc(asig.slot.descripcion)}</span></div>`
+                                : '';
                             asignInfo = `${desc}<div>${partes.join(' · ')}</div>`;
                         } else {
                             const partes = [esc(asig.grab.descripcion)];
                             if (asig.grab.ip) partes.push(esc(asig.grab.ip));
-                            asignInfo = partes.join(' · ');
+                            asignInfo = `<span class="badge badge-estado-produccion" style="white-space:nowrap">${partes.join(' · ')}</span>`;
                         }
                     }
-                    // el badge de estado va a la derecha, en el lugar de asignInfo
-                    // solo se omite cuando está en producción (asignInfo ya muestra los datos del grabador)
+                    // badge de estado (no aplica a producción: el color ya está en asignInfo)
                     const ESTADO_BADGE_INFO = {
-                        averiado: { label: 'Averiado', clase: 'badge-estado-averiado' },
-                        revisar: { label: 'A revisar', clase: 'badge-estado-revisar' },
-                        desafectado: { label: 'Desafectado', clase: 'badge-estado-desafectado' },
-                        disponible: { label: 'Disponible', clase: 'badge-estado-disponible' },
+                        averiado:    { label: 'Averiado',      clase: 'badge-estado-averiado'    },
+                        revisar:     { label: 'A revisar',     clase: 'badge-estado-revisar'     },
+                        desafectado: { label: 'Desafectado',   clase: 'badge-estado-desafectado' },
+                        disponible:  { label: 'Disponible',    clase: 'badge-estado-disponible'  },
                     };
                     const estadoEfectivo = d.estado || (asig ? 'produccion' : 'disponible');
-                    const estadoBadgeInfo = ESTADO_BADGE_INFO[estadoEfectivo]; // null cuando es 'produccion'
+                    const estadoBadgeInfo = ESTADO_BADGE_INFO[estadoEfectivo];
                     const estadoBadgeHtml = estadoBadgeInfo
                         ? `<span class="badge ${estadoBadgeInfo.clase}" style="white-space:nowrap">${estadoBadgeInfo.label}</span>`
                         : '';
@@ -2879,10 +3084,15 @@
                 </div>`;
                 }
 
-                // reparto intercalado: col1 = índices pares (A,C,E…), col2 = índices impares (B,D,F…)
-                const col1 = sorted.filter((_, i) => i % 2 === 0).map(renderItem).join('');
-                const col2 = sorted.filter((_, i) => i % 2 === 1).map(renderItem).join('');
-                lista.innerHTML = `<div class="lista-2col"><div>${col1}</div><div>${col2}</div></div>`;
+                // reparto según columnas seleccionadas
+                if (_activosColumnas === 1) {
+                    lista.innerHTML = `<div class="lista-1col">${sorted.map(renderItem).join('')}</div>`;
+                } else {
+                    // reparto intercalado: col1 = índices pares (A,C,E…), col2 = índices impares (B,D,F…)
+                    const col1 = sorted.filter((_, i) => i % 2 === 0).map(renderItem).join('');
+                    const col2 = sorted.filter((_, i) => i % 2 === 1).map(renderItem).join('');
+                    lista.innerHTML = `<div class="lista-2col"><div>${col1}</div><div>${col2}</div></div>`;
+                }
             }
 
             /* ---------- PRODUCCIÓN ---------- */
@@ -2955,6 +3165,8 @@
             let _volverDesdeCanal = false; // true cuando el modal activo se abrió desde "Ver activo" del canal
             let _canalDispOcupados = new Set();
             let _canalDispHighlight = -1;
+            let _edificiosOrigen = 'ajustes'; // 'ajustes' | 'canal' — desde dónde se abrió el modal de edificios
+            let _edificiosSnapForm = null;    // snapshot del formulario de canal al ir a edificios
             let _tabActual = 'dashboard';
 
             function _actualizarBotonesEstado(estadoActual) {
@@ -3031,10 +3243,50 @@
                 },
 
                 abrirVistaActivos() {
+                    const btn1 = document.getElementById('btn-vista-1col');
+                    const btn2 = document.getElementById('btn-vista-2col');
+                    if (btn1 && btn2) {
+                        btn1.style.background = _activosColumnas === 1 ? 'var(--c-blue)' : '';
+                        btn1.style.color = _activosColumnas === 1 ? 'var(--c-white)' : '';
+                        btn2.style.background = _activosColumnas === 2 ? 'var(--c-blue)' : '';
+                        btn2.style.color = _activosColumnas === 2 ? 'var(--c-white)' : '';
+                    }
+                    ['tipo','estado','forma','marca'].forEach(o => {
+                        const b = document.getElementById(`btn-orden-${o}`);
+                        if (b) { b.style.background = _activosOrden === o ? 'var(--c-blue)' : ''; b.style.color = _activosOrden === o ? 'var(--c-white)' : ''; }
+                    });
                     MM.abrir('modal-vista-activos');
                 },
 
                 cerrarVistaActivos() {
+                    MM.cerrar('modal-vista-activos');
+                },
+
+                setActivosColumnas(n) {
+                    if (_activosColumnas === n) { MM.cerrar('modal-vista-activos'); return; }
+                    _activosColumnas = n;
+                    try { localStorage.setItem('cctv_activos_cols', n); } catch (_) {}
+                    renderActivos();
+                    const btn1 = document.getElementById('btn-vista-1col');
+                    const btn2 = document.getElementById('btn-vista-2col');
+                    if (btn1 && btn2) {
+                        btn1.style.background = n === 1 ? 'var(--c-blue)' : '';
+                        btn1.style.color = n === 1 ? 'var(--c-white)' : '';
+                        btn2.style.background = n === 2 ? 'var(--c-blue)' : '';
+                        btn2.style.color = n === 2 ? 'var(--c-white)' : '';
+                    }
+                    MM.cerrar('modal-vista-activos');
+                },
+
+                setActivosOrden(orden) {
+                    if (_activosOrden === orden) { MM.cerrar('modal-vista-activos'); return; }
+                    _activosOrden = orden;
+                    try { localStorage.setItem('cctv_activos_orden', orden); } catch (_) {}
+                    renderActivos();
+                    ['tipo','estado','forma','marca'].forEach(o => {
+                        const b = document.getElementById(`btn-orden-${o}`);
+                        if (b) { b.style.background = o === orden ? 'var(--c-blue)' : ''; b.style.color = o === orden ? 'var(--c-white)' : ''; }
+                    });
                     MM.cerrar('modal-vista-activos');
                 },
 
@@ -3096,7 +3348,7 @@
                     MM.cerrar('modal-ajustes');
                     setTimeout(() => {
                         UI._renderTiposCustom();
-                        MM.abrir('modal-tipos-dispositivo');
+                        MM.abrir('modal-tipos-dispositivo', { onEscape: () => UI.cerrarTiposDispositivo() });
                     }, 150);
                 },
 
@@ -3107,14 +3359,31 @@
 
                 abrirImportarDesdeAjustes() {
                     MM.cerrar('modal-ajustes');
-                    setTimeout(() => UI.abrirImportar(), 150);
+                    setTimeout(() => {
+                        // abrirImportar usa MM.abrir internamente; lo sobreescribimos con padre
+                        UI.abrirImportar();
+                        // registrar padre después de que abrirImportar llame MM.abrir
+                        setTimeout(() => {
+                            const m = document.getElementById('modal-importar');
+                            if (m && m.classList.contains('show')) {
+                                MM.abrir('modal-importar', { onEscape: () => { MM.cerrar('modal-importar'); setTimeout(() => UI.abrirAjustes(), 150); } });
+                            }
+                        }, 20);
+                    }, 150);
                 },
 
                 async borrarTodosLosDatos() {
-                    const ok = await confirmarModal('¿Borrar todos los dispositivos y grabadores? Esta acción no se puede deshacer.', 'Borrar todo');
+                    const ok = await confirmarModal('¿Borrar todos los datos? Se eliminarán dispositivos, grabadores, tipos personalizados y edificios. Esta acción no se puede deshacer.', 'Borrar todo');
                     if (!ok) return;
+                    // datos principales
                     _data = { dispositivos: [], grabadores: [] };
                     guardar();
+                    // tipos custom
+                    Object.keys(S.TIPOS).forEach(k => { if (!S.TIPOS_BUILTIN[k]) delete S.TIPOS[k]; });
+                    S.guardarTipos();
+                    // edificios
+                    S.edificios.length = 0;
+                    S.guardarEdificios();
                     render();
                     MM.cerrar('modal-ajustes');
                     toast('Todos los datos fueron eliminados', 'success');
@@ -3164,19 +3433,124 @@
                     toast('Tipo eliminado', 'success');
                 },
 
+                // ---- Edificios ----
+                abrirEdificios(origen = 'ajustes') {
+                    _edificiosOrigen = origen;
+                    // si venimos del canal, capturar el estado actual del formulario
+                    if (origen === 'canal') {
+                        _edificiosSnapForm = {
+                            dispositivoId: document.getElementById('sel-canal-dispositivo').value || '',
+                            dispInput: document.getElementById('canal-disp-input').value || '',
+                            descripcion: document.getElementById('canal-descripcion').value || '',
+                            ip: document.getElementById('canal-ip').value || '',
+                            puerto: document.getElementById('canal-puerto').value || '',
+                            edificio: document.getElementById('canal-edificio').value || '',
+                            piso: document.getElementById('canal-piso').value || '',
+                            rack: document.getElementById('canal-rack').value || '',
+                            comentarios: document.getElementById('canal-comentarios').value || '',
+                        };
+                        MM.cerrar('modal-canal');
+                    } else {
+                        MM.cerrar('modal-ajustes');
+                    }
+                    setTimeout(() => {
+                        UI._renderEdificios();
+                        document.getElementById('nuevo-edificio-nombre').value = '';
+                        // label del botón Volver según origen
+                        const btnVolver = document.querySelector('#modal-edificios .btn-cancel');
+                        if (btnVolver) {
+                            btnVolver.innerHTML = origen === 'canal'
+                                ? `<svg class="icon icon-line"><use href="#icon-undo"/></svg> Volver al canal`
+                                : `<svg class="icon icon-line"><use href="#icon-undo"/></svg> Volver`;
+                        }
+                        MM.abrir('modal-edificios', { onEscape: () => UI.cerrarEdificios() });
+                        setTimeout(() => document.getElementById('nuevo-edificio-nombre').focus(), 50);
+                    }, 150);
+                },
+
+                cerrarEdificios() {
+                    const origen = _edificiosOrigen;
+                    const snap = _edificiosSnapForm;
+                    MM.cerrar('modal-edificios');
+                    if (origen === 'canal' && snap) {
+                        setTimeout(() => {
+                            // re-abrir el canal (carga desde slot)
+                            UI.abrirAsignarCanal(_editandoCanalGrabId, _editandoCanalN, _canalDesdeDispId);
+                            // restaurar lo que el usuario había escrito
+                            setTimeout(() => {
+                                document.getElementById('sel-canal-dispositivo').value = snap.dispositivoId;
+                                document.getElementById('canal-disp-input').value = snap.dispInput;
+                                document.getElementById('canal-descripcion').value = snap.descripcion;
+                                document.getElementById('canal-ip').value = snap.ip;
+                                document.getElementById('canal-puerto').value = snap.puerto;
+                                document.getElementById('canal-piso').value = snap.piso;
+                                document.getElementById('canal-rack').value = snap.rack;
+                                document.getElementById('canal-comentarios').value = snap.comentarios;
+                                // repoblar edificio con la lista actualizada, seleccionando el valor anterior
+                                _poblarSelectEdificio('canal-edificio', snap.edificio);
+                                const btnVerActivo = document.getElementById('btn-ver-activo-canal');
+                                if (btnVerActivo) btnVerActivo.style.display = snap.dispositivoId ? '' : 'none';
+                                _edificiosSnapForm = null;
+                            }, 220);
+                        }, 150);
+                    } else {
+                        _edificiosSnapForm = null;
+                        setTimeout(() => UI.abrirAjustes(), 150);
+                    }
+                },
+
+                _renderEdificios() {
+                    const cont = document.getElementById('lista-edificios');
+                    if (!cont) return;
+                    const lista = S.edificios;
+                    if (!lista.length) {
+                        cont.innerHTML = `<div style="font-size:0.85rem;color:var(--text-disabled);padding:0.25rem 0.25rem 0.5rem">Sin edificios declarados</div>`;
+                        return;
+                    }
+                    cont.innerHTML = lista.map((nombre, idx) => `
+                        <div style="display:flex;align-items:center;gap:0.5rem;padding:0.35rem 0;border-bottom:1px solid var(--border)">
+                            <span style="font-size:1.1rem;width:28px;text-align:center">🏢</span>
+                            <span style="flex:1;font-size:0.9rem">${esc(nombre)}</span>
+                            <button onclick="UI.eliminarEdificio(${idx})" class="icon-btn btn-delete" style="width:32px;height:32px;min-width:unset;color:var(--c-white)" title="Eliminar edificio">
+                                <svg class="icon icon-line" style="width:14px;height:14px"><use href="#icon-trash"/></svg>
+                            </button>
+                        </div>`).join('');
+                },
+
+                agregarEdificio() {
+                    const el = document.getElementById('nuevo-edificio-nombre');
+                    const nombre = S.sanitize(el.value.trim(), 60);
+                    if (!nombre) { el.classList.add('error'); toast('Ingresá un nombre para el edificio', 'error'); return; }
+                    if (S.edificios.some(e => e.toLowerCase() === nombre.toLowerCase())) {
+                        toast(`Ya existe el edificio "${nombre}"`, 'error'); return;
+                    }
+                    S.edificios.push(nombre);
+                    S.guardarEdificios();
+                    el.value = '';
+                    el.classList.remove('error');
+                    UI._renderEdificios();
+                    toast(`Edificio "${nombre}" agregado`, 'success');
+                },
+
+                async eliminarEdificio(idx) {
+                    const nombre = S.edificios[idx];
+                    if (!nombre) return;
+                    const ok = await confirmarModal(`¿Eliminar el edificio "${nombre}"?`);
+                    if (!ok) return;
+                    S.edificios.splice(idx, 1);
+                    S.guardarEdificios();
+                    UI._renderEdificios();
+                    toast('Edificio eliminado', 'success');
+                },
+
                 // ---- Tabs ----
                 cambiarTab(tab) {
-                    // resetear detalle del dashboard al salir de él o al volver
+                    if (_tabActual === tab) return;
+                    // resetear detalle del dashboard al salir de él
                     if (tab !== 'dashboard' && _dashTipoAbierto) {
                         _dashTipoAbierto = null;
                         renderDashboard();
                     }
-                    _tabActual = tab;
-                    ['dashboard', 'activos', 'produccion'].forEach(t => {
-                        document.getElementById('panel-' + t).style.display = t === tab ? '' : 'none';
-                        document.getElementById('tab-' + t).classList.toggle('activa', t === tab);
-                    });
-                    localStorage.setItem('cctv_tab', JSON.stringify({ tab, ts: Date.now() }));
                     // limpiar búsqueda al cambiar de pestaña
                     const inputBusq = document.getElementById('input-busqueda');
                     if (inputBusq && inputBusq.value) {
@@ -3185,6 +3559,72 @@
                         if (btnX) btnX.style.display = 'none';
                         renderActivos();
                     }
+                    // actualizar botones de tab inmediatamente
+                    ['dashboard', 'activos', 'produccion'].forEach(t => {
+                        document.getElementById('tab-' + t).classList.toggle('activa', t === tab);
+                    });
+                    localStorage.setItem('cctv_tab', JSON.stringify({ tab, ts: Date.now() }));
+                    const panelSaliente = document.getElementById('panel-' + _tabActual);
+                    const panelEntrante = document.getElementById('panel-' + tab);
+                    _tabActual = tab;
+                    // fade out → ocultar → mostrar nuevo → fade in
+                    if (panelSaliente && panelSaliente !== panelEntrante) {
+                        panelSaliente.classList.add('tab-saliendo');
+                        setTimeout(() => {
+                            panelSaliente.classList.remove('tab-saliendo');
+                            panelSaliente.style.display = 'none';
+                            panelEntrante.style.display = '';
+                            // forzar reflow para que la animación de entrada arranque
+                            panelEntrante.getBoundingClientRect();
+                            panelEntrante.classList.add('tab-entrando');
+                            panelEntrante.addEventListener('animationend', () => {
+                                panelEntrante.classList.remove('tab-entrando');
+                            }, { once: true });
+                        }, 180);
+                    } else {
+                        panelEntrante.style.display = '';
+                    }
+                },
+
+                irAActivosConFiltro(tipo, estado) {
+                    const ESTADO_QUERY = { produccion: 'produccion', disponible: 'disponible', averiado: 'averiado', revisar: 'revisar', desafectado: 'desafectado' };
+                    const tipoLabel = S.TIPOS[tipo]?.label?.toLowerCase() || tipo;
+                    const estadoQ   = ESTADO_QUERY[estado] || estado;
+                    const query = [tipoLabel, estadoQ].filter(Boolean).join(' ');
+
+                    // Hacer la transición de pestaña manualmente para NO limpiar el input
+                    if (_dashTipoAbierto) { _dashTipoAbierto = null; renderDashboard(); }
+                    ['dashboard', 'activos', 'produccion'].forEach(t => {
+                        document.getElementById('tab-' + t).classList.toggle('activa', t === 'activos');
+                    });
+                    localStorage.setItem('cctv_tab', JSON.stringify({ tab: 'activos', ts: Date.now() }));
+                    const panelSaliente = document.getElementById('panel-' + _tabActual);
+                    const panelEntrante = document.getElementById('panel-activos');
+                    _tabActual = 'activos';
+
+                    // Poner la query ANTES de que el panel sea visible
+                    const input = document.getElementById('input-busqueda');
+                    const btnX  = document.getElementById('btn-limpiar-busqueda');
+                    if (input) { input.value = query; if (btnX) btnX.style.display = query ? '' : 'none'; }
+                    renderActivos();
+
+                    // Animación de transición
+                    if (panelSaliente && panelSaliente !== panelEntrante) {
+                        panelSaliente.classList.add('tab-saliendo');
+                        setTimeout(() => {
+                            panelSaliente.classList.remove('tab-saliendo');
+                            panelSaliente.style.display = 'none';
+                            panelEntrante.style.display = '';
+                            panelEntrante.getBoundingClientRect();
+                            panelEntrante.classList.add('tab-entrando');
+                            panelEntrante.addEventListener('animationend', () => {
+                                panelEntrante.classList.remove('tab-entrando');
+                            }, { once: true });
+                        }, 180);
+                    } else {
+                        panelEntrante.style.display = '';
+                    }
+                    setTimeout(() => input?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 250);
                 },
 
                 // ---- Búsqueda en activos ----
@@ -3212,9 +3652,22 @@
                     const card = document.querySelector(`.nvr-card[data-grab-id="${CSS.escape(id)}"]`);
                     const grid = card?.querySelector('.nvr-canales-grid');
                     if (!card || !grid) return;
-                    const col = !_grabExpanded.has(id);
-                    card.classList.toggle('collapsed', col);
-                    grid.classList.toggle('collapsed', col);
+                    const expandiendo = _grabExpanded.has(id);
+                    card.classList.toggle('collapsed', !expandiendo);
+                    if (expandiendo) {
+                        // expandir: quitar collapsed primero para medir scrollHeight
+                        grid.classList.remove('collapsed');
+                        grid.style.maxHeight = grid.scrollHeight + 'px';
+                        grid.addEventListener('transitionend', () => {
+                            grid.style.maxHeight = ''; // dejar libre para reflows futuros
+                        }, { once: true });
+                    } else {
+                        // colapsar: fijar altura actual, luego animar a 0
+                        grid.style.maxHeight = grid.scrollHeight + 'px';
+                        grid.getBoundingClientRect(); // forzar reflow
+                        grid.classList.add('collapsed');
+                        grid.style.maxHeight = ''; // el CSS .collapsed ya pone max-height:0
+                    }
                 },
 
                 // ---- Dispositivos ----
@@ -3386,7 +3839,7 @@
                         }
                     });
 
-                    MM.abrir('modal-editar-disp');
+                    MM.abrir('modal-editar-disp', { onEscape: () => UI.cerrarModalEditarDispositivo() });
                     // etiqueta del botón cerrar: "Volver" si viene desde Ver activo del canal
                     const btnCerrarDisp = document.querySelector('#modal-editar-disp .btn-cancel');
                     if (btnCerrarDisp) btnCerrarDisp.innerHTML = _volverDesdeCanal
@@ -3416,7 +3869,7 @@
                 async guardarEdicionDispositivo() {
                     const prefijo = 'editar-disp';
                     const tipo = document.getElementById(`${prefijo}-tipo`).value;
-                    const macRaw = document.getElementById(`${prefijo}-mac`).value.trim();
+                    const macRaw = document.getElementById(`${prefijo}-mac`).value.trim().toUpperCase();
                     const serial = document.getElementById(`${prefijo}-serial`).value.trim();
                     const macs = macRaw ? macRaw.split(',').map(t => t.trim()).filter(Boolean) : [];
 
@@ -3766,7 +4219,7 @@
                     document.getElementById('canal-disp-dropdown').style.display = 'none';
                     _canalDispHighlight = -1;
 
-                    MM.abrir('modal-canal');
+                    MM.abrir('modal-canal', { onEscape: () => UI.cerrarModalCanal() });
 
                     // snapshot para detectar cambios al guardar
                     _snapshotCanal = {
@@ -3783,7 +4236,7 @@
                     document.getElementById('canal-descripcion').value = slot?.descripcion || '';
                     document.getElementById('canal-ip').value = slot?.ip || '';
                     document.getElementById('canal-puerto').value = slot?.puerto || '';
-                    document.getElementById('canal-edificio').value = slot?.edificio || '';
+                    _poblarSelectEdificio('canal-edificio', slot?.edificio || '');
                     document.getElementById('canal-piso').value = slot?.piso || '';
                     document.getElementById('canal-rack').value = slot?.rack || '';
                     document.getElementById('canal-comentarios').value = slot?.comentarios || '';
@@ -3900,6 +4353,21 @@
                     if (_canalDispHighlight >= 0) items[_canalDispHighlight].scrollIntoView({ block: 'nearest' });
                 },
 
+                // Filtra el input de Piso: solo permite dígitos, '-', y las letras P,B,E,S
+                // (que forman PB, EP, SS). Máx 4 caracteres (ya cubierto por maxlength).
+                _pisoFiltrar(el) {
+                    const pos = el.selectionStart;
+                    const anterior = el.value;
+                    // Permitir: dígitos 0-9, guión, y letras P B E S (mayúsculas)
+                    const limpio = anterior.toUpperCase().replace(/[^0-9\-PBES]/g, '');
+                    if (limpio !== anterior) {
+                        el.value = limpio;
+                        // restaurar posición del cursor
+                        const nuevaPos = Math.max(0, pos - (anterior.length - limpio.length));
+                        el.setSelectionRange(nuevaPos, nuevaPos);
+                    }
+                },
+
                 cerrarModalCanal() {
                     MM.cerrar('modal-canal');
                     const dispId = _canalDesdeDispId;
@@ -3920,7 +4388,7 @@
                     document.getElementById('canal-descripcion').value = '';
                     document.getElementById('canal-ip').value = '';
                     document.getElementById('canal-puerto').value = '';
-                    document.getElementById('canal-edificio').value = '';
+                    _poblarSelectEdificio('canal-edificio', '');
                     document.getElementById('canal-piso').value = '';
                     document.getElementById('canal-rack').value = '';
                     document.getElementById('canal-comentarios').value = '';
@@ -4001,7 +4469,7 @@
                             const contenido = e.target.result;
                             if (!contenido?.trim()) { toast('Archivo vacío', 'error'); return; }
 
-                            // parse seguro (idéntico a Horarios)
+                            // parse seguro
                             const data = S.safeParse(contenido);
 
                             if (!data || typeof data !== 'object' || Array.isArray(data)) {
@@ -4033,6 +4501,28 @@
                                     }
                                 });
                                 if (tiposAgregados) S.guardarTipos();
+                            }
+
+                            // restaurar edificios del archivo
+                            if (Array.isArray(data.edificios)) {
+                                const nuevos = data.edificios
+                                    .filter(e => typeof e === 'string' && e.trim().length > 0)
+                                    .map(e => S.sanitize(e.trim(), 60));
+                                if (modo === 'replace') {
+                                    // reemplazar lista completa
+                                    S.edificios.length = 0;
+                                    nuevos.forEach(e => S.edificios.push(e));
+                                } else {
+                                    // merge: agregar solo los que no existen (case-insensitive)
+                                    const existentes = new Set(S.edificios.map(e => e.toLowerCase()));
+                                    nuevos.forEach(e => {
+                                        if (!existentes.has(e.toLowerCase())) {
+                                            S.edificios.push(e);
+                                            existentes.add(e.toLowerCase());
+                                        }
+                                    });
+                                }
+                                S.guardarEdificios();
                             }
 
                             if (modo === 'replace') {
@@ -4070,6 +4560,7 @@
                             dispositivos: disps,
                             grabadores: grabs,
                             tiposCustom,
+                            edificios: S.edificios.slice(), // copia del array
                             version: S.SCHEMA_V,
                             fecha: S.fechaISO(),
                             hash: await S.sha256({ dispositivos: disps, grabadores: grabs }),
@@ -4123,6 +4614,46 @@
                     if (k === seleccionado) opt.selected = true;
                     sel.appendChild(opt);
                 });
+            }
+
+            // Puebla el select de edificios con los edificios declarados en ajustes
+            function _poblarSelectEdificio(selectId, seleccionado) {
+                const sel = document.getElementById(selectId);
+                if (!sel) return;
+                // preservar handler previo para no duplicar
+                sel.onchange = null;
+                sel.innerHTML = '<option value="">— Sin edificio —</option>';
+                S.edificios.forEach(nombre => {
+                    const opt = document.createElement('option');
+                    opt.value = nombre;
+                    opt.textContent = nombre;
+                    if (nombre === seleccionado) opt.selected = true;
+                    sel.appendChild(opt);
+                });
+                // si el valor seleccionado no está en la lista (dato viejo), agregar como opción
+                if (seleccionado && !S.edificios.includes(seleccionado)) {
+                    const opt = document.createElement('option');
+                    opt.value = seleccionado;
+                    opt.textContent = seleccionado + ' (personalizado)';
+                    opt.selected = true;
+                    sel.appendChild(opt);
+                }
+                // opción especial al final
+                const optAgregar = document.createElement('option');
+                optAgregar.value = '__agregar__';
+                optAgregar.textContent = '＋ Agregar edificio…';
+                sel.appendChild(optAgregar);
+                // interceptar selección de la opción especial
+                sel.onchange = function () {
+                    if (sel.value === '__agregar__') {
+                        // restaurar el valor anterior antes de abrir el modal
+                        sel.value = seleccionado || '';
+                        UI.abrirEdificios('canal');
+                    } else {
+                        // actualizar seleccionado para que el onchange futuro recuerde el valor
+                        seleccionado = sel.value;
+                    }
+                };
             }
 
             // Puebla el selector de dispositivos NVR/DVR en el modal grabador.
@@ -4232,6 +4763,7 @@
                             'modal-editar-grab': () => UI.guardarEdicionGrabador(),
                             'modal-canal': () => UI.guardarAsignacionCanal(),
                             'modal-tipos-dispositivo': () => UI.agregarTipoCustom(),
+                            'modal-edificios': () => UI.agregarEdificio(),
                             'modal-confirmar': () => document.getElementById('modal-confirmar-ok')?.click(),
                         }[modal.id];
                         if (accion) { e.preventDefault(); accion(); }
@@ -4329,15 +4861,18 @@
 
 <!--
 // ====================================================================
-//         NOTAS CCTV ACTIVOS VERSION 200
+//         NOTAS CCTV ACTIVOS VERSION 211
 // ====================================================================
 
  - CAMBIOS:
-
+   · Exportar: los edificios declarados se incluyen en el JSON como
+     campo "edificios" (array de strings).
+   · Importar (Combinar): agrega los edificios del archivo que no existen
+     localmente (comparación case-insensitive).
+   · Importar (Reemplazar): reemplaza la lista de edificios completa.
 
  - PENDIENTE (futuras iteraciones):
    · Undo/redo
-   · Filtros de vista en activos
    · Más campos (fecha instalación)
    · Vista de árbol / diagrama de red
 
