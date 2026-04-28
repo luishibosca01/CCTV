@@ -16,7 +16,7 @@
         frame-ancestors 'none';
         upgrade-insecure-requests;">
     <meta name="referrer" content="no-referrer">
-    <title>CCTV — Control de Activos v190</title>
+    <title>CCTV — Control de Activos v198</title>
 
     <style>
         /* ============================================================
@@ -416,7 +416,7 @@
             transform: translateY(24px) scale(0.96);
             transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease;
             opacity: 0;
-            max-width: 580px;
+            max-width: 500px;
             width: 100%;
             max-height: 90vh;
             overflow-y: auto;
@@ -753,19 +753,27 @@
         /* ============================================================
            LISTA DE DISTRIBUCIÓN POR TIPO (dashboard)
         ============================================================ */
-        .dash-3col {
+        .dash-2col {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 1rem;
+            align-items: start;
         }
 
-        @media (max-width: 560px) {
-            .dash-3col {
+        .dash-col-left,
+        .dash-col-right {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        @media (max-width: 700px) {
+            .dash-2col {
                 grid-template-columns: 1fr;
             }
         }
 
-        .dash-3col .card {
+        .dash-2col .card {
             margin-bottom: 0;
         }
 
@@ -1144,19 +1152,8 @@
         ============================================================ */
         @media (hover: hover) and (pointer: fine) {
 
-            .btn-edit:hover:not(:disabled),
-            .btn-delete:hover:not(:disabled),
-            .btn-backup:hover:not(:disabled),
-            .btn-cancel:hover:not(:disabled),
-            .icon-btn:hover:not(:disabled) {
-                filter: var(--hover);
-            }
-
-            .dispositivo-item:hover {
-                filter: var(--hover);
-            }
-
-            .canal-slot:hover {
+            :is(.btn-edit, .btn-delete, .btn-backup, .btn-cancel, .icon-btn):hover:not(:disabled),
+            :is(.dispositivo-item, .canal-slot):hover {
                 filter: var(--hover);
             }
 
@@ -1264,10 +1261,11 @@
             <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
             <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
         </symbol>
-        <symbol id="icon-settings" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="3" />
+        <symbol id="icon-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
             <path
-                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z">
+            </path>
         </symbol>
         <symbol id="icon-cancelar" viewBox="0 0 24 24">
             <line x1="18" y1="6" x2="6" y2="18" class="icon-line" stroke="currentColor"></line>
@@ -1368,24 +1366,30 @@
 
         <!-- ===== PANEL DASHBOARD ===== -->
         <div id="panel-dashboard">
-            <div class="card">
-                <h2><svg class="icon icon-line">
-                        <use href="#icon-grid" />
-                    </svg> Resumen general</h2>
-                <div id="dash-disp-tree"></div>
-            </div>
-            <div class="dash-3col">
-                <div class="card">
-                    <h2><svg class="icon icon-line">
-                            <use href="#icon-server" />
-                        </svg> Grabadores</h2>
-                    <div id="dash-grabadores"></div>
+            <div class="dash-2col">
+                <!-- columna izquierda: resumen general + grabadores -->
+                <div class="dash-col-left">
+                    <div class="card" id="card-resumen-general">
+                        <h2><svg class="icon icon-line">
+                                <use href="#icon-grid" />
+                            </svg> Resumen general</h2>
+                        <div id="dash-disp-tree"></div>
+                    </div>
+                    <div class="card">
+                        <h2><svg class="icon icon-line">
+                                <use href="#icon-server" />
+                            </svg> Grabadores</h2>
+                        <div id="dash-grabadores"></div>
+                    </div>
                 </div>
-                <div class="card">
-                    <h2><svg class="icon icon-line">
-                            <use href="#icon-camera" />
-                        </svg> Cámaras</h2>
-                    <div id="dash-camaras"></div>
+                <!-- columna derecha: cámaras -->
+                <div class="dash-col-right">
+                    <div class="card">
+                        <h2><svg class="icon icon-line">
+                                <use href="#icon-camera" />
+                            </svg> Cámaras</h2>
+                        <div id="dash-camaras" style="min-height:32rem"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1689,8 +1693,8 @@
                 <div class="form-row">
                     <div class="form-group" style="display:flex;align-items:flex-end;gap:0.4rem">
                         <div style="flex:1;min-width:0">
-                            <label>MAC</label>
-                            <input type="text" id="editar-disp-mac" placeholder="Ej: AA:BB:CC:DD:EE:FF" maxlength="500">
+                            <label>MAC (una sola)</label>
+                            <input type="text" id="editar-disp-mac" placeholder="Ej: AA:BB:CC:DD:EE:FF" maxlength="17">
                         </div>
                         <button id="btn-editar-asignacion" class="icon-btn btn-backup"
                             onclick="UI.editarAsignacionCamara()" style="display:none;flex-shrink:0;margin-bottom:1px"
@@ -2136,7 +2140,7 @@
                     try {
                         const raw = localStorage.getItem(KEY_TIPOS);
                         if (!raw) return;
-                        const custom = JSON.parse(raw);
+                        const custom = safeParse(raw);
                         if (typeof custom !== 'object' || Array.isArray(custom)) return;
                         Object.entries(custom).forEach(([k, v]) => {
                             if (TIPOS_BUILTIN[k]) return; // no pisar builtins
@@ -2212,15 +2216,22 @@
                     document.getElementById('modal-confirmar-label').textContent = labelOk;
                     const ok = document.getElementById('modal-confirmar-ok');
                     const can = document.getElementById('modal-confirmar-cancel');
-                    function si() { cleanup(); resolve(true); }
-                    function no() { cleanup(); resolve(false); }
+                    let resuelto = false;
+                    function si() { if (!resuelto) { resuelto = true; cleanup(); resolve(true); } }
+                    function no() { if (!resuelto) { resuelto = true; cleanup(); resolve(false); } }
+                    function onEscape(e) {
+                        if (e.key === 'Escape') no();
+                    }
                     function cleanup() {
                         ok.removeEventListener('click', si);
                         can.removeEventListener('click', no);
+                        document.removeEventListener('keydown', onEscape, true);
                         MM.cerrar('modal-confirmar');
                     }
                     ok.addEventListener('click', si);
                     can.addEventListener('click', no);
+                    // capturar Escape antes del handler global que cierra todos los modales
+                    document.addEventListener('keydown', onEscape, true);
                     MM.abrir('modal-confirmar');
                 });
             }
@@ -2312,10 +2323,13 @@
                 const canales = parseInt(g.canales ?? g.canales_n);
                 const n = Number.isFinite(canales) && canales >= 1 && canales <= 256 ? canales : 16;
                 const slots = [];
+                // Pre-indexar canales_data por número de canal para evitar O(n²) con Array.find
+                const canalMap = {};
+                if (Array.isArray(g.canales_data)) {
+                    g.canales_data.forEach(c => { canalMap[c.canal] = c; });
+                }
                 for (let i = 1; i <= n; i++) {
-                    const existente = Array.isArray(g.canales_data)
-                        ? g.canales_data.find(c => c.canal === i)
-                        : null;
+                    const existente = canalMap[i] || null;
                     slots.push({
                         canal: i,
                         dispositivoId: existente?.dispositivoId || null,
@@ -2437,6 +2451,8 @@
             /* ---------- DASHBOARD ---------- */
             // estado actualmente expandido en el resumen
             let _dashTipoAbierto = null;
+            // vista activa en la card de cámaras: 'forma' | 'edificio'
+            let _dashCamarasVista = 'forma';
 
             function _estadosDeDisps(dispsDelTipo, idsEnProd) {
                 // Devuelve objeto con conteos de estados para un array de dispositivos
@@ -2510,14 +2526,7 @@
                         const tc = S.TIPOS[_dashTipoAbierto];
                         const n = disps.filter(d => d.tipo === _dashTipoAbierto).length;
                         const dispsDelTipo = disps.filter(d => d.tipo === _dashTipoAbierto);
-                        const est = { produccion: 0, disponible: 0, averiado: 0, revisar: 0, desafectado: 0 };
-                        dispsDelTipo.forEach(d => {
-                            if (d.estado === 'averiado') est.averiado++;
-                            else if (d.estado === 'revisar') est.revisar++;
-                            else if (d.estado === 'desafectado') est.desafectado++;
-                            else if (idsEnProd.has(d.id)) est.produccion++;
-                            else est.disponible++;
-                        });
+                        const est = _estadosDeDisps(dispsDelTipo, idsEnProd);
 
                         const chipSeleccionado = `
                         <div class="stat-chip stat-chip-tipo activo" onclick="_toggleTipoDetalle('${_dashTipoAbierto}')">
@@ -2581,29 +2590,109 @@
 
                 // ── Cámaras resumen ──────────────────────────────────────
                 const camarasDisps = disps.filter(d => d.tipo === 'camara');
-                const enProd = camarasDisps.filter(d => idsEnProd.has(d.id)).length;
+                const camarasEnProd = camarasDisps.filter(d => idsEnProd.has(d.id));
+                const enProd = camarasEnProd.length;
                 const disponibles = camarasDisps.length - enProd;
 
-                document.getElementById('dash-camaras').innerHTML = `
-                <div style="display:flex;flex-direction:column;gap:0.6rem">
-                    <div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;border-bottom:1px solid var(--border)">
-                        <span style="font-size:0.88rem;color:var(--text-muted);font-weight:600">Total</span>
-                        <span style="font-size:1.2rem;font-weight:700">${camarasDisps.length}</span>
-                    </div>
-                    <div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;border-bottom:1px solid var(--border)">
-                        <span style="font-size:0.88rem;color:var(--text-muted);font-weight:600">En producción</span>
-                        <span style="font-size:1.2rem;font-weight:700;color:var(--c-blue)">${enProd}</span>
-                    </div>
-                    <div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0">
-                        <span style="font-size:0.88rem;color:var(--text-muted);font-weight:600">Disponibles</span>
-                        <span style="font-size:1.2rem;font-weight:700;color:var(--c-green)">${disponibles}</span>
-                    </div>
-                    ${camarasDisps.length > 0 ? `
-                    <div style="height:4px;background:var(--border);border-radius:var(--radius-pill);overflow:hidden">
-                        <div style="height:100%;width:${camarasDisps.length ? Math.round((enProd / camarasDisps.length) * 100) : 0}%;background:var(--c-blue);border-radius:var(--radius-pill);transition:width 0.4s"></div>
-                    </div>` : ''}
-                    ${camarasDisps.length === 0 ? `<div style="color:var(--text-disabled);font-size:0.85rem">Sin cámaras registradas</div>` : ''}
+                // Selector de vista (pill tabs)
+                const selectorHtml = `
+                <div style="display:flex;background:var(--bg-body);border-radius:var(--radius-sm);padding:0.2rem;gap:0;margin-bottom:0.85rem;box-shadow:var(--shadow)">
+                    <button onclick="_setCamarasVista('forma')"
+                        style="flex:1;padding:0.35rem 0.5rem;font-size:0.8rem;font-weight:600;border:none;border-radius:calc(var(--radius-sm) - 3px);height:auto;transition:background 0.2s,color 0.2s,box-shadow 0.2s;
+                        ${_dashCamarasVista === 'forma'
+                            ? 'background:var(--bg-card);color:var(--text-main);box-shadow:var(--shadow)'
+                            : 'background:transparent;color:var(--text-muted)'}">
+                        Por forma
+                    </button>
+                    <button onclick="_setCamarasVista('edificio')"
+                        style="flex:1;padding:0.35rem 0.5rem;font-size:0.8rem;font-weight:600;border:none;border-radius:calc(var(--radius-sm) - 3px);height:auto;transition:background 0.2s,color 0.2s,box-shadow 0.2s;
+                        ${_dashCamarasVista === 'edificio'
+                            ? 'background:var(--bg-card);color:var(--text-main);box-shadow:var(--shadow)'
+                            : 'background:transparent;color:var(--text-muted)'}">
+                        Por edificio
+                    </button>
                 </div>`;
+
+                let vistaHtml = '';
+
+                if (_dashCamarasVista === 'forma') {
+                    // ── Vista por forma ──
+                    const FORMAS_DEF = [
+                        { key: 'domo',       label: 'Domo' },
+                        { key: 'bullet',     label: 'Bullet' },
+                        { key: 'turret',     label: 'Turret' },
+                        { key: 'minidomo',   label: 'Mini domo' },
+                        { key: 'minibullet', label: 'Mini bullet' },
+                        { key: 'domo-ptz',   label: 'Domo PTZ' },
+                    ];
+                    const conteoForma = {};
+                    camarasDisps.forEach(d => {
+                        const k = d.forma || '__sin_forma__';
+                        if (!conteoForma[k]) conteoForma[k] = { total: 0, prod: 0 };
+                        conteoForma[k].total++;
+                        if (idsEnProd.has(d.id)) conteoForma[k].prod++;
+                    });
+                    const filas = FORMAS_DEF
+                        .map(f => ({ label: f.label, ...( conteoForma[f.key] || { total: 0, prod: 0 }) }))
+                        .filter(f => f.total > 0);
+                    if (conteoForma['__sin_forma__']?.total > 0)
+                        filas.push({ label: 'Sin forma', ...conteoForma['__sin_forma__'] });
+
+                    if (filas.length === 0) {
+                        vistaHtml = `<div style="color:var(--text-disabled);font-size:0.85rem">Sin cámaras registradas</div>`;
+                    } else {
+                        // encabezado de columnas
+                        const header = `
+                        <div style="display:flex;justify-content:flex-end;gap:0.5rem;padding:0 0 0.3rem;border-bottom:1px solid var(--border);margin-bottom:0.1rem">
+                            <span style="font-size:0.72rem;font-weight:600;color:var(--text-disabled);width:2.8rem;text-align:right">TOTAL</span>
+                            <span style="font-size:0.72rem;font-weight:600;color:var(--text-disabled);width:2.8rem;text-align:right">PROD.</span>
+                            <span style="font-size:0.72rem;font-weight:600;color:var(--text-disabled);width:2.8rem;text-align:right">DISP.</span>
+                        </div>`;
+                        const rows = filas.map((f, i) => `
+                        <div style="display:flex;align-items:center;padding:0.45rem 0;${i < filas.length - 1 ? 'border-bottom:1px solid var(--border)' : ''}">
+                            <span style="flex:1;font-size:0.85rem;color:var(--text-muted);font-weight:600">${f.label}</span>
+                            <span style="font-size:1rem;font-weight:700;width:2.8rem;text-align:right">${f.total}</span>
+                            <span style="font-size:1rem;font-weight:700;width:2.8rem;text-align:right;color:var(--c-blue-solid)">${f.prod}</span>
+                            <span style="font-size:1rem;font-weight:700;width:2.8rem;text-align:right;color:var(--c-green-solid)">${f.total - f.prod}</span>
+                        </div>`).join('');
+                        vistaHtml = header + rows;
+                    }
+
+                } else {
+                    // ── Vista por edificio (solo cámaras en producción con edificio en su canal) ──
+                    const conteoEdificio = {};
+                    grabs.forEach(g => {
+                        g.canales_data.forEach(c => {
+                            if (!c.dispositivoId) return;
+                            const disp = camarasDisps.find(d => d.id === c.dispositivoId);
+                            if (!disp) return;
+                            const k = c.edificio?.trim() || '__sin_edificio__';
+                            conteoEdificio[k] = (conteoEdificio[k] || 0) + 1;
+                        });
+                    });
+                    const sinEdificio = conteoEdificio['__sin_edificio__'] || 0;
+                    const filas = Object.entries(conteoEdificio)
+                        .filter(([k]) => k !== '__sin_edificio__')
+                        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+                        .map(([label, n]) => ({ label, n }));
+                    if (sinEdificio > 0) filas.push({ label: 'Sin edificio', n: sinEdificio });
+
+                    if (filas.length === 0) {
+                        vistaHtml = enProd === 0
+                            ? `<div style="color:var(--text-disabled);font-size:0.85rem">Sin cámaras en producción</div>`
+                            : `<div style="color:var(--text-disabled);font-size:0.85rem">Ningún canal tiene edificio asignado</div>`;
+                    } else {
+                        vistaHtml = filas.map((f, i) => `
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:0.45rem 0;${i < filas.length - 1 ? 'border-bottom:1px solid var(--border)' : ''}">
+                            <span style="font-size:0.85rem;color:var(--text-muted);font-weight:600">${esc(f.label)}</span>
+                            <span style="font-size:1rem;font-weight:700">${f.n}</span>
+                        </div>`).join('');
+                    }
+                }
+
+                document.getElementById('dash-camaras').innerHTML =
+                    selectorHtml +
+                    `<div style="display:flex;flex-direction:column">${vistaHtml}</div>`;
             }
 
             /* ---------- ACTIVOS ---------- */
@@ -2644,6 +2733,11 @@
                 if (query) {
                     const tokens = query.split(/\s+/).filter(Boolean);
 
+                    // Precalcular regexes para cada token (evita recompilar en cada dispositivo)
+                    const tokenRegexes = tokens.map(t =>
+                        new RegExp('(?<![a-z0-9])' + t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![a-z0-9])', 'i')
+                    );
+
                     // Calcula score de relevancia (menor = más relevante).
                     // Por cada token se toma el mejor nivel de match posible.
                     function scoreDispositivo(d) {
@@ -2674,8 +2768,9 @@
                         }
 
                         let total = 0;
-                        for (const t of tokens) {
-                            const re = new RegExp('(?<![a-z0-9])' + t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![a-z0-9])', 'i');
+                        for (let ti = 0; ti < tokens.length; ti++) {
+                            const t = tokens[ti];
+                            const re = tokenRegexes[ti];
                             if (tipoKey && tipoKey === t) { total += 0; continue; } // tipo exacto
                             if (tipoLabel && tipoLabel === t) { total += 1; continue; } // label exacto
                             if (tipoKey && (re.test(tipoKey) || re.test(tipoLabel))) { total += 2; continue; } // palabra en tipo
@@ -3058,6 +3153,11 @@
 
                 // ---- Tabs ----
                 cambiarTab(tab) {
+                    // resetear detalle del dashboard al salir de él o al volver
+                    if (tab !== 'dashboard' && _dashTipoAbierto) {
+                        _dashTipoAbierto = null;
+                        renderDashboard();
+                    }
                     _tabActual = tab;
                     ['dashboard', 'activos', 'produccion'].forEach(t => {
                         document.getElementById('panel-' + t).style.display = t === tab ? '' : 'none';
@@ -3621,13 +3721,13 @@
                         if (desdeDispId) {
                             // Estructura para "Volver"
                             btnCancel.innerHTML = `
-            <svg class="icon"><use xlink:href="#icon-undo"></use></svg>
+            <svg class="icon"><use href="#icon-undo"></use></svg>
             <span>Volver</span>
         `;
                         } else {
                             // Estructura para "Cancelar" con icon-cancelar
                             btnCancel.innerHTML = `
-            <svg class="icon"><use xlink:href="#icon-cancelar"></use></svg>
+            <svg class="icon"><use href="#icon-cancelar"></use></svg>
             <span>Cancelar</span>
         `;
                         }
@@ -3853,14 +3953,9 @@
                     const huboCambiosCanal = JSON.stringify(nuevoSnapCanal) !== JSON.stringify(_snapshotCanal);
                     if (!huboCambiosCanal) { toast('Sin cambios', 'info'); MM.cerrar('modal-canal'); _editandoCanalGrabId = null; _editandoCanalN = null; _snapshotCanal = null; return; }
 
-                    slot.dispositivoId = nuevoSnapCanal.dispositivoId || null;
-                    slot.descripcion = nuevoSnapCanal.descripcion;
-                    slot.ip = nuevoSnapCanal.ip;
-                    slot.puerto = nuevoSnapCanal.puerto;
-                    slot.edificio = nuevoSnapCanal.edificio;
-                    slot.piso = nuevoSnapCanal.piso;
-                    slot.rack = nuevoSnapCanal.rack;
-                    slot.comentarios = nuevoSnapCanal.comentarios;
+                    Object.assign(slot, nuevoSnapCanal, {
+                        dispositivoId: nuevoSnapCanal.dispositivoId || null,
+                    });
                     guardar(); render(); MM.cerrar('modal-canal');
                     // mensaje según qué cambió
                     const fueAsignado = !_snapshotCanal.dispositivoId && nuevoSnapCanal.dispositivoId;
@@ -4059,8 +4154,8 @@
                 [`${prefijo}-marca`, `${prefijo}-modelo`, `${prefijo}-serial`, `${prefijo}-mac`, `${prefijo}-patrimonio`].forEach(id => {
                     const el = document.getElementById(id); if (el) { el.value = ''; el.classList.remove('error'); }
                 });
-                document.getElementById(`${prefijo}-tipo`).value = '';
-                document.getElementById(`${prefijo}-tipo`).classList.remove('error');
+                const tipoEl = document.getElementById(`${prefijo}-tipo`);
+                tipoEl.value = ''; tipoEl.classList.remove('error');
                 document.getElementById(`${prefijo}-forma`).value = '';
                 document.getElementById(`${prefijo}-forma-group`).style.display = 'none';
                 document.getElementById(`${prefijo}-canales`).value = '16';
@@ -4086,6 +4181,15 @@
                 }
             });
 
+            // click fuera del bloque de mosaicos dentro del card Resumen general → volver a vista por tipos
+            document.getElementById('card-resumen-general').addEventListener('mousedown', e => {
+                if (!_dashTipoAbierto) return;
+                if (!e.target.closest('#dash-disp-tree')) {
+                    _dashTipoAbierto = null;
+                    renderDashboard();
+                }
+            });
+
             // file-import: mostrar nombre y habilitar botones
             document.getElementById('file-import').addEventListener('change', function () {
                 const f = this.files[0];
@@ -4094,43 +4198,49 @@
                 document.getElementById('btn-reemplazar').disabled = !f;
             });
 
-            // atajo de teclado: tecla + abre el modal de agregar dispositivo
-            // tecla A-Z: ir a activos y enfocar búsqueda
-            // Enter en modales: dispara el guardado del modal activo
-            document.addEventListener('keydown', e => {
-                if (e.key !== 'Enter') return;
-                // solo si hay un modal abierto y el foco está en un input/select (no textarea)
-                if (!document.body.classList.contains('modal-open')) return;
-                const tag = document.activeElement?.tagName;
-                if (tag === 'TEXTAREA') return; // textarea necesita Enter para salto de línea
-                // no disparar si el foco está en un botón (ya maneja su propio click)
-                if (tag === 'BUTTON') return;
-                const modalAbierto = document.querySelector('.modal.show');
-                if (!modalAbierto) return;
-                const accion = {
-                    'modal-nuevo-disp': () => UI.guardarNuevoDispositivo(),
-                    'modal-editar-disp': () => UI.guardarEdicionDispositivo(),
-                    'modal-nuevo-grab': () => UI.guardarNuevoGrabador(),
-                    'modal-editar-grab': () => UI.guardarEdicionGrabador(),
-                    'modal-canal': () => UI.guardarAsignacionCanal(),
-                    'modal-tipos-dispositivo': () => UI.agregarTipoCustom(),
-                    'modal-confirmar': () => document.getElementById('modal-confirmar-ok')?.click(),
-                }[modalAbierto.id];
-                if (accion) { e.preventDefault(); accion(); }
-            });
-
+            // atajo de teclado unificado:
+            //   Enter en modales → guarda el modal activo
+            //   Escape fuera de input → limpia búsqueda
+            //   + / = → abre nuevo dispositivo
+            //   letra / número → va a activos y enfoca búsqueda
             document.addEventListener('keydown', e => {
                 const tag = document.activeElement?.tagName;
                 const enInput = tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA';
-                if (document.body.classList.contains('modal-open')) return;
-                // Escape: limpiar búsqueda desde cualquier lugar
+                const modalAbierto = document.body.classList.contains('modal-open');
+
+                // Enter: solo en modales, no en textarea ni botón
+                if (e.key === 'Enter' && modalAbierto && tag !== 'TEXTAREA' && tag !== 'BUTTON') {
+                    const modal = document.querySelector('.modal.show');
+                    if (modal) {
+                        const accion = {
+                            'modal-nuevo-disp': () => UI.guardarNuevoDispositivo(),
+                            'modal-editar-disp': () => UI.guardarEdicionDispositivo(),
+                            'modal-nuevo-grab': () => UI.guardarNuevoGrabador(),
+                            'modal-editar-grab': () => UI.guardarEdicionGrabador(),
+                            'modal-canal': () => UI.guardarAsignacionCanal(),
+                            'modal-tipos-dispositivo': () => UI.agregarTipoCustom(),
+                            'modal-confirmar': () => document.getElementById('modal-confirmar-ok')?.click(),
+                        }[modal.id];
+                        if (accion) { e.preventDefault(); accion(); }
+                    }
+                    return;
+                }
+
+                // Nada más se ejecuta si hay un modal abierto
+                if (modalAbierto) return;
+
+                // Escape fuera de input: limpiar búsqueda
                 if (e.key === 'Escape' && !enInput) {
                     const input = document.getElementById('input-busqueda');
                     if (input && input.value) { UI.limpiarBusqueda(); input.blur(); return; }
                 }
+
                 if (enInput) return;
+
+                // + / = → nuevo dispositivo
                 if (e.key === '+' || e.key === '=') { UI.abrirNuevoDispositivo(); return; }
-                // letra A-Z (sin modificadores): ir a activos y buscar
+
+                // letra A-Z / número: ir a activos y enfocar búsqueda
                 if (e.key.length === 1 && /^[a-zA-Z0-9:]$/.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey) {
                     if (_tabActual !== 'activos') UI.cambiarTab('activos');
                     const input = document.getElementById('input-busqueda');
@@ -4176,6 +4286,11 @@
             // ==============================================================
             window.UI = UI;
             window._toggleTipoDetalle = _toggleTipoDetalle;
+            window._setCamarasVista = function(vista) {
+                if (_dashCamarasVista === vista) return;
+                _dashCamarasVista = vista;
+                renderDashboard();
+            };
             cargar();
             render();
 
@@ -4201,12 +4316,15 @@
 
 <!--
 // ====================================================================
-//         NOTAS CCTV ACTIVOS VERSION 189
+//         NOTAS CCTV ACTIVOS VERSION 198
 // ====================================================================
+
+ - CAMBIOS:
+
 
  - PENDIENTE (futuras iteraciones):
    · Undo/redo
-   · Filtros de vista en activos   
+   · Filtros de vista en activos
    · Más campos (fecha instalación)
    · Vista de árbol / diagrama de red
 
