@@ -323,7 +323,7 @@
             font-weight: 600;
             background: transparent;
             border: none;
-            border-radius: calc(var(--radius) - 4px);
+            border-radius: var(--radius);
             color: var(--text-muted);
             height: auto;
             transition: background 0.2s, color 0.2s, box-shadow 0.2s;
@@ -492,6 +492,50 @@
             flex-wrap: wrap;
             gap: 0.35rem;
             align-items: center;
+        }
+
+        /* en 2 columnas: altura fija para alinear tarjetas entre sí */
+        .lista-2col .dispositivo-item {
+            align-items: flex-start;
+            height: 80px;
+            overflow: hidden;
+        }
+
+        .lista-1col .dispositivo-item {
+            height: 74px;
+            overflow: hidden;
+        }
+
+        .lista-2col .dispositivo-nombre {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .lista-2col .dispositivo-meta {
+            flex-wrap: nowrap;
+            overflow: hidden;
+        }
+
+        .lista-2col .dispositivo-meta > span {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-width: 0;
+            flex-shrink: 1;
+        }
+
+        .lista-2col .dispositivo-meta > .badge:first-child {
+            flex-shrink: 0;
+        }
+
+        .lista-2col .disp-linea3 {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 0.15rem;
         }
 
         .badge {
@@ -1337,6 +1381,18 @@
             <line x1="10" y1="14" x2="21" y2="3" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round"></line>
         </symbol>
+        <symbol id="icon-search" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </symbol>
+        <symbol id="icon-filter" viewBox="0 0 24 24">
+            <line x1="4" y1="6" x2="20" y2="6" />
+            <line x1="8" y1="12" x2="16" y2="12" />
+            <line x1="11" y1="18" x2="13" y2="18" />
+        </symbol>
+        <symbol id="icon-chevron-up" viewBox="0 0 24 24">
+            <polyline points="18 15 12 9 6 15" />
+        </symbol>
     </svg>
 
     <!-- ====== HEADER ====== -->
@@ -1387,26 +1443,19 @@
         <div id="barra-busqueda" style="margin-bottom:0.75rem;position:relative">
             <input type="text" id="input-busqueda" placeholder="Buscar por tipo, MAC, descripcion de canal…"
                 oninput="UI.filtrarActivos()" style="padding-left:2.5rem;padding-right:4.5rem">
-            <svg style="position:absolute;left:0.75rem;top:50%;transform:translateY(-50%);width:1.1rem;height:1.1rem;stroke:var(--text-muted);fill:none;stroke-width:2;stroke-linecap:round;pointer-events:none"
-                viewBox="0 0 24 24">
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            <svg class="icon icon-line" style="position:absolute;left:0.75rem;top:50%;transform:translateY(-50%);width:1.1rem;height:1.1rem;stroke:var(--text-muted);pointer-events:none">
+                <use href="#icon-search" />
             </svg>
             <button id="btn-limpiar-busqueda" onclick="UI.limpiarBusqueda()"
                 style="display:none;position:absolute;right:2.25rem;top:50%;transform:translateY(-50%);width:28px;height:28px;min-width:unset;padding:0;background:transparent;border:none">
-                <svg style="width:1rem;height:1rem;stroke:var(--text-muted);fill:none;stroke-width:2.5;stroke-linecap:round"
-                    viewBox="0 0 24 24">
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                    <line x1="6" y1="6" x2="18" y2="18" />
+                <svg class="icon icon-line" style="width:1rem;height:1rem;stroke:var(--text-muted)">
+                    <use href="#icon-cancelar" />
                 </svg>
             </button>
             <button id="btn-filtros-busqueda" onclick="UI.abrirFiltrosBusqueda()" title="Personalizar búsqueda"
                 style="position:absolute;right:0.35rem;top:50%;transform:translateY(-50%);width:28px;height:28px;min-width:unset;padding:0;background:transparent;border:none">
-                <svg style="width:1rem;height:1rem;stroke:var(--text-muted);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"
-                    viewBox="0 0 24 24">
-                    <line x1="4" y1="6" x2="20" y2="6" />
-                    <line x1="8" y1="12" x2="16" y2="12" />
-                    <line x1="11" y1="18" x2="13" y2="18" />
+                <svg class="icon icon-line" style="width:1rem;height:1rem;stroke:var(--text-muted)">
+                    <use href="#icon-filter" />
                 </svg>
             </button>
         </div>
@@ -1593,7 +1642,7 @@
             <div style="flex:1;overflow-y:auto;padding:1rem 0.75rem">
                 <div id="lista-tipos-custom" style="margin-bottom:0.75rem"></div>
                 <div style="display:flex;gap:0.5rem;align-items:center">
-                    <input type="text" id="nuevo-tipo-label" placeholder="Ej: Router, PC, Joystick…" maxlength="30"
+                    <input type="text" id="nuevo-tipo-label" placeholder="Ej: Router, PC, Joystick…" maxlength="100"
                         style="flex:1">
                     <button onclick="UI.agregarTipoCustom()" class="icon-btn btn-edit" title="Agregar tipo">
                         <svg class="icon icon-line">
@@ -1631,7 +1680,7 @@
             <div style="flex:1;overflow-y:auto;padding:1rem 0.75rem">
                 <div id="lista-edificios" style="margin-bottom:0.75rem"></div>
                 <div style="display:flex;gap:0.5rem;align-items:center">
-                    <input type="text" id="nuevo-edificio-nombre" placeholder="Ej: Torre A, Edificio Central…" maxlength="60"
+                    <input type="text" id="nuevo-edificio-nombre" placeholder="Ej: Torre A, Edificio Central…" maxlength="100"
                         style="flex:1">
                     <button onclick="UI.agregarEdificio()" class="icon-btn btn-edit" title="Agregar edificio">
                         <svg class="icon icon-line">
@@ -1657,9 +1706,8 @@
     <!-- ====== BOTÓN SCROLL TOP ====== -->
     <button id="btn-scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Ir arriba"
         style="display:none;position:fixed;bottom:1.5rem;right:1.25rem;z-index:80;width:44px;height:44px;min-width:unset;padding:0;border-radius:50%;background:var(--c-blue);color:var(--c-white);box-shadow:0 2px 8px rgba(0,0,0,0.25);opacity:0;transition:opacity 0.25s,transform 0.25s;transform:translateY(8px)">
-        <svg style="width:1.1rem;height:1.1rem;stroke:var(--c-white);fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round"
-            viewBox="0 0 24 24">
-            <polyline points="18 15 12 9 6 15" />
+        <svg class="icon icon-line" style="width:1.1rem;height:1.1rem;stroke:var(--c-white)">
+            <use href="#icon-chevron-up" />
         </svg>
     </button>
 
@@ -1912,7 +1960,7 @@
     <div class="modal" id="modal-editar-grab">
         <div class="modal-content">
             <h3><svg class="icon icon-line">
-                    <use href="#icon-server" />
+                    <use href="#icon-edit" />
                 </svg> Editar grabador</h3>
 
             <div class="form-group">
@@ -1920,11 +1968,19 @@
                 <input type="text" id="editar-grab-nombre" placeholder="Ej: NVR-Planta Baja" maxlength="80">
             </div>
 
-            <div class="form-group">
-                <label>Dispositivo (NVR / DVR) *</label>
-                <select id="editar-grab-dispositivo-id">
-                    <option value="">Seleccionar…</option>
-                </select>
+            <div class="form-group" style="display:flex;align-items:flex-end;gap:0.4rem">
+                <div style="flex:1;min-width:0">
+                    <label>Dispositivo (NVR / DVR) *</label>
+                    <select id="editar-grab-dispositivo-id" onchange="UI.onGrabDispositivoChange()">
+                        <option value="">Seleccionar…</option>
+                    </select>
+                </div>
+                <button id="btn-ver-activo-grab" class="icon-btn btn-backup" onclick="UI.verActivoDesdeGrabador()"
+                    style="display:none;flex-shrink:0;margin-bottom:1px" title="Ver activo">
+                    <svg class="icon icon-line">
+                        <use href="#icon-external-link" />
+                    </svg>
+                </button>
             </div>
 
             <div class="form-row">
@@ -1935,6 +1991,17 @@
                 <div class="form-group">
                     <label>Lugar</label>
                     <input type="text" id="editar-grab-lugar" placeholder="Ej: Sala de servidores" maxlength="80">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Rack</label>
+                    <input type="text" id="editar-grab-rack" placeholder="Ej: Rack-02" maxlength="40">
+                </div>
+                <div class="form-group">
+                    <label>Puerto</label>
+                    <input type="text" id="editar-grab-puerto" placeholder="Ej: 554" maxlength="10">
                 </div>
             </div>
 
@@ -2112,23 +2179,21 @@
                 </svg>
                 Vista de activos
             </h3>
-            <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.75rem">Columnas</p>
-            <div class="btn-group" style="margin-top:0">
-                <button id="btn-vista-1col" onclick="UI.setActivosColumnas(1)" style="flex:1;gap:0.4rem">
-                    <svg class="icon icon-line" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" stroke="currentColor" stroke-width="2" fill="none"/></svg>
-                    1 columna
-                </button>
-                <button id="btn-vista-2col" onclick="UI.setActivosColumnas(2)" style="flex:1;gap:0.4rem">
-                    <svg class="icon icon-line" viewBox="0 0 24 24"><rect x="3" y="4" width="7" height="16" rx="2" stroke="currentColor" stroke-width="2" fill="none"/><rect x="14" y="4" width="7" height="16" rx="2" stroke="currentColor" stroke-width="2" fill="none"/></svg>
-                    2 columnas
-                </button>
+            <div class="form-group">
+                <label>Columnas</label>
+                <select id="sel-vista-columnas" onchange="UI.setActivosColumnas(+this.value)">
+                    <option value="1">1 columna</option>
+                    <option value="2">2 columnas</option>
+                </select>
             </div>
-            <p style="font-size:0.85rem;color:var(--text-muted);margin:1.25rem 0 0.75rem">Ordenar por</p>
-            <div class="btn-group" style="margin-top:0;flex-wrap:wrap">
-                <button id="btn-orden-tipo" onclick="UI.setActivosOrden('tipo')" style="flex:1;min-width:calc(50% - 0.25rem);font-size:0.875rem">Tipo</button>
-                <button id="btn-orden-estado" onclick="UI.setActivosOrden('estado')" style="flex:1;min-width:calc(50% - 0.25rem);font-size:0.875rem">Estado</button>
-                <button id="btn-orden-forma" onclick="UI.setActivosOrden('forma')" style="flex:1;min-width:calc(50% - 0.25rem);font-size:0.875rem">Forma</button>
-                <button id="btn-orden-marca" onclick="UI.setActivosOrden('marca')" style="flex:1;min-width:calc(50% - 0.25rem);font-size:0.875rem">Marca / Modelo</button>
+            <div class="form-group">
+                <label>Ordenar por</label>
+                <select id="sel-vista-orden" onchange="UI.setActivosOrden(this.value)">
+                    <option value="tipo">Tipo</option>
+                    <option value="estado">Estado</option>
+                    <option value="forma">Forma</option>
+                    <option value="marca">Marca / Modelo</option>
+                </select>
             </div>
             <div class="btn-group">
                 <button class="btn-cancel" onclick="UI.cerrarVistaActivos()">
@@ -2525,6 +2590,8 @@
                     modelo: S.sanitize(g.modelo || '', 60),
                     ip: S.sanitize(g.ip || '', 45),
                     lugar: S.sanitize(g.lugar || '', 80),
+                    rack: S.sanitize(g.rack || '', 40),
+                    puerto: S.sanitize(g.puerto || '', 10),
                     mac: S.sanitize(g.mac || '', 20),
                     dispositivoId: g.dispositivoId || null,
                     canales_n: n,
@@ -2903,7 +2970,7 @@
 
                 if (disps.length === 0) {
                     lista.innerHTML = `<div class="empty-state">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+                    <svg class="icon icon-line" style="width:2rem;height:2rem;stroke:var(--text-muted)"><use href="#icon-camera"/></svg>
                     Sin dispositivos registrados.<br>Usá el botón <strong>+</strong> para agregar uno.
                 </div>`;
                     const contador = document.getElementById('contador-dispositivos');
@@ -3011,7 +3078,7 @@
 
                 if (sorted.length === 0) {
                     lista.innerHTML = `<div class="empty-state">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <svg class="icon icon-line" style="width:2rem;height:2rem;stroke:var(--text-muted)"><use href="#icon-search"/></svg>
                     Sin resultados para "<strong>${esc(query)}</strong>".
                 </div>`;
                     document.getElementById('contador-dispositivos').textContent = '0';
@@ -3039,16 +3106,17 @@
                     const asig = asignaciones[d.id];
                     if (asig) {
                         if (asig.tipo === 'canal') {
-                            const partes = [esc(asig.grab.descripcion), `CANAL ${asig.slot.canal}`];
-                            if (asig.slot.ip) partes.push(esc(asig.slot.ip));
+                            const linea2 = [esc(asig.grab.descripcion), `CANAL ${asig.slot.canal}`].join(' · ');
+                            const linea3 = asig.slot.ip ? `<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(asig.slot.ip)}</div>` : '';
                             const desc = asig.slot.descripcion
-                                ? `<div><span class="badge badge-estado-produccion" style="white-space:nowrap">${esc(asig.slot.descripcion)}</span></div>`
+                                ? `<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span class="badge badge-estado-produccion">${esc(asig.slot.descripcion)}</span></div>`
                                 : '';
-                            asignInfo = `${desc}<div>${partes.join(' · ')}</div>`;
+                            asignInfo = `${desc}<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${linea2}</div>${linea3}`;
                         } else {
-                            const partes = [esc(asig.grab.descripcion)];
-                            if (asig.grab.ip) partes.push(esc(asig.grab.ip));
-                            asignInfo = `<span class="badge badge-estado-produccion" style="white-space:nowrap">${partes.join(' · ')}</span>`;
+                            const ipHtml = asig.grab.ip
+                                ? `<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(asig.grab.ip)}</div>`
+                                : '';
+                            asignInfo = `<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span class="badge badge-estado-produccion">${esc(asig.grab.descripcion)}</span></div>${ipHtml}`;
                         }
                     }
                     // badge de estado (no aplica a producción: el color ya está en asignInfo)
@@ -3066,7 +3134,7 @@
                     const derechaHtml = estadoBadgeHtml || asignInfo
                         ? `<div style="font-size:0.78rem;color:var(--text-muted);text-align:right;flex-shrink:0;max-width:40%;line-height:1.35;overflow:hidden;display:flex;flex-direction:column;align-items:flex-end;gap:0.2rem">
                             ${estadoBadgeHtml}
-                            ${asignInfo ? asignInfo.replace(/<div>/g, '<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">') : ''}
+                            ${asignInfo}
                            </div>`
                         : '';
                     return `<div class="dispositivo-item tipo-${esc(d.tipo)} ${estadoClase} anim-in"
@@ -3076,9 +3144,9 @@
                         <div class="dispositivo-meta">
                             <span class="badge ${tc.badge || 'badge-otro'}">${tipoBadgeLabel}</span>
                             ${subtitulo ? `<span>${subtitulo}</span>` : ''}
-                            ${d.serial && d.mac ? `<span>S/N: ${esc(d.serial)}</span>` : ''}
-                            ${d.patrimonio ? `<span>PAT: ${esc(d.patrimonio)}</span>` : ''}
+                            ${!(d.serial && d.mac) && !d.patrimonio ? '' : ''}
                         </div>
+                        ${(d.serial && d.mac) || d.patrimonio ? `<div class="disp-linea3">${[d.serial && d.mac ? `S/N: ${esc(d.serial)}` : '', d.patrimonio ? `PAT: ${esc(d.patrimonio)}` : ''].filter(Boolean).join(' · ')}</div>` : ''}
                     </div>
                     ${derechaHtml}
                 </div>`;
@@ -3102,7 +3170,7 @@
 
                 if (grabs.length === 0) {
                     lista.innerHTML = `<div class="empty-state">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/></svg>
+                    <svg class="icon icon-line" style="width:2rem;height:2rem;stroke:var(--text-muted)"><use href="#icon-server"/></svg>
                     Sin grabadores registrados.<br>Usá el botón <strong>+</strong> para agregar uno.
                 </div>`;
                     return;
@@ -3243,18 +3311,10 @@
                 },
 
                 abrirVistaActivos() {
-                    const btn1 = document.getElementById('btn-vista-1col');
-                    const btn2 = document.getElementById('btn-vista-2col');
-                    if (btn1 && btn2) {
-                        btn1.style.background = _activosColumnas === 1 ? 'var(--c-blue)' : '';
-                        btn1.style.color = _activosColumnas === 1 ? 'var(--c-white)' : '';
-                        btn2.style.background = _activosColumnas === 2 ? 'var(--c-blue)' : '';
-                        btn2.style.color = _activosColumnas === 2 ? 'var(--c-white)' : '';
-                    }
-                    ['tipo','estado','forma','marca'].forEach(o => {
-                        const b = document.getElementById(`btn-orden-${o}`);
-                        if (b) { b.style.background = _activosOrden === o ? 'var(--c-blue)' : ''; b.style.color = _activosOrden === o ? 'var(--c-white)' : ''; }
-                    });
+                    const selCol = document.getElementById('sel-vista-columnas');
+                    const selOrden = document.getElementById('sel-vista-orden');
+                    if (selCol) selCol.value = _activosColumnas;
+                    if (selOrden) selOrden.value = _activosOrden;
                     MM.abrir('modal-vista-activos');
                 },
 
@@ -3263,31 +3323,17 @@
                 },
 
                 setActivosColumnas(n) {
-                    if (_activosColumnas === n) { MM.cerrar('modal-vista-activos'); return; }
+                    if (_activosColumnas === n) return;
                     _activosColumnas = n;
                     try { localStorage.setItem('cctv_activos_cols', n); } catch (_) {}
                     renderActivos();
-                    const btn1 = document.getElementById('btn-vista-1col');
-                    const btn2 = document.getElementById('btn-vista-2col');
-                    if (btn1 && btn2) {
-                        btn1.style.background = n === 1 ? 'var(--c-blue)' : '';
-                        btn1.style.color = n === 1 ? 'var(--c-white)' : '';
-                        btn2.style.background = n === 2 ? 'var(--c-blue)' : '';
-                        btn2.style.color = n === 2 ? 'var(--c-white)' : '';
-                    }
-                    MM.cerrar('modal-vista-activos');
                 },
 
                 setActivosOrden(orden) {
-                    if (_activosOrden === orden) { MM.cerrar('modal-vista-activos'); return; }
+                    if (_activosOrden === orden) return;
                     _activosOrden = orden;
                     try { localStorage.setItem('cctv_activos_orden', orden); } catch (_) {}
                     renderActivos();
-                    ['tipo','estado','forma','marca'].forEach(o => {
-                        const b = document.getElementById(`btn-orden-${o}`);
-                        if (b) { b.style.background = o === orden ? 'var(--c-blue)' : ''; b.style.color = o === orden ? 'var(--c-white)' : ''; }
-                    });
-                    MM.cerrar('modal-vista-activos');
                 },
 
                 abrirFiltrosBusqueda() {
@@ -3409,16 +3455,31 @@
 
                 agregarTipoCustom() {
                     const labelEl = document.getElementById('nuevo-tipo-label');
-                    const label = S.sanitize(labelEl.value.trim(), 30);
-                    if (!label) { labelEl.classList.add('error'); toast('Ingresá un nombre para el tipo', 'error'); return; }
-                    const key = label.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '') || S.genId().slice(0, 8);
-                    if (S.TIPOS[key]) { toast(`Ya existe un tipo "${S.TIPOS[key].label}"`, 'error'); return; }
-                    S.TIPOS[key] = { label, emoji: '📦', badge: 'badge-otro', dot: 'var(--c-gold)', builtin: false };
-                    S.guardarTipos();
+                    const raw = labelEl.value.trim();
+                    if (!raw) { labelEl.classList.add('error'); toast('Ingresá un nombre para el tipo', 'error'); return; }
+                    const labels = raw.split(',').map(n => S.sanitize(n.trim(), 100)).filter(Boolean);
+                    if (!labels.length) { labelEl.classList.add('error'); return; }
+                    const agregados = [], duplicados = [];
+                    for (const label of labels) {
+                        const key = label.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '') || S.genId().slice(0, 8);
+                        if (S.TIPOS[key]) {
+                            duplicados.push(label);
+                        } else {
+                            S.TIPOS[key] = { label, emoji: '📦', badge: 'badge-otro', dot: 'var(--c-gold)', builtin: false };
+                            agregados.push(label);
+                        }
+                    }
+                    if (agregados.length) S.guardarTipos();
                     labelEl.value = '';
                     labelEl.classList.remove('error');
                     UI._renderTiposCustom();
-                    toast(`Tipo "${label}" agregado`, 'success');
+                    if (agregados.length && !duplicados.length) {
+                        toast(agregados.length === 1 ? `Tipo "${agregados[0]}" agregado` : `${agregados.length} tipos agregados`, 'success');
+                    } else if (agregados.length && duplicados.length) {
+                        toast(`${agregados.length} agregado${agregados.length > 1 ? 's' : ''}, ${duplicados.length} duplicado${duplicados.length > 1 ? 's' : ''} omitido${duplicados.length > 1 ? 's' : ''}`, 'info');
+                    } else {
+                        toast(duplicados.length === 1 ? `Ya existe "${duplicados[0]}"` : 'Todos ya existen', 'error');
+                    }
                 },
 
                 async eliminarTipoCustom(key) {
@@ -3519,17 +3580,30 @@
 
                 agregarEdificio() {
                     const el = document.getElementById('nuevo-edificio-nombre');
-                    const nombre = S.sanitize(el.value.trim(), 60);
-                    if (!nombre) { el.classList.add('error'); toast('Ingresá un nombre para el edificio', 'error'); return; }
-                    if (S.edificios.some(e => e.toLowerCase() === nombre.toLowerCase())) {
-                        toast(`Ya existe el edificio "${nombre}"`, 'error'); return;
+                    const raw = el.value.trim();
+                    if (!raw) { el.classList.add('error'); toast('Ingresá un nombre para el edificio', 'error'); return; }
+                    const nombres = raw.split(',').map(n => S.sanitize(n.trim(), 100)).filter(Boolean);
+                    if (!nombres.length) { el.classList.add('error'); return; }
+                    const agregados = [], duplicados = [];
+                    for (const nombre of nombres) {
+                        if (S.edificios.some(e => e.toLowerCase() === nombre.toLowerCase())) {
+                            duplicados.push(nombre);
+                        } else {
+                            S.edificios.push(nombre);
+                            agregados.push(nombre);
+                        }
                     }
-                    S.edificios.push(nombre);
-                    S.guardarEdificios();
+                    if (agregados.length) S.guardarEdificios();
                     el.value = '';
                     el.classList.remove('error');
                     UI._renderEdificios();
-                    toast(`Edificio "${nombre}" agregado`, 'success');
+                    if (agregados.length && !duplicados.length) {
+                        toast(agregados.length === 1 ? `Edificio "${agregados[0]}" agregado` : `${agregados.length} edificios agregados`, 'success');
+                    } else if (agregados.length && duplicados.length) {
+                        toast(`${agregados.length} agregado${agregados.length > 1 ? 's' : ''}, ${duplicados.length} duplicado${duplicados.length > 1 ? 's' : ''} omitido${duplicados.length > 1 ? 's' : ''}`, 'info');
+                    } else {
+                        toast(duplicados.length === 1 ? `Ya existe "${duplicados[0]}"` : 'Todos ya existen', 'error');
+                    }
                 },
 
                 async eliminarEdificio(idx) {
@@ -3774,7 +3848,7 @@
                     const inputCanales = document.getElementById(`${prefijo}-canales`);
                     inputCanales.disabled = canalesOcupados > 0;
                     if (canalesOcupados > 0) {
-                        inputCanales.title = `No se puede modificar: ${canalesOcupados} canal(es) ocupado(s)`;
+                        inputCanales.title = `No se puede modificar: ${canalesOcupados} canal${canalesOcupados === 1 ? '' : 'es'} ocupado${canalesOcupados === 1 ? '' : 's'}`;
                     } else {
                         inputCanales.title = '';
                     }
@@ -3783,7 +3857,7 @@
                     let avisoHtml = '';
                     if (enProduccionComoGrab && canalesOcupados > 0) {
                         avisoHtml = `<div id="aviso-prod-disp" style="font-size:0.8rem;background:var(--input-bg);border-radius:var(--radius-sm);padding:0.6rem 0.75rem;margin-bottom:0.75rem;line-height:1.45">
-                            ⚠️ Este grabador está en producción con <strong>${canalesOcupados} canal(es) ocupado(s)</strong>.<br>
+                            ⚠️ Este grabador está en producción con <strong>${canalesOcupados} canal${canalesOcupados === 1 ? '' : 'es'} ocupado${canalesOcupados === 1 ? '' : 's'}</strong>.<br>
                             No se puede cambiar el tipo, canales ni eliminar mientras tenga cámaras asignadas.
                         </div>`;
                     } else if (enProduccionComoGrab) {
@@ -3807,10 +3881,16 @@
                         btnEliminar.title = enProduccion ? 'No se puede eliminar: el dispositivo está en producción' : '';
                     }
 
-                    // Botón "Editar asignación": visible solo si es cámara asignada a un grabador
+                    // Botón "Editar asignación": visible si es cámara asignada a canal, o si es NVR/DVR con grabador
                     const btnAsig = document.getElementById('btn-editar-asignacion');
                     if (esCamara) {
                         btnAsig.style.display = enProduccionComoCanal ? '' : 'none';
+                        btnAsig.title = 'Ver asignación';
+                        btnAsig.onclick = () => UI.editarAsignacionCamara();
+                    } else if (esGrab && enProduccionComoGrab) {
+                        btnAsig.style.display = '';
+                        btnAsig.title = 'Ver grabador';
+                        btnAsig.onclick = () => UI.verGrabadorDesdeDispositivo();
                     } else {
                         btnAsig.style.display = 'none';
                     }
@@ -3991,6 +4071,14 @@
                     setTimeout(() => UI.abrirAsignarCanal(grabId, nCanal, dispId), 180);
                 },
 
+                verGrabadorDesdeDispositivo() {
+                    if (!_editandoDispId) return;
+                    const grab = _data.grabadores.find(g => g.dispositivoId === _editandoDispId);
+                    if (!grab) return;
+                    MM.cerrar('modal-editar-disp');
+                    setTimeout(() => UI.abrirEditarGrabador(grab.id), 180);
+                },
+
                 async eliminarDispositivo() {
                     if (!_editandoDispId) return;
                     const d = _data.dispositivos.find(x => x.id === _editandoDispId);
@@ -3999,7 +4087,7 @@
                     if (grabAsoc) {
                         const ocupados = grabAsoc.canales_data.filter(c => c.dispositivoId).length;
                         if (ocupados > 0) {
-                            toast(`No se puede eliminar: el grabador tiene ${ocupados} canal(es) ocupado(s)`, 'error');
+                            toast(`No se puede eliminar: el grabador tiene ${ocupados} canal${ocupados === 1 ? '' : 'es'} ocupado${ocupados === 1 ? '' : 's'}`, 'error');
                             return;
                         }
                     }
@@ -4068,6 +4156,8 @@
                     document.getElementById(`${prefijo}-nombre`).value = g.descripcion;
                     document.getElementById(`${prefijo}-ip`).value = g.ip || '';
                     document.getElementById(`${prefijo}-lugar`).value = g.lugar || '';
+                    document.getElementById(`${prefijo}-rack`).value = g.rack || '';
+                    document.getElementById(`${prefijo}-puerto`).value = g.puerto || '';
                     // canales mínimos = mayor número de canal ocupado (para preservar la configuración)
                     const _canalesOcupadosGrab = g.canales_data.filter(c => c.dispositivoId).length;
                     const _maxCanalOcupado = g.canales_data
@@ -4080,6 +4170,8 @@
                         descripcion: g.descripcion,
                         ip: g.ip || '',
                         lugar: g.lugar || '',
+                        rack: g.rack || '',
+                        puerto: g.puerto || '',
                         dispositivoId: g.dispositivoId || '',
                     };
 
@@ -4088,15 +4180,30 @@
                     const btnElimGrab = document.querySelector('#modal-editar-grab .btn-delete');
                     if (btnElimGrab) {
                         btnElimGrab.disabled = ocupados > 0;
-                        btnElimGrab.title = ocupados > 0 ? `No se puede eliminar: ${ocupados} canal(es) ocupado(s)` : '';
+                        btnElimGrab.title = ocupados > 0 ? `No se puede eliminar: ${ocupados} canal${ocupados === 1 ? '' : 'es'} ocupado${ocupados === 1 ? '' : 's'}` : '';
                     }
 
                     MM.abrir('modal-editar-grab');
+                    const btnVerActivo = document.getElementById('btn-ver-activo-grab');
+                    if (btnVerActivo) btnVerActivo.style.display = g.dispositivoId ? '' : 'none';
                 },
 
                 cerrarModalEditarGrabador() {
                     MM.cerrar('modal-editar-grab');
                     _editandoGrabId = null;
+                },
+
+                onGrabDispositivoChange() {
+                    const dispId = document.getElementById('editar-grab-dispositivo-id').value;
+                    const btn = document.getElementById('btn-ver-activo-grab');
+                    if (btn) btn.style.display = dispId ? '' : 'none';
+                },
+
+                verActivoDesdeGrabador() {
+                    const dispId = document.getElementById('editar-grab-dispositivo-id').value;
+                    if (!dispId) return;
+                    MM.cerrar('modal-editar-grab');
+                    setTimeout(() => UI.abrirEditarDispositivo(dispId), 180);
                 },
 
                 guardarEdicionGrabador() {
@@ -4131,6 +4238,8 @@
                         modelo: disp.modelo,
                         ip: document.getElementById(`${prefijo}-ip`).value.trim(),
                         lugar: document.getElementById(`${prefijo}-lugar`).value.trim(),
+                        rack: document.getElementById(`${prefijo}-rack`).value.trim(),
+                        puerto: document.getElementById(`${prefijo}-puerto`).value.trim(),
                         mac: disp.mac || '',
                         canales: disp.canales || 16,
                         dispositivoId: disp.id,
@@ -4142,6 +4251,8 @@
                         descripcion: datos.descripcion,
                         ip: datos.ip || '',
                         lugar: datos.lugar || '',
+                        rack: datos.rack || '',
+                        puerto: datos.puerto || '',
                         dispositivoId: datos.dispositivoId || '',
                     };
                     const huboCambiosGrab = JSON.stringify(nuevoSnapGrab) !== JSON.stringify(_snapshotGrab);
@@ -4160,7 +4271,7 @@
                     const g = _data.grabadores.find(x => x.id === _editandoGrabId);
                     const ocupados = g ? g.canales_data.filter(c => c.dispositivoId).length : 0;
                     if (ocupados > 0) {
-                        toast(`No se puede eliminar: el grabador tiene ${ocupados} canal(es) ocupado(s). Desasigná las cámaras primero.`, 'error');
+                        toast(`No se puede eliminar: el grabador tiene ${ocupados} canal${ocupados === 1 ? '' : 'es'} ocupado${ocupados === 1 ? '' : 's'}. Desasigná las cámaras primero.`, 'error');
                         return;
                     }
                     const ok = await confirmarModal(`¿Eliminar el grabador "${g?.descripcion}"?`);
@@ -4676,7 +4787,7 @@
                         const canalesDisp = d.canales || 0;
                         const canalesStr = canalesDisp ? ` · ${canalesDisp} ch` : '';
                         const label = d.mac || d.serial || d.id;
-                        const marcaModelo = [d.marca, d.modelo].filter(Boolean).join(' ');
+                        const marcaModelo = d.modelo || '';
                         opt.textContent = `${d.tipo === 'nvr' ? '📟' : '📼'} ${label}${marcaModelo ? ' · ' + marcaModelo : ''}${canalesStr}`;
                         if (enUso.has(d.id)) {
                             opt.disabled = true; opt.textContent += ' (en uso)';
@@ -4861,15 +4972,11 @@
 
 <!--
 // ====================================================================
-//         NOTAS CCTV ACTIVOS VERSION 211
+//         NOTAS CCTV ACTIVOS VERSION 227
 // ====================================================================
 
  - CAMBIOS:
-   · Exportar: los edificios declarados se incluyen en el JSON como
-     campo "edificios" (array de strings).
-   · Importar (Combinar): agrega los edificios del archivo que no existen
-     localmente (comparación case-insensitive).
-   · Importar (Reemplazar): reemplaza la lista de edificios completa.
+   
 
  - PENDIENTE (futuras iteraciones):
    · Undo/redo
