@@ -16,21 +16,25 @@
         frame-ancestors 'none';
         upgrade-insecure-requests;">
     <meta name="referrer" content="no-referrer">
-    <title>CCTV — Control de Activos v202</title>
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="./icon.svg">
+    <title>CCTVS</title>
 
     <style>
         /* ============================================================
-           VARIABLES DE COLOR  (idénticas a Horarios)
+           VARIABLES DE COLOR
         ============================================================ */
         :root {
-            --bg-body: #ffffff;
-            --bg-card: #f0f4f9;
-            --bg-header: #ffffff;
-            --text-main: #1f1f1f;
-            --text-muted: #444746;
+            --bg-body: #f5f6fa;
+            --bg-card: #ffffff;
+            --bg-header: #ffffffee;
+            --text-main: #1a1d23;
+            --text-muted: #5a6070;
             --text-disabled: #444746a2;
-            --border: #dde3ea;
-            --input-bg: #dde3ea;
+            --border: #e2e6ef;
+            --input-bg: #f0f2f8;
             /* aliases semánticos usados en inline styles */
             --surface: var(--bg-card);
             --text: var(--text-main);
@@ -89,7 +93,7 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
             background: var(--bg-body);
             color: var(--text-main);
             transition: background 0.3s, color 0.3s;
@@ -111,14 +115,15 @@
         .header {
             background: var(--bg-header);
             backdrop-filter: blur(10px);
-            padding: 0.6rem;
+            padding: 0 0.75rem;
+            height: 56px;
             box-shadow: var(--shadow);
             position: sticky;
             top: 0;
             z-index: 90;
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            gap: 0.75rem;
         }
 
         .header h1 {
@@ -150,6 +155,25 @@
             color: var(--text-main);
         }
 
+        .modal-header {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-header h3 {
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .modal-header-version {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            letter-spacing: 0.04em;
+        }
+
         .card h2 {
             font-size: 1rem;
             margin-bottom: 1rem;
@@ -158,6 +182,16 @@
             gap: 0.5rem;
             color: var(--text-main);
             min-height: 44px;
+        }
+
+        /* ── Títulos de las tarjetas ── */
+        .card h2 {
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-main);
         }
 
         /* ============================================================
@@ -169,22 +203,25 @@
 
         label {
             display: block;
-            font-size: 0.875rem;
+            font-size: 0.78rem;
             font-weight: 600;
             color: var(--text-muted);
-            margin: 0 0 0.25rem 0.5rem;
+            margin-bottom: 0.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            padding-left: 0.5rem;
         }
 
         input,
         select {
             width: 100%;
-            padding: 0.75rem;
+            padding: 0.65rem 0.85rem;
             border: 1px solid var(--border);
             border-radius: var(--radius);
-            font-size: 1rem;
+            font-size: 0.95rem;
             background: var(--input-bg);
             color: var(--text-main);
-            height: 48px;
+            height: 44px;
             transition: border-color 0.2s, background 0.3s;
         }
 
@@ -200,6 +237,7 @@
         input:focus,
         select:focus {
             outline: none;
+            border-color: var(--c-blue);
         }
 
         input.error {
@@ -223,13 +261,13 @@
         ============================================================ */
         button {
             width: 100%;
-            padding: 0.875rem;
+            padding: 0.75rem 1rem;
             border: 1px solid transparent;
             border-radius: var(--radius);
             font-weight: 600;
-            font-size: 1rem;
+            font-size: 0.9rem;
             cursor: pointer;
-            transition: transform 0.2s, background 0.2s;
+            transition: transform 0.2s, background 0.2s, filter 0.15s;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -247,13 +285,14 @@
             cursor: not-allowed;
             transform: none;
             color: var(--text-disabled);
+            filter: none;
         }
 
         .icon-btn {
-            width: auto;
-            padding: 0.5rem;
-            min-width: 44px;
-            height: 44px;
+            width: 40px;
+            min-width: 40px;
+            height: 40px;
+            padding: 0;
             background: transparent;
             touch-action: manipulation;
         }
@@ -303,17 +342,111 @@
             fill: none;
         }
 
+        /* Modificador para iconos que necesitan dar vueltas */
+        .icon-btn-spinning svg {
+            animation: spin 1s linear infinite;
+            transform-origin: center;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
         /* ============================================================
-           TABS  (estilo propio pero con variables de Horarios)
+           MINI TABS (Para tarjetas internas, ej: Cámaras)
+        ============================================================ */
+        .mini-tabs {
+            position: relative;
+            display: flex;
+            background: var(--bg-body);
+            border-radius: var(--radius-sm);
+            padding: 0.2rem;
+            margin-bottom: 0.85rem;
+            box-shadow: var(--shadow);
+            z-index: 1;
+        }
+
+        /* ── Slider deslizable ── */
+        .mini-tabs::before {
+            content: '';
+            position: absolute;
+            top: 0.2rem;
+            left: 0.2rem;
+            bottom: 0.2rem;
+            width: calc(50% - 0.2rem);
+            /* 50% porque son 2 pestañas */
+            background: var(--bg-card);
+            border-radius: calc(var(--radius-sm) - 2px);
+            box-shadow: var(--shadow);
+            transition: transform 0.2s cubic-bezier(0.34, 1.3, 0.64, 1);
+            z-index: -1;
+        }
+
+        /* Detectamos la pestaña activa para mover el slider a la derecha */
+        .mini-tabs:has(.mini-tab-btn[data-target="edificio"].activa)::before {
+            transform: translateX(100%);
+        }
+
+        .mini-tab-btn {
+            flex: 1;
+            padding: 0.35rem 0.5rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: color 0.2s;
+            text-align: center;
+        }
+
+        .mini-tab-btn.activa {
+            color: var(--text-main);
+        }
+
+        /* ============================================================
+           TABS  (con fondo deslizable, igual que Materiales)
         ============================================================ */
         .tabs {
+            position: relative;
             display: flex;
-            gap: 0;
             background: var(--bg-card);
             border-radius: var(--radius);
             padding: 0.3rem;
-            margin-bottom: 1rem;
+            margin-bottom: 0.75rem;
             box-shadow: var(--shadow);
+            z-index: 1;
+        }
+
+        /* ── fondo deslizable (Slider) ── */
+        .tabs::before {
+            content: '';
+            position: absolute;
+            top: 0.3rem;
+            left: 0.3rem;
+            bottom: 0.3rem;
+            /* Tenemos 3 pestañas, así que el ancho es 1/3 (33.33%) */
+            width: calc(33.333% - 0.2rem);
+            background: var(--bg-body);
+            border-radius: calc(var(--radius) - 2px);
+            box-shadow: var(--shadow);
+            transition: transform 0.2s cubic-bezier(0.34, 1.3, 0.64, 1);
+            z-index: -1;
+        }
+
+        /* Movimiento del slider según la pestaña activa usando :has() */
+        .tabs:has(#tab-activos.activa)::before {
+            transform: translateX(100%);
+        }
+
+        .tabs:has(#tab-produccion.activa)::before {
+            transform: translateX(200%);
         }
 
         .tab-btn {
@@ -326,14 +459,54 @@
             border-radius: var(--radius);
             color: var(--text-muted);
             height: auto;
-            transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            transition: color 0.2s;
+            /* Solo transicionamos color, el fondo lo da el slider */
+            display: flex;
+            align-items: center;
+            justify-content: center;
             gap: 0.3rem;
+            position: relative;
+            /* Mantiene el texto por encima del slider */
         }
 
         .tab-btn.activa {
-            background: var(--bg-body);
+            background: transparent;
+            /* El color lo da el slider ahora */
             color: var(--text-main);
-            box-shadow: var(--shadow);
+            box-shadow: none;
+        }
+
+        /* ============================================================
+           BARRA DE BÚSQUEDA (Sticky)
+        ============================================================ */
+        /* Contenedor que agrupa la barra para hacerla sticky */
+        .search-actions-bar {
+            margin-bottom: 0.75rem;
+            position: relative;
+        }
+
+        /* Solo se hace sticky si el input tiene texto (no está vacío) */
+        .search-actions-bar:has(#input-busqueda:not(:placeholder-shown)) {
+            position: sticky;
+            top: 56px;
+            /* Altura del header */
+            z-index: 85;
+            padding-top: 0.5rem;
+            margin-top: -0.5rem;
+            padding-bottom: 0.5rem;
+            margin-bottom: 0.25rem;
+        }
+
+        /* Borde cuando hay un filtro activo (tiene texto) */
+        #input-busqueda:not(:placeholder-shown),
+        #input-busqueda:not(:placeholder-shown):focus {
+            border-color: var(--c-orange);
+        }
+
+        /* Pinta el ícono de la lupa cuando hay filtro activo */
+        .search-actions-bar:has(#input-busqueda:not(:placeholder-shown)) .icon-search-lupa {
+            stroke: var(--c-orange) !important;
         }
 
         /* ============================================================
@@ -517,7 +690,7 @@
             overflow: hidden;
         }
 
-        .lista-2col .dispositivo-meta > span {
+        .lista-2col .dispositivo-meta>span {
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -525,7 +698,7 @@
             flex-shrink: 1;
         }
 
-        .lista-2col .dispositivo-meta > .badge:first-child {
+        .lista-2col .dispositivo-meta>.badge:first-child {
             flex-shrink: 0;
         }
 
@@ -980,6 +1153,54 @@
             transition-delay: 0.40s;
         }
 
+        /* ============================================================
+           IMPORTAR DROPZONE
+        ============================================================ */
+        .importar-dropzone {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            padding: 2rem 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .importar-dropzone-drag {
+            border-color: var(--c-blue) !important;
+            background: var(--input-bg);
+        }
+
+        .dropzone-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            opacity: 0.35;
+            margin: 0 auto 0.75rem;
+            display: block;
+        }
+
+        .dropzone-label {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        .import-ok {
+            color: var(--c-green);
+            font-weight: 700;
+        }
+
+        .import-fail {
+            color: var(--c-red);
+            font-weight: 700;
+        }
+
+        .import-sub {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: block;
+            margin-top: 0.25rem;
+        }
 
         /* ============================================================
            EMPTY STATE
@@ -1069,27 +1290,45 @@
         .tab-panel {
             animation: none;
         }
+
         .tab-panel.tab-saliendo {
             animation: tabFadeOut 0.18s ease forwards;
             pointer-events: none;
         }
+
         .tab-panel.tab-entrando {
             animation: tabFadeIn 0.22s ease forwards;
         }
+
         @keyframes tabFadeOut {
-            from { opacity: 1; transform: translateY(0); }
-            to   { opacity: 0; transform: translateY(6px); }
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            to {
+                opacity: 0;
+                transform: translateY(6px);
+            }
         }
+
         @keyframes tabFadeIn {
-            from { opacity: 0; transform: translateY(-6px); }
-            to   { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(-6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         /* ── Expand/collapse grabadores animado ── */
         .nvr-canales-grid {
-            transition: max-height 0.32s cubic-bezier(0.4,0,0.2,1),
-                        opacity    0.25s ease,
-                        padding    0.32s cubic-bezier(0.4,0,0.2,1);
+            transition: max-height 0.32s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.25s ease,
+                padding 0.32s cubic-bezier(0.4, 0, 0.2, 1);
             overflow: hidden;
         }
 
@@ -1103,13 +1342,13 @@
             border-radius: calc(var(--radius) - 4px);
             cursor: pointer;
             gap: 0.75rem;
+            margin-bottom: 0;
         }
 
         .filtro-label {
             font-size: 0.9rem;
             font-weight: 500;
             color: var(--text-main);
-            cursor: pointer;
             flex: 1;
         }
 
@@ -1230,6 +1469,148 @@
         }
 
         /* ============================================================
+           GIST SYNC STYLES
+        ============================================================ */
+        .gist-input-row {
+            display: flex;
+            gap: 0.4rem;
+            align-items: center;
+        }
+
+        .gist-input-row input {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .gist-eye-btn {
+            flex-shrink: 0;
+            padding: 0;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            color: var(--text-muted);
+        }
+
+        .gist-eye-btn:hover {
+            color: var(--text-main);
+        }
+
+        .icon-link {
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .gist-autosync-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 0.65rem 0.85rem;
+            margin-bottom: 0.6rem;
+            cursor: pointer;
+        }
+
+        .gist-autosync-text {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+        }
+
+        .gist-autosync-title {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .toggle-switch {
+            flex-shrink: 0;
+            width: 44px;
+            height: 26px;
+            background: var(--border);
+            border-radius: var(--radius-pill);
+            position: relative;
+            transition: background 0.2s;
+        }
+
+        .toggle-switch.on {
+            background: var(--c-blue);
+        }
+
+        .toggle-thumb {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+        }
+
+        .toggle-switch.on .toggle-thumb {
+            transform: translateX(18px);
+        }
+
+        .gist-sync-status {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            text-align: right;
+            min-height: 1.2em;
+            margin-top: 0.1rem;
+        }
+
+        .gist-novedades-desc {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
+        }
+
+        .gist-novedades-pregunta {
+            font-size: 0.88rem;
+            font-weight: 600;
+        }
+
+        .gist-novedades-detalle {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            margin-bottom: 0.85rem;
+        }
+
+        .gist-novedades-chip {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 0.55rem 0.85rem;
+            font-size: 0.88rem;
+        }
+
+        .gist-novedades-chip-label {
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .gist-novedades-chip-count {
+            font-weight: 800;
+            color: var(--c-blue);
+            font-size: 1rem;
+        }
+
+        /* ============================================================
            HOVERS (todos agrupados — solo pointer: fine)
         ============================================================ */
         @media (hover: hover) and (pointer: fine) {
@@ -1247,6 +1628,10 @@
             .stat-chip-tipo:hover {
                 filter: var(--hover);
                 box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+            }
+
+            .gist-autosync-row:hover {
+                filter: var(--hover);
             }
         }
     </style>
@@ -1296,6 +1681,7 @@
             <path d="M14 11v6" />
             <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
         </symbol>
+        <!-- Undo / Redo -->
         <symbol id="icon-undo" viewBox="0 0 24 24">
             <path d="M3 7v6h6" class="icon-line" stroke="currentColor"></path>
             <path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13" class="icon-line" stroke="currentColor"></path>
@@ -1364,14 +1750,15 @@
             <line x1="9" y1="8" x2="15" y2="8" class="icon-line" stroke="currentColor"></line>
             <line x1="17" y1="16" x2="23" y2="16" class="icon-line" stroke="currentColor"></line>
         </symbol>
-        <symbol id="icon-building" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2"/>
-            <path d="M9 3v18"/>
-            <path d="M3 9h6"/>
-            <path d="M3 15h6"/>
-            <path d="M15 8h2"/>
-            <path d="M15 12h2"/>
-            <path d="M15 16h2"/>
+        <symbol id="icon-building" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+            <path d="M9 3v18" />
+            <path d="M3 9h6" />
+            <path d="M3 15h6" />
+            <path d="M15 8h2" />
+            <path d="M15 12h2" />
+            <path d="M15 16h2" />
         </symbol>
         <symbol id="icon-external-link" viewBox="0 0 24 24">
             <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" fill="none" stroke="currentColor"
@@ -1393,12 +1780,38 @@
         <symbol id="icon-chevron-up" viewBox="0 0 24 24">
             <polyline points="18 15 12 9 6 15" />
         </symbol>
+        <!-- Íconos de Gist -->
+        <symbol id="icon-cloud-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 16 12 12 8 16" />
+            <line x1="12" y1="12" x2="12" y2="21" />
+            <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" />
+        </symbol>
+        <symbol id="icon-cloud-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="8 16 12 20 16 16" />
+            <line x1="12" y1="20" x2="12" y2="11" />
+            <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" />
+        </symbol>
+        <symbol id="icon-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+            <circle cx="12" cy="12" r="3" />
+        </symbol>
+        <symbol id="icon-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path
+                d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+            <line x1="1" y1="1" x2="23" y2="23" />
+        </symbol>
+        <symbol id="icon-gist" viewBox="0 0 24 24">
+            <path
+                d="M12 2C6.477 2 2 6.484 2 12.021c0 4.428 2.865 8.184 6.839 9.504.5.092.682-.217.682-.483 0-.237-.009-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.021C22 6.484 17.522 2 12 2z" />
+        </symbol>
     </svg>
 
     <!-- ====== HEADER ====== -->
     <header class="header">
-
-
         <h1>
             <svg class="icon icon-line">
                 <use href="#icon-camera" />
@@ -1406,6 +1819,18 @@
             SCB
         </h1>
         <div class="header-buttons">
+            <!-- ── HISTORIAL (UNDO/REDO) ── -->
+            <button class="icon-btn" id="btn-undo" onclick="historial.undo()" title="Deshacer (Ctrl+Z)" disabled>
+                <svg class="icon icon-line">
+                    <use href="#icon-undo" />
+                </svg>
+            </button>
+            <button class="icon-btn" id="btn-redo" onclick="historial.redo()" title="Rehacer (Ctrl+Y)" disabled>
+                <svg class="icon icon-line">
+                    <use href="#icon-redo" />
+                </svg>
+            </button>
+
             <button class="icon-btn" onclick="UI.abrirAjustes()" title="Ajustes">
                 <svg class="icon icon-line">
                     <use href="#icon-settings" />
@@ -1440,24 +1865,29 @@
         </div>
 
         <!-- ===== BARRA DE BÚSQUEDA ===== -->
-        <div id="barra-busqueda" style="margin-bottom:0.75rem;position:relative">
-            <input type="text" id="input-busqueda" placeholder="Buscar por tipo, MAC, descripcion de canal…"
-                oninput="UI.filtrarActivos()" style="padding-left:2.5rem;padding-right:4.5rem">
-            <svg class="icon icon-line" style="position:absolute;left:0.75rem;top:50%;transform:translateY(-50%);width:1.1rem;height:1.1rem;stroke:var(--text-muted);pointer-events:none">
-                <use href="#icon-search" />
-            </svg>
-            <button id="btn-limpiar-busqueda" onclick="UI.limpiarBusqueda()"
-                style="display:none;position:absolute;right:2.25rem;top:50%;transform:translateY(-50%);width:28px;height:28px;min-width:unset;padding:0;background:transparent;border:none">
-                <svg class="icon icon-line" style="width:1rem;height:1rem;stroke:var(--text-muted)">
-                    <use href="#icon-cancelar" />
+        <div class="search-actions-bar">
+            <div id="barra-busqueda" style="position:relative">
+                <input type="text" id="input-busqueda" placeholder="Buscar por tipo, MAC, descripcion de canal…"
+                    oninput="UI.filtrarActivos()" style="padding-left:2.5rem;padding-right:4.5rem">
+                <!-- Le agregamos la clase icon-search-lupa -->
+                <svg class="icon icon-line icon-search-lupa"
+                    style="position:absolute;left:0.75rem;top:50%;transform:translateY(-50%);width:1.1rem;height:1.1rem;stroke:var(--text-muted);pointer-events:none;transition: stroke 0.2s;">
+                    <use href="#icon-search" />
                 </svg>
-            </button>
-            <button id="btn-filtros-busqueda" onclick="UI.abrirFiltrosBusqueda()" title="Personalizar búsqueda"
-                style="position:absolute;right:0.35rem;top:50%;transform:translateY(-50%);width:28px;height:28px;min-width:unset;padding:0;background:transparent;border:none">
-                <svg class="icon icon-line" style="width:1rem;height:1rem;stroke:var(--text-muted)">
-                    <use href="#icon-filter" />
-                </svg>
-            </button>
+                <button id="btn-limpiar-busqueda" onclick="UI.limpiarBusqueda()"
+                    style="display:none;position:absolute;right:2.25rem;top:50%;transform:translateY(-50%);width:28px;height:28px;min-width:unset;padding:0;background:transparent;border:none">
+                    <!-- ⬇️ ACÁ LE SACAMOS EL STROKE INLINE -->
+                    <svg class="icon icon-line">
+                        <use href="#icon-cancelar" />
+                    </svg>
+                </button>
+                <button id="btn-filtros-busqueda" onclick="UI.abrirFiltrosBusqueda()" title="Personalizar búsqueda"
+                    style="position:absolute;right:0.35rem;top:50%;transform:translateY(-50%);width:28px;height:28px;min-width:unset;padding:0;background:transparent;border:none">
+                    <svg class="icon icon-line" style="width:1rem;height:1rem;stroke:var(--text-muted)">
+                        <use href="#icon-filter" />
+                    </svg>
+                </button>
+            </div>
         </div>
 
         <!-- ===== PANEL DASHBOARD ===== -->
@@ -1484,7 +1914,20 @@
                         <h2><svg class="icon icon-line">
                                 <use href="#icon-camera" />
                             </svg> Cámaras</h2>
-                        <div id="dash-camaras" style="min-height:32rem"></div>
+
+                        <!-- ⬅ Botonera fija acá -->
+                        <div class="mini-tabs">
+                            <button id="mini-tab-forma" class="mini-tab-btn activa" data-target="forma"
+                                onclick="_setCamarasVista('forma')">
+                                Por forma
+                            </button>
+                            <button id="mini-tab-edificio" class="mini-tab-btn" data-target="edificio"
+                                onclick="_setCamarasVista('edificio')">
+                                Por edificio
+                            </button>
+                        </div>
+
+                        <div id="dash-camaras" style="min-height:28rem"></div>
                     </div>
                 </div>
             </div>
@@ -1540,23 +1983,55 @@
 
     <!-- ====== TOAST ====== -->
     <!-- ============================================================
-         MODAL — Ajustes
+         MODAL Ajustes
     ============================================================ -->
     <div class="modal" id="modal-ajustes">
         <div class="modal-content">
-            <h3>
-                <svg class="icon icon-line">
-                    <use href="#icon-settings" />
-                </svg>
-                Ajustes
-            </h3>
+            <div class="modal-header">
+                <h3>
+                    <svg class="icon icon-line">
+                        <use href="#icon-settings" />
+                    </svg>
+                    Ajustes
+                </h3>
+                <span class="modal-header-version">v229</span>
+            </div>
+
+            <!-- Sincronización (Gist) -->
+            <div style="margin-bottom:1.25rem">
+                <div
+                    style="font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:0.5rem;padding:0 0.25rem">
+                    Sincronización</div>
+                <div style="display:flex;gap:0.5rem;align-items:stretch;margin-bottom:0.5rem">
+                    <button onclick="UI.abrirGist()"
+                        style="justify-content:center;gap:0.75rem;background:var(--input-bg);border:1px solid var(--border);flex:1">
+                        <svg class="icon icon-line">
+                            <use href="#icon-gist" />
+                        </svg>
+                        GitHub Gist
+                    </button>
+                    <button id="btn-ajustes-gist-subir" class="icon-btn" onclick="GistSync.subir()" title="Subir a Gist"
+                        style="display:none;background:var(--input-bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--text-muted)">
+                        <svg class="icon icon-line">
+                            <use href="#icon-cloud-up" />
+                        </svg>
+                    </button>
+                    <button id="btn-ajustes-gist-bajar" class="icon-btn" onclick="GistSync.bajar()"
+                        title="Bajar de Gist"
+                        style="display:none;background:var(--input-bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--text-muted)">
+                        <svg class="icon icon-line">
+                            <use href="#icon-cloud-down" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
 
             <!-- Datos -->
             <div style="margin-bottom:1.25rem">
                 <div
                     style="font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:0.5rem;padding:0 0.25rem">
-                    Datos</div>
-                <div class="btn-group">
+                    Datos Locales</div>
+                <div class="btn-group" style="margin-top:0">
                     <button onclick="UI.abrirImportarDesdeAjustes()"
                         style="justify-content:center;gap:0.75rem;background:var(--input-bg);border:1px solid var(--border)">
                         <svg class="icon icon-line">
@@ -1680,8 +2155,8 @@
             <div style="flex:1;overflow-y:auto;padding:1rem 0.75rem">
                 <div id="lista-edificios" style="margin-bottom:0.75rem"></div>
                 <div style="display:flex;gap:0.5rem;align-items:center">
-                    <input type="text" id="nuevo-edificio-nombre" placeholder="Ej: Torre A, Edificio Central…" maxlength="100"
-                        style="flex:1">
+                    <input type="text" id="nuevo-edificio-nombre" placeholder="Ej: Torre A, Edificio Central…"
+                        maxlength="100" style="flex:1">
                     <button onclick="UI.agregarEdificio()" class="icon-btn btn-edit" title="Agregar edificio">
                         <svg class="icon icon-line">
                             <use href="#icon-plus" />
@@ -1699,6 +2174,132 @@
                         Volver
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         MODAL — Gist Sync
+    ============================================================ -->
+    <div class="modal" id="modal-gist">
+        <div class="modal-content">
+            <h3>
+                <svg class="icon icon-line">
+                    <use href="#icon-gist" />
+                </svg>
+                GitHub Gist
+            </h3>
+
+            <!-- Token -->
+            <div class="form-group">
+                <label>Personal Access Token</label>
+                <div class="gist-input-row">
+                    <input type="password" id="gist-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off"
+                        spellcheck="false">
+                    <button class="icon-btn gist-eye-btn" id="gist-token-eye" onclick="GistSync.toggleToken()"
+                        title="Mostrar/ocultar">
+                        <svg class="icon icon-line" style="width:1.2rem;height:1.2rem">
+                            <use href="#icon-eye" id="gist-eye-icon" />
+                        </svg>
+                    </button>
+                    <a class="icon-btn gist-eye-btn icon-link"
+                        href="https://github.com/settings/tokens/new?description=CCTV+Sync&scopes=gist" target="_blank"
+                        title="Crear token en GitHub">
+                        <svg class="icon icon-line" style="width:1.2rem;height:1.2rem">
+                            <use href="#icon-plus" />
+                        </svg>
+                    </a>
+                </div>
+                <p style="font-size:0.74rem;color:var(--text-muted);margin-top:0.35rem">
+                    ⚠️ El token se guarda de forma local. Usá un token con permisos mínimos (solo
+                    <code>gist</code>).
+                </p>
+            </div>
+
+            <!-- Gist ID -->
+            <div class="form-group">
+                <label>Gist ID</label>
+                <div class="gist-input-row">
+                    <input type="text" id="gist-id" placeholder="Dejar vacío para crear uno nuevo" autocomplete="off"
+                        spellcheck="false">
+                    <a id="gist-link-btn" class="icon-btn gist-eye-btn icon-link" target="_blank"
+                        title="Abrir en GitHub" style="display:none;">
+                        <svg class="icon icon-line" style="width:1.2rem;height:1.2rem">
+                            <use href="#icon-external-link" />
+                        </svg>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Acciones -->
+            <div
+                style="font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-top:1.25rem;margin-bottom:0.5rem;padding:0 0.25rem">
+                Acciones</div>
+            <div class="btn-group" style="margin-top:0; margin-bottom: 0.75rem;">
+                <button class="btn-cancel" id="btn-gist-subir" onclick="GistSync.subir()">
+                    <svg class="icon icon-line">
+                        <use href="#icon-cloud-up" />
+                    </svg> Subir
+                </button>
+                <button class="btn-cancel" id="btn-gist-bajar" onclick="GistSync.bajar()">
+                    <svg class="icon icon-line">
+                        <use href="#icon-cloud-down" />
+                    </svg> Bajar
+                </button>
+            </div>
+
+            <!-- Auto-sync toggle -->
+            <label class="gist-autosync-row" id="gist-autosync-label">
+                <span class="gist-autosync-text">
+                    <span class="gist-autosync-title">Sincronización automática</span>
+                    <span style="font-size: 0.78rem; color: var(--text-muted);">Sube y comprueba cambios al
+                        iniciar</span>
+                </span>
+                <div class="toggle-switch" id="gist-autosync-toggle" onclick="GistSync.toggleAuto()">
+                    <div class="toggle-thumb"></div>
+                </div>
+            </label>
+
+            <!-- Estado sync -->
+            <p id="gist-sync-status" class="gist-sync-status"></p>
+
+            <div class="btn-group" style="margin-top:1.5rem">
+                <button class="btn-edit" onclick="GistSync.guardarConfig()">
+                    <svg class="icon icon-line">
+                        <use href="#icon-save" />
+                    </svg> Guardar
+                </button>
+                <button class="btn-cancel" onclick="UI.cerrarGist()">
+                    <svg class="icon icon-line">
+                        <use href="#icon-undo" />
+                    </svg> Volver
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         MODAL — Gist Novedades
+    ============================================================ -->
+    <div class="modal" id="modal-gist-novedades">
+        <div class="modal-content" style="max-width: 400px;">
+            <h3>
+                <svg class="icon icon-line">
+                    <use href="#icon-cloud-down" />
+                </svg>
+                Novedades en GitHub
+            </h3>
+            <p class="gist-novedades-desc">Se encontraron registros remotos que no están en este dispositivo:</p>
+            <div id="gist-novedades-detalle" class="gist-novedades-detalle"></div>
+            <p class="gist-novedades-pregunta">¿Querés agregarlos a tus datos locales?</p>
+
+            <div class="btn-group" style="margin-top:1.5rem">
+                <button class="btn-edit" id="gist-novedades-ok">
+                    <svg class="icon icon-line">
+                        <use href="#icon-plus" />
+                    </svg> Agregar
+                </button>
+                <button class="btn-cancel" onclick="MM.cerrar('modal-gist-novedades')">Ignorar</button>
             </div>
         </div>
     </div>
@@ -2087,7 +2688,8 @@
                     </div>
                     <div class="form-group">
                         <label>Piso</label>
-                        <input type="text" id="canal-piso" placeholder="Ej: PB, 3, -1, EP2" maxlength="4" oninput="UI._pisoFiltrar(this)">
+                        <input type="text" id="canal-piso" placeholder="Ej: PB, 3, -1, EP2" maxlength="4"
+                            oninput="UI._pisoFiltrar(this)">
                     </div>
                 </div>
 
@@ -2137,33 +2739,39 @@
         <div class="modal-content">
             <h3><svg class="icon icon-line">
                     <use href="#icon-upload" />
-                </svg> Importar datos</h3>
+                </svg> Restaurar datos</h3>
 
-            <div class="form-group">
-                <input type="file" id="file-import" accept=".json" style="display:none">
-                <button class="btn-backup" onclick="document.getElementById('file-import').click()">
-                    <svg class="icon icon-line">
-                        <use href="#icon-upload" />
-                    </svg>
-                    Seleccionar archivo JSON
-                </button>
-                <div id="nombre-archivo"></div>
+            <!-- Drop zone -->
+            <div id="importar-dropzone" class="importar-dropzone"
+                onclick="document.getElementById('file-import').click()">
+                <svg class="icon icon-line dropzone-icon">
+                    <use href="#icon-cloud-up" />
+                </svg>
+                <p id="importar-dropzone-label" class="dropzone-label">Seleccioná o arrastrá un archivo .json</p>
             </div>
+            <input type="file" id="file-import" accept=".json,application/json" style="display:none"
+                onchange="UI.onImportarFileChange(event)">
 
-            <hr style="border:0;border-top:1px solid var(--border);margin:1rem 0">
-
-            <div style="display:flex;flex-direction:column;gap:0.75rem">
-                <button id="btn-combinar" class="btn-backup" onclick="UI.importarDatos('merge')" disabled>
+            <div style="display:flex;flex-direction:column;gap:0.75rem;margin-top:1.5rem">
+                <div class="btn-group" style="margin-top:0">
+                    <button id="btn-reemplazar" class="btn-edit" onclick="UI.importarDatos('replace')" disabled
+                        style="flex:1">
+                        <svg class="icon icon-line">
+                            <use href="#icon-alert" />
+                        </svg> Reemplazar
+                    </button>
+                    <button id="btn-combinar" class="btn-backup" onclick="UI.importarDatos('merge')" disabled
+                        style="flex:1">
+                        <svg class="icon icon-line">
+                            <use href="#icon-link" />
+                        </svg> Combinar
+                    </button>
+                </div>
+                <button class="btn-cancel" onclick="UI.cerrarImportar()">
                     <svg class="icon icon-line">
-                        <use href="#icon-link" />
-                    </svg> Combinar
+                        <use href="#icon-undo" />
+                    </svg> Volver
                 </button>
-                <button id="btn-reemplazar" class="btn-delete" onclick="UI.importarDatos('replace')" disabled>
-                    <svg class="icon icon-line">
-                        <use href="#icon-alert" />
-                    </svg> Reemplazar todo
-                </button>
-                <button class="btn-cancel" onclick="UI.cerrarImportar()">Cancelar</button>
             </div>
         </div>
     </div>
@@ -2207,7 +2815,7 @@
     </div>
 
     <!-- ============================================================
-         MODAL — Confirmar
+         MODAL — Filtros de búsqueda
     ============================================================ -->
     <div class="modal" id="modal-filtros-busqueda">
         <div class="modal-content" style="max-width:360px">
@@ -2231,6 +2839,10 @@
             <button class="btn-cancel" onclick="UI.cerrarFiltrosBusqueda()">Cerrar</button>
         </div>
     </div>
+
+    <!-- ============================================================
+         MODAL — Confirmar
+    ============================================================ -->
     <div class="modal" id="modal-confirmar">
         <div class="modal-content">
             <h3><svg class="icon icon-line">
@@ -2258,7 +2870,7 @@
             'use strict';
 
             // ==============================================================
-            // SECURITY & UTILS  (tomado de Horarios)
+            // SECURITY & UTILS  
             // ==============================================================
             const S = (() => {
                 const MAX_JSON = 4 * 1024 * 1024;
@@ -2364,9 +2976,11 @@
 
                 cargarEdificios();
 
-                return { sanitize, genId, sha256, fechaISO, deepClone, safeParse, MAX_JSON, SCHEMA_V, TIPOS_BUILTIN,
+                return {
+                    sanitize, genId, sha256, fechaISO, deepClone, safeParse, MAX_JSON, SCHEMA_V, TIPOS_BUILTIN,
                     get TIPOS() { return TIPOS; }, guardarTipos, cargarTipos,
-                    get edificios() { return _edificios; }, guardarEdificios, cargarEdificios };
+                    get edificios() { return _edificios; }, guardarEdificios, cargarEdificios
+                };
             })();
 
             // ==============================================================
@@ -2374,7 +2988,6 @@
             // ==============================================================
             const MM = (() => {
                 let _mdDown = false;
-                // mapa id → función que ejecuta el cierre "correcto" (con vuelta al padre)
                 const _onCerrar = {};
 
                 function _onMD(e) { _mdDown = e.target === e.currentTarget; }
@@ -2383,14 +2996,11 @@
                     if (e.target === e.currentTarget) _cerrarConPadre(e.target.id);
                 }
 
-                // Cierra respetando la cadena: si hay un handler registrado lo usa, si no cierra directo
                 function _cerrarConPadre(id) {
                     const fn = _onCerrar[id];
                     if (fn) { fn(); } else { cerrar(id); }
                 }
 
-                // abrir(id, cb)  — cb es el callback de apertura (opcional, igual que antes)
-                // abrir(id, { cb, onEscape })  — onEscape es la función a llamar al cerrar con Escape/overlay
                 function abrir(id, optsOrCb) {
                     const m = document.getElementById(id); if (!m) return;
                     let cb, onEscape;
@@ -2418,7 +3028,9 @@
                     const m = document.getElementById(id); if (!m) return;
                     delete _onCerrar[id];
                     m.classList.remove('show');
-                    document.body.classList.remove('modal-open');
+                    if (!document.querySelector('.modal.show')) {
+                        document.body.classList.remove('modal-open');
+                    }
                     m.removeEventListener('mousedown', _onMD);
                     m.removeEventListener('click', _onClick);
                     cb?.();
@@ -2434,11 +3046,9 @@
                     document.body.classList.remove('modal-open');
                 }
 
-                // Escape global: cierra el modal más reciente respetando la cadena
                 function cerrarTop() {
                     const abiertos = [...document.querySelectorAll('.modal.show')];
                     if (!abiertos.length) return;
-                    // el "más reciente" es el último en el DOM con clase show que tenga handler, o el último visible
                     const conHandler = abiertos.filter(m => _onCerrar[m.id]);
                     const target = conHandler.length ? conHandler[conHandler.length - 1] : abiertos[abiertos.length - 1];
                     _cerrarConPadre(target.id);
@@ -2470,7 +3080,6 @@
                     }
                     ok.addEventListener('click', si);
                     can.addEventListener('click', no);
-                    // capturar Escape antes del handler global que cierra todos los modales
                     document.addEventListener('keydown', onEscape, true);
                     MM.abrir('modal-confirmar');
                 });
@@ -2481,12 +3090,10 @@
             // ==============================================================
             const _toastQueue = [];
             let _toastActivo = false;
-            let _toastUltimo = null; // { msg, tipo } del último mostrado
+            let _toastUltimo = null;
 
             function toast(msg, tipo = 'success') {
-                // descartar si es igual al último procesado
                 if (_toastUltimo && _toastUltimo.msg === msg && _toastUltimo.tipo === tipo) return;
-                // descartar si ya está en cola (evita duplicados encadenados)
                 if (_toastQueue.some(t => t.msg === msg && t.tipo === tipo)) return;
                 _toastQueue.push({ msg, tipo });
                 _procesarToastQueue();
@@ -2505,7 +3112,7 @@
                     setTimeout(() => {
                         el.className = 'toast';
                         _toastActivo = false;
-                        _toastUltimo = null; // limpiar para que el mismo mensaje pueda mostrarse de nuevo
+                        _toastUltimo = null;
                         _procesarToastQueue();
                     }, 300);
                 }, 3000);
@@ -2528,11 +3135,14 @@
             }
 
             function guardar() {
-                try { localStorage.setItem(KEY, JSON.stringify(_data)); return true; }
+                try {
+                    localStorage.setItem(KEY, JSON.stringify(_data));
+                    GistSync.subirAuto(); // <-- Disparador de Gist Auto Sync
+                    return true;
+                }
                 catch { toast('Error al guardar (almacenamiento lleno)', 'error'); return false; }
             }
 
-            // sanitiza un objeto dispositivo entrante
             function _sanDisp(d) {
                 const tipo = S.TIPOS[d.tipo] ? d.tipo : 'otro';
                 const FORMAS = ['domo', 'bullet', 'turret', 'minidomo', 'minibullet', 'domo-ptz'];
@@ -2558,12 +3168,10 @@
                 return obj;
             }
 
-            // sanitiza un objeto grabador entrante
             function _sanGrab(g) {
                 const canales = parseInt(g.canales ?? g.canales_n);
                 const n = Number.isFinite(canales) && canales >= 1 && canales <= 256 ? canales : 16;
                 const slots = [];
-                // Pre-indexar canales_data por número de canal para evitar O(n²) con Array.find
                 const canalMap = {};
                 if (Array.isArray(g.canales_data)) {
                     g.canales_data.forEach(c => { canalMap[c.canal] = c; });
@@ -2600,23 +3208,103 @@
             }
 
             // ==============================================================
+            // HISTORIAL (UNDO / REDO)
+            // ==============================================================
+            const historial = (() => {
+                const MAX = 30;
+                let _pasado = [];
+                let _futuro = [];
+
+                function _actualizarBotones() {
+                    const btnU = document.getElementById('btn-undo');
+                    const btnR = document.getElementById('btn-redo');
+                    if (btnU) btnU.disabled = _pasado.length === 0;
+                    if (btnR) btnR.disabled = _futuro.length === 0;
+                }
+
+                function empujar(label) {
+                    _pasado.push({
+                        data: S.deepClone(_data),
+                        tipos: S.deepClone(S.TIPOS),
+                        edificios: S.deepClone(S.edificios),
+                        label
+                    });
+                    if (_pasado.length > MAX) _pasado.shift();
+                    _futuro = [];
+                    _actualizarBotones();
+                }
+
+                function _aplicarEstado(e) {
+                    _data = e.data;
+
+                    // Restaurar tipos
+                    Object.keys(S.TIPOS).forEach(k => delete S.TIPOS[k]);
+                    Object.assign(S.TIPOS, e.tipos);
+                    S.guardarTipos();
+
+                    // Restaurar edificios
+                    S.edificios.length = 0;
+                    S.edificios.push(...e.edificios);
+                    S.guardarEdificios();
+
+                    guardar();
+                    render();
+                    _actualizarBotones();
+                }
+
+                function undo() {
+                    if (!_pasado.length) return;
+                    const entrada = _pasado.pop();
+                    _futuro.push({
+                        data: S.deepClone(_data),
+                        tipos: S.deepClone(S.TIPOS),
+                        edificios: S.deepClone(S.edificios),
+                        label: entrada.label
+                    });
+                    _aplicarEstado(entrada);
+                    toast(`Deshecho: ${entrada.label}`, 'info');
+                }
+
+                function redo() {
+                    if (!_futuro.length) return;
+                    const entrada = _futuro.pop();
+                    _pasado.push({
+                        data: S.deepClone(_data),
+                        tipos: S.deepClone(S.TIPOS),
+                        edificios: S.deepClone(S.edificios),
+                        label: entrada.label
+                    });
+                    _aplicarEstado(entrada);
+                    toast(`Rehecho: ${entrada.label}`, 'info');
+                }
+
+                return { empujar, undo, redo };
+            })();
+
+            // ==============================================================
             // ESC
             // ==============================================================
             document.addEventListener('keydown', e => {
+                const tag = document.activeElement?.tagName;
+                const enInput = tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA';
+
+                // ── Ctrl+Z / Ctrl+Y (Historial) ──
+                if (e.ctrlKey && !e.altKey && !e.shiftKey) {
+                    if (e.key === 'z' || e.key === 'Z') { e.preventDefault(); historial.undo(); return; }
+                    if (e.key === 'y' || e.key === 'Y') { e.preventDefault(); historial.redo(); return; }
+                }
+
                 if (e.key !== 'Escape') return;
                 const input = document.getElementById('input-busqueda');
                 const enBusqueda = document.activeElement === input;
                 if (enBusqueda) {
                     if (input.value) {
-                        // primer Escape: limpiar
                         UI.limpiarBusqueda();
                     } else {
-                        // segundo Escape (campo ya vacío): quitar foco
                         input.blur();
                     }
-                    return; // no cerrar modales al mismo tiempo
+                    return;
                 }
-                // si hay modales abiertos, cerrar respetando la cadena de padres
                 if (document.querySelector('.modal.show')) {
                     MM.cerrarTop();
                 }
@@ -2632,25 +3320,18 @@
                     .replace(/'/g, '&#39;');
             }
 
-            // Valida una dirección IPv4 según el estándar:
-            // 4 octetos decimales 0-255, sin ceros a la izquierda, separados por puntos.
-            // Devuelve true si el string es vacío (campo opcional) o si es una IP válida.
             function validarIPv4(ip) {
-                if (!ip) return true; // campo opcional: vacío = válido
+                if (!ip) return true;
                 const partes = ip.split('.');
                 if (partes.length !== 4) return false;
                 return partes.every(p => {
-                    if (!/^\d+$/.test(p)) return false;       // solo dígitos
-                    if (p.length > 1 && p[0] === '0') return false; // sin ceros a la izquierda
+                    if (!/^\d+$/.test(p)) return false;
+                    if (p.length > 1 && p[0] === '0') return false;
                     const n = Number(p);
                     return n >= 0 && n <= 255;
                 });
             }
 
-            // Valida una dirección MAC según el estándar IEEE 802 (EUI-48):
-            // 6 grupos de 2 dígitos hexadecimales, separados por ':' o '-'.
-            // Acepta mayúsculas y minúsculas. Vacío = válido (campo opcional).
-            // También acepta el formato especial "sinrelevarXXX" (1 a 3 dígitos, ej: sinrelevarn1, sinrelevarn12, sinrelevarn123).
             function validarMAC(mac) {
                 if (!mac) return true;
                 if (/^sinrelevarn?\d{1,3}$/i.test(mac)) return true;
@@ -2660,7 +3341,7 @@
             function validarCampoMAC(elementId) {
                 const el = document.getElementById(elementId);
                 const raw = el?.value.trim() || '';
-                if (!raw) { el.classList.remove('error'); return true; } // vacío = válido
+                if (!raw) { el.classList.remove('error'); return true; }
                 const tokens = raw.split(',').map(t => t.trim()).filter(Boolean);
                 const invalidos = tokens.filter(t => !validarMAC(t));
                 if (invalidos.length) {
@@ -2685,6 +3366,475 @@
             }
 
             // ==============================================================
+            // GITHUB GIST SYNC MODULE
+            // ==============================================================
+            const GistSync = (() => {
+                const CFG_KEY = 'cctv_gist_cfg';
+                const FILENAME = 'cctv_data.json';
+                const DEBOUNCE_MS = 3000;
+                const RE_GIST_ID = /^[a-f0-9]{20,40}$/i;
+
+                let _cfg = { token: '', gistId: '', lastSync: null, auto: false };
+                let _debounceTimer = null;
+                let _subiendo = false;
+
+                function _cargarCfg() {
+                    try { const c = S.safeParse(localStorage.getItem(CFG_KEY) || 'null'); if (c) _cfg = { ..._cfg, ...c }; } catch (_) { }
+                    _actualizarBotonesAjustes();
+                }
+
+                function _guardarCfg() {
+                    try { localStorage.setItem(CFG_KEY, JSON.stringify(_cfg)); } catch (_) { }
+                }
+
+                function _spinStart() {
+                    document.querySelector('.header-buttons [title="Ajustes"]')?.classList.add('icon-btn-spinning');
+                }
+                function _spinStop() {
+                    document.querySelector('.header-buttons [title="Ajustes"]')?.classList.remove('icon-btn-spinning');
+                }
+
+                function _setBusy(busy) {
+                    _subiendo = busy;
+                    ['btn-gist-subir', 'btn-gist-bajar'].forEach(id => {
+                        const btn = document.getElementById(id);
+                        if (btn) btn.disabled = busy;
+                    });
+                    if (busy) _spinStart(); else _spinStop();
+                }
+
+                function _setStatus(msg) {
+                    const el = document.getElementById('gist-sync-status');
+                    if (el) el.textContent = msg;
+                }
+
+                function _setStatusSync() {
+                    if (!_cfg.lastSync) return;
+                    const d = new Date(_cfg.lastSync);
+                    const ts = d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                    _setStatus(`Sincronizado: ${d.toLocaleDateString('es-AR')}, ${ts}`);
+                }
+
+                function _actualizarLinkBtn() {
+                    const id = document.getElementById('gist-id')?.value.trim();
+                    const btn = document.getElementById('gist-link-btn');
+                    if (!btn) return;
+                    if (id) {
+                        btn.href = `https://gist.github.com/${id}`;
+                        btn.style.display = 'flex';
+                    } else {
+                        btn.style.display = 'none';
+                    }
+                }
+
+                function _actualizarToggleUI() {
+                    const toggle = document.getElementById('gist-autosync-toggle');
+                    if (toggle) toggle.classList.toggle('on', !!_cfg.auto);
+                }
+
+                function _actualizarBotonesAjustes() {
+                    const visible = !!((_cfg.token || '').trim()) && !!((_cfg.gistId || '').trim());
+                    const display = visible ? 'flex' : 'none';
+                    const btnUp = document.getElementById('btn-ajustes-gist-subir');
+                    const btnDn = document.getElementById('btn-ajustes-gist-bajar');
+                    if (btnUp) btnUp.style.display = display;
+                    if (btnDn) btnDn.style.display = display;
+                }
+
+                function toggleToken() {
+                    const inp = document.getElementById('gist-token');
+                    const icon = document.getElementById('gist-eye-icon');
+                    if (!inp) return;
+                    const mostrar = inp.type === 'password';
+                    inp.type = mostrar ? 'text' : 'password';
+                    if (icon) icon.setAttribute('href', mostrar ? '#icon-eye-off' : '#icon-eye');
+                }
+
+                function toggleAuto() {
+                    const toggle = document.getElementById('gist-autosync-toggle');
+                    if (toggle) toggle.classList.toggle('on');
+                }
+
+                function guardarConfig() {
+                    const tokenEl = document.getElementById('gist-token');
+                    const idEl = document.getElementById('gist-id');
+                    const toggleEl = document.getElementById('gist-autosync-toggle');
+
+                    const nuevoToken = tokenEl?.value.trim() || '';
+                    const nuevoGistId = idEl?.value.trim() || '';
+                    const nuevoAuto = toggleEl ? toggleEl.classList.contains('on') : false;
+
+                    if (nuevoGistId && !RE_GIST_ID.test(nuevoGistId)) {
+                        toast('El Gist ID tiene un formato inválido', 'error');
+                        if (idEl) idEl.classList.add('error');
+                        return;
+                    }
+
+                    const tokenActual = _cfg.token || '';
+                    const idActual = _cfg.gistId || '';
+                    const autoActual = !!_cfg.auto;
+
+                    if (tokenActual === nuevoToken && idActual === nuevoGistId && autoActual === nuevoAuto) {
+                        UI.cerrarGist();
+                        toast('Sin cambios', 'info');
+                        return;
+                    }
+
+                    _cfg.token = nuevoToken;
+                    _cfg.gistId = nuevoGistId;
+                    _cfg.auto = nuevoAuto;
+
+                    _guardarCfg();
+                    _actualizarBotonesAjustes();
+
+                    if (autoActual !== nuevoAuto) {
+                        toast(nuevoAuto ? 'Sincronización automática activada' : 'Sincronización automática desactivada');
+                    } else {
+                        toast('Configuración guardada');
+                    }
+
+                    UI.cerrarGist();
+                }
+
+                // Generador de payload idéntico a exportarJSON
+                async function _generarPayload() {
+                    const disps = _data.dispositivos.map(_sanDisp);
+                    const grabs = _data.grabadores.map(_sanGrab);
+                    const tiposCustom = {};
+                    Object.entries(S.TIPOS).forEach(([k, v]) => {
+                        if (!v.builtin) tiposCustom[k] = { label: v.label, emoji: v.emoji };
+                    });
+                    return {
+                        dispositivos: disps,
+                        grabadores: grabs,
+                        tiposCustom,
+                        edificios: S.edificios.slice(),
+                        version: S.SCHEMA_V,
+                        fecha: S.fechaISO(),
+                        hash: await S.sha256({ dispositivos: disps, grabadores: grabs })
+                    };
+                }
+
+                async function _ejecutarSubida(silencioso = false) {
+                    const token = _cfg.token;
+                    const gistId = _cfg.gistId;
+                    if (!token) { if (!silencioso) toast('Ingresá el token primero', 'error'); return; }
+                    if (gistId && !RE_GIST_ID.test(gistId)) {
+                        if (!silencioso) toast('Gist ID inválido', 'error');
+                        return;
+                    }
+
+                    _setBusy(true);
+                    if (!silencioso) _setStatus('Subiendo…');
+
+                    const payloadData = await _generarPayload();
+                    const body = { files: { [FILENAME]: { content: JSON.stringify(payloadData, null, 2) } } };
+
+                    try {
+                        let res, data;
+                        if (gistId) {
+                            res = await fetch(`https://api.github.com/gists/${gistId}`, {
+                                method: 'PATCH',
+                                headers: { Authorization: `token ${token}`, 'Content-Type': 'application/json' },
+                                body: JSON.stringify(body),
+                            });
+                        } else {
+                            body.description = 'CCTV — Control de Activos';
+                            body.public = false;
+                            res = await fetch('https://api.github.com/gists', {
+                                method: 'POST',
+                                headers: { Authorization: `token ${token}`, 'Content-Type': 'application/json' },
+                                body: JSON.stringify(body),
+                            });
+                        }
+
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                        data = await res.json();
+
+                        if (!gistId && data.id) {
+                            _cfg.gistId = data.id;
+                            const el = document.getElementById('gist-id');
+                            if (el) el.value = data.id;
+                            _actualizarLinkBtn();
+                        }
+
+                        _cfg.lastSync = new Date().toISOString();
+                        _guardarCfg();
+                        _setStatusSync();
+                        if (!silencioso) toast('Datos subidos a Gist');
+
+                    } catch (err) {
+                        _setStatus(`Error: ${err.message}`);
+                        if (!silencioso) toast(`Error al subir: ${err.message}`, 'error');
+                    } finally {
+                        _setBusy(false);
+                    }
+                }
+
+                function subir() { _ejecutarSubida(false); }
+
+                function subirAuto() {
+                    if (!_cfg.auto || !_cfg.token) return;
+                    clearTimeout(_debounceTimer);
+                    _debounceTimer = setTimeout(() => {
+                        if (!_subiendo) _ejecutarSubida(true);
+                    }, DEBOUNCE_MS);
+                }
+
+                function _combinarDatosRemotos(remoto) {
+                    let cDisps = 0, cGrabs = 0, cTipos = 0, cEdif = 0;
+
+                    const idsD = new Set(_data.dispositivos.map(d => d.id));
+                    const idsG = new Set(_data.grabadores.map(g => g.id));
+
+                    (remoto.dispositivos || []).forEach(d => {
+                        const san = _sanDisp(d);
+                        if (!idsD.has(san.id)) { _data.dispositivos.push(san); idsD.add(san.id); cDisps++; }
+                    });
+
+                    (remoto.grabadores || []).forEach(g => {
+                        const san = _sanGrab(g);
+                        if (!idsG.has(san.id)) { _data.grabadores.push(san); idsG.add(san.id); cGrabs++; }
+                    });
+
+                    if (remoto.tiposCustom && typeof remoto.tiposCustom === 'object') {
+                        Object.entries(remoto.tiposCustom).forEach(([k, v]) => {
+                            if (S.TIPOS_BUILTIN[k]) return;
+                            if (v && v.label && !S.TIPOS[k]) {
+                                S.TIPOS[k] = { label: v.label, emoji: v.emoji || '📦', badge: 'badge-otro', dot: 'var(--c-gold)', builtin: false };
+                                cTipos++;
+                            }
+                        });
+                        if (cTipos > 0) S.guardarTipos();
+                    }
+
+                    if (Array.isArray(remoto.edificios)) {
+                        const existentes = new Set(S.edificios.map(e => e.toLowerCase()));
+                        remoto.edificios.forEach(e => {
+                            if (typeof e === 'string' && e.trim()) {
+                                const lim = S.sanitize(e.trim(), 60);
+                                if (!existentes.has(lim.toLowerCase())) {
+                                    S.edificios.push(lim);
+                                    existentes.add(lim.toLowerCase());
+                                    cEdif++;
+                                }
+                            }
+                        });
+                        if (cEdif > 0) S.guardarEdificios();
+                    }
+
+                    return { cDisps, cGrabs, cTipos, cEdif };
+                }
+
+                async function bajar() {
+                    const token = document.getElementById('gist-token')?.value.trim() || _cfg.token;
+                    const gistId = document.getElementById('gist-id')?.value.trim() || _cfg.gistId;
+                    if (!token) { toast('Ingresá el token primero', 'error'); return; }
+                    if (!gistId) { toast('Ingresá el Gist ID primero', 'error'); return; }
+                    if (!RE_GIST_ID.test(gistId)) { toast('Gist ID inválido', 'error'); return; }
+
+                    _setBusy(true);
+                    _setStatus('Bajando…');
+
+                    try {
+                        const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+                            headers: { Authorization: `token ${token}` },
+                        });
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                        const data = await res.json();
+
+                        const file = data.files?.[FILENAME];
+                        if (!file) throw new Error(`No se encontró "${FILENAME}" en el Gist`);
+
+                        let contenido = file.content;
+                        if (file.truncated) {
+                            const rawOrigin = new URL(file.raw_url).hostname;
+                            if (!rawOrigin.endsWith('.githubusercontent.com')) throw new Error('raw_url inválida');
+                            const r2 = await fetch(file.raw_url);
+                            contenido = await r2.text();
+                        }
+
+                        const remoto = S.safeParse(contenido);
+                        if (!remoto || typeof remoto !== 'object') throw new Error('Formato inválido');
+
+                        // Verificación de firma
+                        let esValida = true;
+                        if (remoto.hash) {
+                            const newDisps = Array.isArray(remoto.dispositivos) ? remoto.dispositivos.map(_sanDisp) : [];
+                            const newGrabs = Array.isArray(remoto.grabadores) ? remoto.grabadores.map(_sanGrab) : [];
+                            const calc = await S.sha256({ dispositivos: newDisps, grabadores: newGrabs });
+                            if (calc !== remoto.hash) esValida = false;
+                        }
+
+                        const procesarBajada = () => {
+                            _setBusy(true);
+
+                            // ── PRE-CHECK: Verificamos si hay novedades antes de tocar el historial ──
+                            const idsD = new Set(_data.dispositivos.map(d => d.id));
+                            const idsG = new Set(_data.grabadores.map(g => g.id));
+                            const catT = new Set(Object.keys(S.TIPOS));
+                            const catE = new Set(S.edificios.map(e => e.toLowerCase()));
+
+                            const cDisps = (remoto.dispositivos || []).filter(d => !idsD.has(d.id)).length;
+                            const cGrabs = (remoto.grabadores || []).filter(g => !idsG.has(g.id)).length;
+                            const cTipos = Object.keys(remoto.tiposCustom || {}).filter(k => !catT.has(k) && !S.TIPOS_BUILTIN[k] && remoto.tiposCustom[k]?.label).length;
+                            const cEdif = (remoto.edificios || []).filter(e => e && typeof e === 'string' && e.trim() && !catE.has(e.trim().toLowerCase())).length;
+
+                            if (cDisps === 0 && cGrabs === 0 && cTipos === 0 && cEdif === 0) {
+                                _cfg.token = token; _cfg.gistId = gistId; _cfg.lastSync = new Date().toISOString();
+                                _guardarCfg(); _setStatusSync();
+                                toast('Sin cambios remotos', 'info');
+                                _setBusy(false);
+                                return; // ⬅ Cortamos acá, el historial ni se entera
+                            }
+                            // ───────────────────────────────────────────────────────────────────────────
+
+                            // Recién ahora, sabiendo que hay cambios reales, guardamos la foto para el Undo
+                            historial.empujar(esValida ? 'Bajar desde Gist' : 'Bajar desde Gist (Forzado)');
+                            const resMerge = _combinarDatosRemotos(remoto);
+
+                            guardar();
+                            render();
+                            _cfg.token = token; _cfg.gistId = gistId; _cfg.lastSync = new Date().toISOString();
+                            _guardarCfg(); _setStatusSync();
+
+                            const msgs = [];
+                            if (resMerge.cDisps) msgs.push(`+${resMerge.cDisps} disp`);
+                            if (resMerge.cGrabs) msgs.push(`+${resMerge.cGrabs} grab`);
+                            if (resMerge.cTipos) msgs.push(`+${resMerge.cTipos} tipos`);
+                            if (resMerge.cEdif) msgs.push(`+${resMerge.cEdif} edif`);
+
+                            toast(esValida ? `Datos combinados (${msgs.join(' · ')})` : `Datos alterados combinados (${msgs.join(' · ')})`, esValida ? 'success' : 'info');
+                            _setBusy(false);
+                        };
+
+                        if (!esValida) {
+                            _setBusy(false);
+                            confirmarModal('Los datos en GitHub han sido modificados manualmente. ¿Querés combinarlos de todos modos?', 'Combinar').then(ok => {
+                                if (ok) procesarBajada();
+                            });
+                        } else {
+                            procesarBajada();
+                        }
+
+                    } catch (err) {
+                        _setStatus(`Error: ${err.message}`);
+                        toast(`Error al bajar: ${err.message}`, 'error');
+                        _setBusy(false);
+                    }
+                }
+
+                function poblarModal() {
+                    _cargarCfg();
+                    const tokenEl = document.getElementById('gist-token');
+                    const idEl = document.getElementById('gist-id');
+                    const eyeIcon = document.getElementById('gist-eye-icon');
+                    if (tokenEl) { tokenEl.value = _cfg.token || ''; tokenEl.type = 'password'; }
+                    if (idEl) idEl.value = _cfg.gistId || '';
+                    if (eyeIcon) eyeIcon.setAttribute('href', '#icon-eye');
+                    _actualizarLinkBtn();
+                    _actualizarToggleUI();
+                    if (_cfg.lastSync) _setStatusSync(); else _setStatus('');
+                }
+
+                function init() {
+                    _cargarCfg();
+                    const idEl = document.getElementById('gist-id');
+                    if (idEl) idEl.addEventListener('input', _actualizarLinkBtn);
+                    _actualizarBotonesAjustes();
+                }
+
+                async function verificarAlAbrir() {
+                    if (!_cfg.auto || !_cfg.token || !_cfg.gistId) return;
+
+                    _spinStart();
+                    try {
+                        const res = await fetch(`https://api.github.com/gists/${_cfg.gistId}`, {
+                            headers: { Authorization: `token ${_cfg.token}` },
+                        });
+                        if (!res.ok) return;
+
+                        const data = await res.json();
+                        const file = data.files?.[FILENAME];
+                        if (!file) return;
+
+                        let contenido = file.content;
+                        if (file.truncated) {
+                            const rawOrigin = new URL(file.raw_url).hostname;
+                            if (!rawOrigin.endsWith('.githubusercontent.com')) return;
+                            const r2 = await fetch(file.raw_url);
+                            contenido = await r2.text();
+                        }
+
+                        const remoto = S.safeParse(contenido);
+                        if (!remoto) return;
+
+                        let esValida = true;
+                        if (remoto.hash) {
+                            const newDisps = Array.isArray(remoto.dispositivos) ? remoto.dispositivos.map(_sanDisp) : [];
+                            const newGrabs = Array.isArray(remoto.grabadores) ? remoto.grabadores.map(_sanGrab) : [];
+                            const calc = await S.sha256({ dispositivos: newDisps, grabadores: newGrabs });
+                            if (calc !== remoto.hash) esValida = false;
+                        }
+
+                        const idsD = new Set(_data.dispositivos.map(m => m.id));
+                        const idsG = new Set(_data.grabadores.map(m => m.id));
+                        const catT = new Set(Object.keys(S.TIPOS));
+                        const catE = new Set(S.edificios.map(e => e.toLowerCase()));
+
+                        const dispNuevos = (remoto.dispositivos || []).filter(m => !idsD.has(m.id));
+                        const grabNuevos = (remoto.grabadores || []).filter(m => !idsG.has(m.id));
+                        const tiposNuevos = Object.keys(remoto.tiposCustom || {}).filter(k => !catT.has(k) && !S.TIPOS_BUILTIN[k]);
+                        const edifNuevos = (remoto.edificios || []).filter(e => e && typeof e === 'string' && !catE.has(e.toLowerCase()));
+
+                        if (!dispNuevos.length && !grabNuevos.length && !tiposNuevos.length && !edifNuevos.length) return;
+
+                        const desc = document.querySelector('.gist-novedades-desc');
+                        if (desc) {
+                            desc.innerHTML = esValida
+                                ? 'Se encontraron registros en GitHub que no están en este dispositivo:'
+                                : 'Se encontraron registros en GitHub.<br><strong style="color:var(--c-orange); margin-top: 0.4rem; display: block;">⚠️ Atención: Los datos fueron alterados manualmente.</strong>';
+                        }
+
+                        const detalle = document.getElementById('gist-novedades-detalle');
+                        if (detalle) {
+                            const chips = [];
+                            if (dispNuevos.length) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Dispositivos</span><span class="gist-novedades-chip-count">+${dispNuevos.length}</span></div>`);
+                            if (grabNuevos.length) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Grabadores</span><span class="gist-novedades-chip-count">+${grabNuevos.length}</span></div>`);
+                            if (tiposNuevos.length) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Tipos Custom</span><span class="gist-novedades-chip-count">+${tiposNuevos.length}</span></div>`);
+                            if (edifNuevos.length) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Edificios</span><span class="gist-novedades-chip-count">+${edifNuevos.length}</span></div>`);
+                            detalle.innerHTML = chips.join('');
+                        }
+
+                        const btnOk = document.getElementById('gist-novedades-ok');
+                        if (btnOk) {
+                            btnOk.onclick = () => {
+                                historial.empujar(esValida ? 'Bajar novedades desde Gist' : 'Bajar novedades desde Gist (Forzado)');
+                                const resMerge = _combinarDatosRemotos(remoto);
+                                guardar();
+                                render();
+                                MM.cerrar('modal-gist-novedades');
+                                const msgs = [];
+                                if (resMerge.cDisps) msgs.push(`+${resMerge.cDisps} disp`);
+                                if (resMerge.cGrabs) msgs.push(`+${resMerge.cGrabs} grab`);
+                                if (resMerge.cTipos) msgs.push(`+${resMerge.cTipos} tipos`);
+                                if (resMerge.cEdif) msgs.push(`+${resMerge.cEdif} edif`);
+                                toast(esValida ? `Datos combinados (${msgs.join(' · ')})` : `Datos alterados combinados (${msgs.join(' · ')})`, esValida ? 'success' : 'info');
+                            };
+                        }
+
+                        setTimeout(() => MM.abrir('modal-gist-novedades'), 600);
+
+                    } catch (_) {
+                    } finally {
+                        _spinStop();
+                    }
+                }
+
+                return { subir, bajar, subirAuto, verificarAlAbrir, toggleToken, toggleAuto, guardarConfig, poblarModal, init, actualizarBotonesAjustes: _actualizarBotonesAjustes };
+            })();
+
+            // ==============================================================
             // RENDER
             // ==============================================================
             function render() {
@@ -2694,17 +3844,12 @@
             }
 
             /* ---------- DASHBOARD ---------- */
-            // estado actualmente expandido en el resumen
             let _dashTipoAbierto = null;
-            // vista activa en la card de cámaras: 'forma' | 'edificio'
             let _dashCamarasVista = 'forma';
-            // columnas en la lista de activos: 1 | 2
             let _activosColumnas = (() => { try { return parseInt(localStorage.getItem('cctv_activos_cols')) === 1 ? 1 : 2; } catch { return 2; } })();
-            // orden de la lista de activos: 'tipo' | 'estado' | 'forma' | 'marca'
-            let _activosOrden = (() => { try { const v = localStorage.getItem('cctv_activos_orden'); return ['tipo','estado','forma','marca'].includes(v) ? v : 'tipo'; } catch { return 'tipo'; } })();
+            let _activosOrden = (() => { try { const v = localStorage.getItem('cctv_activos_orden'); return ['tipo', 'estado', 'forma', 'marca'].includes(v) ? v : 'tipo'; } catch { return 'tipo'; } })();
 
             function _estadosDeDisps(dispsDelTipo, idsEnProd) {
-                // Devuelve objeto con conteos de estados para un array de dispositivos
                 const res = { produccion: 0, disponible: 0, averiado: 0, revisar: 0, desafectado: 0 };
                 dispsDelTipo.forEach(d => {
                     if (d.estado === 'averiado') res.averiado++;
@@ -2725,8 +3870,6 @@
                 const disps = _data.dispositivos;
                 const grabs = _data.grabadores;
 
-                // IDs de dispositivos asignados a algún canal de grabador,
-                // más los dispositivos DVR/NVR vinculados directamente a un grabador
                 const idsEnProd = new Set([
                     ...grabs.flatMap(g => g.canales_data.filter(c => c.dispositivoId).map(c => c.dispositivoId)),
                     ...grabs.filter(g => g.dispositivoId).map(g => g.dispositivoId),
@@ -2740,14 +3883,13 @@
                     const tiposOrden = [...tiposBuitin, ...tiposCustom];
 
                     const ESTADOS_DEFS = [
-                        { key: 'produccion',  label: 'En producción', color: 'var(--c-blue)'     },
-                        { key: 'disponible',  label: 'Disponibles',   color: 'var(--c-green)'    },
-                        { key: 'averiado',    label: 'Averiados',     color: 'var(--c-red)'      },
-                        { key: 'revisar',     label: 'A revisar',     color: 'var(--c-purple)'   },
-                        { key: 'desafectado', label: 'Desafectados',  color: 'var(--text-muted)' },
+                        { key: 'produccion', label: 'En producción', color: 'var(--c-blue)' },
+                        { key: 'disponible', label: 'Disponibles', color: 'var(--c-green)' },
+                        { key: 'averiado', label: 'Averiados', color: 'var(--c-red)' },
+                        { key: 'revisar', label: 'A revisar', color: 'var(--c-purple)' },
+                        { key: 'desafectado', label: 'Desafectados', color: 'var(--text-muted)' },
                     ];
 
-                    // ── Panel izquierdo: total + tipos ──
                     const chipTotal = `
                     <div class="stat-chip">
                         <div class="stat-chip-valor">${disps.length}</div>
@@ -2769,7 +3911,6 @@
 
                     const panelIzq = `<div class="dashboard-grid">${chipTotal}${chipsTipo}</div>`;
 
-                    // ── Panel derecho: chip seleccionado + estados ──
                     let panelDer = '<div class="dashboard-grid"></div>';
                     if (_dashTipoAbierto && S.TIPOS[_dashTipoAbierto]) {
                         const tc = S.TIPOS[_dashTipoAbierto];
@@ -2800,7 +3941,6 @@
                     const contenedor = document.getElementById('dash-disp-tree');
                     const enDetalle = !!(_dashTipoAbierto && S.TIPOS[_dashTipoAbierto]);
 
-                    // primera vez: construir estructura, luego solo actualizar contenido y clase
                     let wrap = contenedor.querySelector('.dash-slide-wrap');
                     if (!wrap) {
                         contenedor.innerHTML = `<div class="dash-slide-wrap">
@@ -2808,14 +3948,12 @@
                             <div class="dash-slide-panel">${panelDer}</div>
                         </div>`;
                         wrap = contenedor.querySelector('.dash-slide-wrap');
-                        // forzar reflow para que la transición inicial no se salte
                         wrap.getBoundingClientRect();
                     } else {
                         wrap.querySelector('.dash-slide-panel:first-child').innerHTML = panelIzq;
                         wrap.querySelector('.dash-slide-panel:last-child').innerHTML = panelDer;
                     }
 
-                    // aplicar clase con un pequeño delay para que el DOM pinte primero
                     requestAnimationFrame(() => {
                         wrap.classList.toggle('en-detalle', enDetalle);
                     });
@@ -2847,46 +3985,32 @@
                 const enProd = camarasEnProd.length;
                 const disponibles = camarasDisps.length - enProd;
 
-                // Selector de vista (pill tabs)
-                const selectorHtml = `
-                <div style="display:flex;background:var(--bg-body);border-radius:var(--radius-sm);padding:0.2rem;gap:0;margin-bottom:0.85rem;box-shadow:var(--shadow)">
-                    <button onclick="_setCamarasVista('forma')"
-                        style="flex:1;padding:0.35rem 0.5rem;font-size:0.8rem;font-weight:600;border:none;border-radius:calc(var(--radius-sm) - 3px);height:auto;transition:background 0.2s,color 0.2s,box-shadow 0.2s;
-                        ${_dashCamarasVista === 'forma'
-                            ? 'background:var(--bg-card);color:var(--text-main);box-shadow:var(--shadow)'
-                            : 'background:transparent;color:var(--text-muted)'}">
-                        Por forma
-                    </button>
-                    <button onclick="_setCamarasVista('edificio')"
-                        style="flex:1;padding:0.35rem 0.5rem;font-size:0.8rem;font-weight:600;border:none;border-radius:calc(var(--radius-sm) - 3px);height:auto;transition:background 0.2s,color 0.2s,box-shadow 0.2s;
-                        ${_dashCamarasVista === 'edificio'
-                            ? 'background:var(--bg-card);color:var(--text-main);box-shadow:var(--shadow)'
-                            : 'background:transparent;color:var(--text-muted)'}">
-                        Por edificio
-                    </button>
-                </div>`;
+                // Actualizamos las clases de la botonera fija sin destruirla
+                const btnForma = document.getElementById('mini-tab-forma');
+                const btnEdificio = document.getElementById('mini-tab-edificio');
+                if (btnForma) btnForma.classList.toggle('activa', _dashCamarasVista === 'forma');
+                if (btnEdificio) btnEdificio.classList.toggle('activa', _dashCamarasVista === 'edificio');
 
                 let vistaHtml = '';
 
                 if (_dashCamarasVista === 'forma') {
-                    // ── Vista por forma ──
                     const FORMAS_DEF = [
-                        { key: 'domo',       label: 'Domo' },
-                        { key: 'bullet',     label: 'Bullet' },
-                        { key: 'turret',     label: 'Turret' },
-                        { key: 'minidomo',   label: 'Mini domo' },
+                        { key: 'domo', label: 'Domo' },
+                        { key: 'bullet', label: 'Bullet' },
+                        { key: 'turret', label: 'Turret' },
+                        { key: 'minidomo', label: 'Mini domo' },
                         { key: 'minibullet', label: 'Mini bullet' },
-                        { key: 'domo-ptz',   label: 'Domo PTZ' },
+                        { key: 'domo-ptz', label: 'Domo PTZ' },
                     ];
                     const conteoForma = {};
                     camarasDisps.forEach(d => {
                         const k = d.forma || '__sin_forma__';
                         if (!conteoForma[k]) conteoForma[k] = { total: 0, prod: 0, averiado: 0, revisar: 0, desafectado: 0 };
                         conteoForma[k].total++;
-                        if      (d.estado === 'averiado')    conteoForma[k].averiado++;
-                        else if (d.estado === 'revisar')     conteoForma[k].revisar++;
+                        if (d.estado === 'averiado') conteoForma[k].averiado++;
+                        else if (d.estado === 'revisar') conteoForma[k].revisar++;
                         else if (d.estado === 'desafectado') conteoForma[k].desafectado++;
-                        else if (idsEnProd.has(d.id))        conteoForma[k].prod++;
+                        else if (idsEnProd.has(d.id)) conteoForma[k].prod++;
                     });
                     const _ceroForma = { total: 0, prod: 0, averiado: 0, revisar: 0, desafectado: 0 };
                     const filas = FORMAS_DEF
@@ -2902,10 +4026,10 @@
                             `<span style="font-size:0.72rem;font-weight:600;color:${color};width:2.8rem;text-align:right">${txt}</span>`;
                         const header = `
                         <div style="display:flex;justify-content:flex-end;gap:0.5rem;padding:0 0 0.3rem;border-bottom:1px solid var(--border);margin-bottom:0.1rem">
-                            ${col('TOTAL',  'var(--text-disabled)')}
-                            ${col('PROD.',  'var(--c-blue)')}
-                            ${col('DISP.',  'var(--c-green)')}
-                            ${col('AVER.',  'var(--c-red)')}
+                            ${col('TOTAL', 'var(--text-disabled)')}
+                            ${col('PROD.', 'var(--c-blue)')}
+                            ${col('DISP.', 'var(--c-green)')}
+                            ${col('AVER.', 'var(--c-red)')}
                             ${col('REVIS.', 'var(--c-purple)')}
                             ${col('DESAF.', 'var(--text-muted)')}
                         </div>`;
@@ -2914,18 +4038,17 @@
                         const rows = filas.map((f, i) => `
                         <div style="display:flex;align-items:center;gap:0.5rem;padding:0.45rem 0;${i < filas.length - 1 ? 'border-bottom:1px solid var(--border)' : ''}">
                             <span style="flex:1;font-size:0.85rem;color:var(--text-muted);font-weight:600">${f.label}</span>
-                            ${val(f.total,                    'var(--text-main)')}
-                            ${val(f.prod,                     'var(--c-blue)')}
+                            ${val(f.total, 'var(--text-main)')}
+                            ${val(f.prod, 'var(--c-blue)')}
                             ${val(f.total - f.prod - f.averiado - f.revisar - f.desafectado, 'var(--c-green)')}
-                            ${val(f.averiado,                 'var(--c-red)')}
-                            ${val(f.revisar,                  'var(--c-purple)')}
-                            ${val(f.desafectado,              'var(--text-muted)')}
+                            ${val(f.averiado, 'var(--c-red)')}
+                            ${val(f.revisar, 'var(--c-purple)')}
+                            ${val(f.desafectado, 'var(--text-muted)')}
                         </div>`).join('');
                         vistaHtml = header + rows;
                     }
 
                 } else {
-                    // ── Vista por edificio (solo cámaras en producción con edificio en su canal) ──
                     const conteoEdificio = {};
                     grabs.forEach(g => {
                         g.canales_data.forEach(c => {
@@ -2957,7 +4080,6 @@
                 }
 
                 document.getElementById('dash-camaras').innerHTML =
-                    selectorHtml +
                     `<div style="display:flex;flex-direction:column">${vistaHtml}</div>`;
             }
 
@@ -3000,7 +4122,6 @@
                     return (orden[a.tipo] ?? 9) - (orden[b.tipo] ?? 9) || dispLabel(a).localeCompare(dispLabel(b));
                 });
 
-                // índice: dispositivoId → { grab, slot } para búsqueda rápida
                 const asignaciones = {};
                 _data.grabadores.forEach(g => {
                     if (g.dispositivoId) {
@@ -3013,17 +4134,12 @@
                     });
                 });
 
-                // filtrar y ordenar por relevancia si hay query
                 if (query) {
                     const tokens = query.split(/\s+/).filter(Boolean);
-
-                    // Precalcular regexes para cada token (evita recompilar en cada dispositivo)
                     const tokenRegexes = tokens.map(t =>
                         new RegExp('(?<![a-z0-9])' + t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![a-z0-9])', 'i')
                     );
 
-                    // Calcula score de relevancia (menor = más relevante).
-                    // Por cada token se toma el mejor nivel de match posible.
                     function scoreDispositivo(d) {
                         const asigD = asignaciones[d.id];
                         const hayCanal = _busqActivos.has('canal') && asigD?.tipo === 'canal'
@@ -3035,11 +4151,10 @@
                             .filter(([k, v]) => v && _busqActivos.has(k))
                             .map(([, v]) => v.toLowerCase());
 
-                        // estado efectivo + aliases de búsqueda
                         let estadoTextos = [];
                         if (_busqActivos.has('estado')) {
                             const estadoEfectivo = d.estado
-                                ? d.estado                          // averiado | revisar | desafectado
+                                ? d.estado
                                 : (asigD ? 'produccion' : 'disponible');
                             const ESTADO_ALIAS = {
                                 produccion: ['produccion', 'producción', 'operativo', 'en produccion', 'en producción'],
@@ -3055,16 +4170,16 @@
                         for (let ti = 0; ti < tokens.length; ti++) {
                             const t = tokens[ti];
                             const re = tokenRegexes[ti];
-                            if (tipoKey && tipoKey === t) { total += 0; continue; } // tipo exacto
-                            if (tipoLabel && tipoLabel === t) { total += 1; continue; } // label exacto
-                            if (tipoKey && (re.test(tipoKey) || re.test(tipoLabel))) { total += 2; continue; } // palabra en tipo
-                            if (campos.some(c => re.test(c))) { total += 3; continue; } // palabra en campo
-                            if (campos.some(c => c.includes(t))) { total += 4; continue; } // substring en campo
-                            if (hayCanal && re.test(hayCanal)) { total += 5; continue; } // palabra en canal
-                            if (hayCanal && hayCanal.includes(t)) { total += 6; continue; } // substring en canal
-                            if (estadoTextos.some(s => s === t)) { total += 1; continue; } // estado exacto
-                            if (estadoTextos.some(s => s.includes(t))) { total += 2; continue; } // substring estado
-                            return Infinity; // token no encontrado → excluir
+                            if (tipoKey && tipoKey === t) { total += 0; continue; }
+                            if (tipoLabel && tipoLabel === t) { total += 1; continue; }
+                            if (tipoKey && (re.test(tipoKey) || re.test(tipoLabel))) { total += 2; continue; }
+                            if (campos.some(c => re.test(c))) { total += 3; continue; }
+                            if (campos.some(c => c.includes(t))) { total += 4; continue; }
+                            if (hayCanal && re.test(hayCanal)) { total += 5; continue; }
+                            if (hayCanal && hayCanal.includes(t)) { total += 6; continue; }
+                            if (estadoTextos.some(s => s === t)) { total += 1; continue; }
+                            if (estadoTextos.some(s => s.includes(t))) { total += 2; continue; }
+                            return Infinity;
                         }
                         return total;
                     }
@@ -3085,7 +4200,6 @@
                     return;
                 }
 
-                // actualizar contador
                 const contador = document.getElementById('contador-dispositivos');
                 if (contador) {
                     contador.textContent = query
@@ -3100,7 +4214,6 @@
                     const estadoClase = d.estado
                         ? `estado-${d.estado}`
                         : (asignaciones[d.id] ? 'estado-produccion' : 'estado-disponible');
-                    // badge de tipo/forma: siempre muestra el tipo (nunca el estado)
                     const tipoBadgeLabel = (d.tipo === 'camara' && d.forma ? d.forma.replace(/-/g, ' ') : tc.label).toUpperCase();
                     let asignInfo = '';
                     const asig = asignaciones[d.id];
@@ -3119,12 +4232,11 @@
                             asignInfo = `<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span class="badge badge-estado-produccion">${esc(asig.grab.descripcion)}</span></div>${ipHtml}`;
                         }
                     }
-                    // badge de estado (no aplica a producción: el color ya está en asignInfo)
                     const ESTADO_BADGE_INFO = {
-                        averiado:    { label: 'Averiado',      clase: 'badge-estado-averiado'    },
-                        revisar:     { label: 'A revisar',     clase: 'badge-estado-revisar'     },
-                        desafectado: { label: 'Desafectado',   clase: 'badge-estado-desafectado' },
-                        disponible:  { label: 'Disponible',    clase: 'badge-estado-disponible'  },
+                        averiado: { label: 'Averiado', clase: 'badge-estado-averiado' },
+                        revisar: { label: 'A revisar', clase: 'badge-estado-revisar' },
+                        desafectado: { label: 'Desafectado', clase: 'badge-estado-desafectado' },
+                        disponible: { label: 'Disponible', clase: 'badge-estado-disponible' },
                     };
                     const estadoEfectivo = d.estado || (asig ? 'produccion' : 'disponible');
                     const estadoBadgeInfo = ESTADO_BADGE_INFO[estadoEfectivo];
@@ -3152,11 +4264,9 @@
                 </div>`;
                 }
 
-                // reparto según columnas seleccionadas
                 if (_activosColumnas === 1) {
                     lista.innerHTML = `<div class="lista-1col">${sorted.map(renderItem).join('')}</div>`;
                 } else {
-                    // reparto intercalado: col1 = índices pares (A,C,E…), col2 = índices impares (B,D,F…)
                     const col1 = sorted.filter((_, i) => i % 2 === 0).map(renderItem).join('');
                     const col2 = sorted.filter((_, i) => i % 2 === 1).map(renderItem).join('');
                     lista.innerHTML = `<div class="lista-2col"><div>${col1}</div><div>${col2}</div></div>`;
@@ -3222,20 +4332,22 @@
             // UI — CONTROLADOR PÚBLICO
             // ==============================================================
             let _editandoDispId = null;
-            let _estadoEditando = ''; // estado seleccionado en el modal editar dispositivo
+            let _estadoEditando = '';
             let _editandoGrabId = null;
-            let _snapshotDisp = null;   // snapshot al abrir modal editar dispositivo
-            let _snapshotGrab = null;   // snapshot al abrir modal editar grabador
-            let _snapshotCanal = null;  // snapshot al abrir modal canal
+            let _snapshotDisp = null;
+            let _snapshotGrab = null;
+            let _snapshotCanal = null;
             let _editandoCanalGrabId = null;
             let _editandoCanalN = null;
-            let _canalDesdeDispId = null; // dispId cuando el canal se abrió desde "Editar asignación"
-            let _volverDesdeCanal = false; // true cuando el modal activo se abrió desde "Ver activo" del canal
+            let _canalDesdeDispId = null;
+            let _volverDesdeCanal = false;
             let _canalDispOcupados = new Set();
             let _canalDispHighlight = -1;
-            let _edificiosOrigen = 'ajustes'; // 'ajustes' | 'canal' — desde dónde se abrió el modal de edificios
-            let _edificiosSnapForm = null;    // snapshot del formulario de canal al ir a edificios
+            let _edificiosOrigen = 'ajustes';
+            let _edificiosSnapForm = null;
             let _tabActual = 'dashboard';
+            let _busqTimer = null;
+            let _importarParsed = null;
 
             function _actualizarBotonesEstado(estadoActual) {
                 _estadoEditando = estadoActual;
@@ -3245,7 +4357,6 @@
                 });
             }
             const KEY_EXPANDED = 'cctv_grab_expanded';
-            // Set de IDs expandidos (abiertos). Por defecto todos cerrados.
             const _grabExpanded = (() => {
                 try {
                     const saved = JSON.parse(localStorage.getItem(KEY_EXPANDED) || 'null');
@@ -3259,7 +4370,6 @@
                 return new Set();
             })();
 
-            // Campos de búsqueda habilitados (con persistencia en localStorage)
             const BUSQ_CAMPOS = [
                 { id: 'tipo', label: 'Tipo de dispositivo' },
                 { id: 'mac', label: 'MAC' },
@@ -3287,26 +4397,33 @@
             }
 
             const UI = {
-
                 // ---- Tema ----
                 alternarTema() {
                     const oscuro = document.body.classList.toggle('dark-mode');
                     localStorage.setItem('cctv_tema', String(oscuro));
                     const use = document.querySelector('#icono-tema use');
                     if (use) use.setAttribute('href', oscuro ? '#icon-sun' : '#icon-moon');
-                    const label = document.getElementById('label-tema');
-                    if (label) label.textContent = oscuro ? 'Modo claro' : 'Modo oscuro';
+                },
 
+                // ---- Gist ----
+                abrirGist() {
+                    MM.cerrar('modal-ajustes');
+                    setTimeout(() => {
+                        GistSync.poblarModal();
+                        MM.abrir('modal-gist', { onEscape: () => UI.cerrarGist() });
+                    }, 150);
+                },
+
+                cerrarGist() {
+                    MM.cerrar('modal-gist');
+                    setTimeout(() => UI.abrirAjustes(), 150);
                 },
 
                 // ---- Ajustes ----
                 abrirAjustes() {
-                    // sync tema
                     const oscuro = document.body.classList.contains('dark-mode');
                     const use = document.querySelector('#icono-tema use');
                     if (use) use.setAttribute('href', oscuro ? '#icon-sun' : '#icon-moon');
-                    const label = document.getElementById('label-tema');
-                    if (label) label.textContent = oscuro ? 'Modo claro' : 'Modo oscuro';
                     MM.abrir('modal-ajustes');
                 },
 
@@ -3325,29 +4442,30 @@
                 setActivosColumnas(n) {
                     if (_activosColumnas === n) return;
                     _activosColumnas = n;
-                    try { localStorage.setItem('cctv_activos_cols', n); } catch (_) {}
+                    try { localStorage.setItem('cctv_activos_cols', n); } catch (_) { }
                     renderActivos();
                 },
 
                 setActivosOrden(orden) {
                     if (_activosOrden === orden) return;
                     _activosOrden = orden;
-                    try { localStorage.setItem('cctv_activos_orden', orden); } catch (_) {}
+                    try { localStorage.setItem('cctv_activos_orden', orden); } catch (_) { }
                     renderActivos();
                 },
 
                 abrirFiltrosBusqueda() {
                     const lista = document.getElementById('filtros-busqueda-lista');
                     lista.innerHTML = BUSQ_CAMPOS.map(f => `
-                        <div class="filtro-row" onclick="event.stopPropagation();document.getElementById('filtro-cb-${f.id}').click()">
+                        <!-- Usamos <label> nativo en lugar de <div> con onclick -->
+                        <label class="filtro-row">
                             <span class="filtro-label">${f.label}</span>
-                            <span class="filtro-toggle" onclick="event.stopPropagation()">
+                            <span class="filtro-toggle">
                                 <input type="checkbox" id="filtro-cb-${f.id}"
                                     ${_busqActivos.has(f.id) ? 'checked' : ''}
                                     onchange="UI._onFiltroChange('${f.id}', this.checked)">
                                 <span class="filtro-toggle-track"></span>
                             </span>
-                        </div>`).join('');
+                        </label>`).join('');
                     MM.abrir('modal-filtros-busqueda');
                 },
 
@@ -3369,12 +4487,10 @@
                 toggleTodosFiltros() {
                     const todosActivos = _busqActivos.size === BUSQ_CAMPOS.length;
                     if (todosActivos) {
-                        // dejar al menos uno activo no tiene sentido, desactivar todos
                         _busqActivos.clear();
                     } else {
                         BUSQ_CAMPOS.forEach(f => _busqActivos.add(f.id));
                     }
-                    // re-renderizar checkboxes
                     document.querySelectorAll('[id^="filtro-cb-"]').forEach(cb => {
                         cb.checked = _busqActivos.has(cb.id.replace('filtro-cb-', ''));
                     });
@@ -3406,9 +4522,7 @@
                 abrirImportarDesdeAjustes() {
                     MM.cerrar('modal-ajustes');
                     setTimeout(() => {
-                        // abrirImportar usa MM.abrir internamente; lo sobreescribimos con padre
                         UI.abrirImportar();
-                        // registrar padre después de que abrirImportar llame MM.abrir
                         setTimeout(() => {
                             const m = document.getElementById('modal-importar');
                             if (m && m.classList.contains('show')) {
@@ -3419,17 +4533,15 @@
                 },
 
                 async borrarTodosLosDatos() {
-                    const ok = await confirmarModal('¿Borrar todos los datos? Se eliminarán dispositivos, grabadores, tipos personalizados y edificios. Esta acción no se puede deshacer.', 'Borrar todo');
+                    const ok = await confirmarModal('¿Borrar todos los datos? Se eliminarán dispositivos, grabadores, tipos personalizados y edificios. Esta acción no se puede deshacer (antes de cerrar la página).', 'Borrar todo');
                     if (!ok) return;
-                    // datos principales
+                    historial.empujar('Restablecer todos los datos');
                     _data = { dispositivos: [], grabadores: [] };
-                    guardar();
-                    // tipos custom
                     Object.keys(S.TIPOS).forEach(k => { if (!S.TIPOS_BUILTIN[k]) delete S.TIPOS[k]; });
                     S.guardarTipos();
-                    // edificios
                     S.edificios.length = 0;
                     S.guardarEdificios();
+                    guardar();
                     render();
                     MM.cerrar('modal-ajustes');
                     toast('Todos los datos fueron eliminados', 'success');
@@ -3459,6 +4571,8 @@
                     if (!raw) { labelEl.classList.add('error'); toast('Ingresá un nombre para el tipo', 'error'); return; }
                     const labels = raw.split(',').map(n => S.sanitize(n.trim(), 100)).filter(Boolean);
                     if (!labels.length) { labelEl.classList.add('error'); return; }
+
+                    historial.empujar('Agregar tipo de dispositivo');
                     const agregados = [], duplicados = [];
                     for (const label of labels) {
                         const key = label.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '') || S.genId().slice(0, 8);
@@ -3488,6 +4602,7 @@
                     if (enUso) { toast('No se puede eliminar: hay dispositivos con este tipo', 'error'); return; }
                     const ok = await confirmarModal(`¿Eliminar el tipo "${S.TIPOS[key]?.label}"?`);
                     if (!ok) return;
+                    historial.empujar(`Eliminar tipo "${S.TIPOS[key]?.label}"`);
                     delete S.TIPOS[key];
                     S.guardarTipos();
                     UI._renderTiposCustom();
@@ -3497,7 +4612,6 @@
                 // ---- Edificios ----
                 abrirEdificios(origen = 'ajustes') {
                     _edificiosOrigen = origen;
-                    // si venimos del canal, capturar el estado actual del formulario
                     if (origen === 'canal') {
                         _edificiosSnapForm = {
                             dispositivoId: document.getElementById('sel-canal-dispositivo').value || '',
@@ -3517,7 +4631,6 @@
                     setTimeout(() => {
                         UI._renderEdificios();
                         document.getElementById('nuevo-edificio-nombre').value = '';
-                        // label del botón Volver según origen
                         const btnVolver = document.querySelector('#modal-edificios .btn-cancel');
                         if (btnVolver) {
                             btnVolver.innerHTML = origen === 'canal'
@@ -3535,9 +4648,7 @@
                     MM.cerrar('modal-edificios');
                     if (origen === 'canal' && snap) {
                         setTimeout(() => {
-                            // re-abrir el canal (carga desde slot)
                             UI.abrirAsignarCanal(_editandoCanalGrabId, _editandoCanalN, _canalDesdeDispId);
-                            // restaurar lo que el usuario había escrito
                             setTimeout(() => {
                                 document.getElementById('sel-canal-dispositivo').value = snap.dispositivoId;
                                 document.getElementById('canal-disp-input').value = snap.dispInput;
@@ -3547,7 +4658,6 @@
                                 document.getElementById('canal-piso').value = snap.piso;
                                 document.getElementById('canal-rack').value = snap.rack;
                                 document.getElementById('canal-comentarios').value = snap.comentarios;
-                                // repoblar edificio con la lista actualizada, seleccionando el valor anterior
                                 _poblarSelectEdificio('canal-edificio', snap.edificio);
                                 const btnVerActivo = document.getElementById('btn-ver-activo-canal');
                                 if (btnVerActivo) btnVerActivo.style.display = snap.dispositivoId ? '' : 'none';
@@ -3584,6 +4694,8 @@
                     if (!raw) { el.classList.add('error'); toast('Ingresá un nombre para el edificio', 'error'); return; }
                     const nombres = raw.split(',').map(n => S.sanitize(n.trim(), 100)).filter(Boolean);
                     if (!nombres.length) { el.classList.add('error'); return; }
+
+                    historial.empujar('Agregar edificio');
                     const agregados = [], duplicados = [];
                     for (const nombre of nombres) {
                         if (S.edificios.some(e => e.toLowerCase() === nombre.toLowerCase())) {
@@ -3611,6 +4723,7 @@
                     if (!nombre) return;
                     const ok = await confirmarModal(`¿Eliminar el edificio "${nombre}"?`);
                     if (!ok) return;
+                    historial.empujar(`Eliminar edificio "${nombre}"`);
                     S.edificios.splice(idx, 1);
                     S.guardarEdificios();
                     UI._renderEdificios();
@@ -3619,13 +4732,33 @@
 
                 // ---- Tabs ----
                 cambiarTab(tab) {
-                    if (_tabActual === tab) return;
-                    // resetear detalle del dashboard al salir de él
-                    if (tab !== 'dashboard' && _dashTipoAbierto) {
+                    // Si el usuario toca la pestaña en la que ya está parado...
+                    if (_tabActual === tab) {
+                        let limpioAlgo = false;
+
+                        // 1. Limpiamos la barra de búsqueda si tiene texto
+                        const inputBusq = document.getElementById('input-busqueda');
+                        if (inputBusq && inputBusq.value) {
+                            UI.limpiarBusqueda();
+                            limpioAlgo = true;
+                        }
+
+                        // 2. Si estaba viendo el detalle de un tipo en el dashboard, lo cerramos
+                        if (tab === 'dashboard' && _dashTipoAbierto) {
+                            _dashTipoAbierto = null;
+                            renderDashboard();
+                            limpioAlgo = true;
+                        }
+
+                        // Si no limpió nada, no hace nada extra
+                        return;
+                    }
+
+                    // Limpieza general al cambiar de pestaña
+                    if (_dashTipoAbierto) {
                         _dashTipoAbierto = null;
                         renderDashboard();
                     }
-                    // limpiar búsqueda al cambiar de pestaña
                     const inputBusq = document.getElementById('input-busqueda');
                     if (inputBusq && inputBusq.value) {
                         inputBusq.value = '';
@@ -3633,22 +4766,23 @@
                         if (btnX) btnX.style.display = 'none';
                         renderActivos();
                     }
-                    // actualizar botones de tab inmediatamente
+
                     ['dashboard', 'activos', 'produccion'].forEach(t => {
                         document.getElementById('tab-' + t).classList.toggle('activa', t === tab);
                     });
+
                     localStorage.setItem('cctv_tab', JSON.stringify({ tab, ts: Date.now() }));
+
                     const panelSaliente = document.getElementById('panel-' + _tabActual);
                     const panelEntrante = document.getElementById('panel-' + tab);
                     _tabActual = tab;
-                    // fade out → ocultar → mostrar nuevo → fade in
+
                     if (panelSaliente && panelSaliente !== panelEntrante) {
                         panelSaliente.classList.add('tab-saliendo');
                         setTimeout(() => {
                             panelSaliente.classList.remove('tab-saliendo');
                             panelSaliente.style.display = 'none';
                             panelEntrante.style.display = '';
-                            // forzar reflow para que la animación de entrada arranque
                             panelEntrante.getBoundingClientRect();
                             panelEntrante.classList.add('tab-entrando');
                             panelEntrante.addEventListener('animationend', () => {
@@ -3663,10 +4797,9 @@
                 irAActivosConFiltro(tipo, estado) {
                     const ESTADO_QUERY = { produccion: 'produccion', disponible: 'disponible', averiado: 'averiado', revisar: 'revisar', desafectado: 'desafectado' };
                     const tipoLabel = S.TIPOS[tipo]?.label?.toLowerCase() || tipo;
-                    const estadoQ   = ESTADO_QUERY[estado] || estado;
+                    const estadoQ = ESTADO_QUERY[estado] || estado;
                     const query = [tipoLabel, estadoQ].filter(Boolean).join(' ');
 
-                    // Hacer la transición de pestaña manualmente para NO limpiar el input
                     if (_dashTipoAbierto) { _dashTipoAbierto = null; renderDashboard(); }
                     ['dashboard', 'activos', 'produccion'].forEach(t => {
                         document.getElementById('tab-' + t).classList.toggle('activa', t === 'activos');
@@ -3676,13 +4809,11 @@
                     const panelEntrante = document.getElementById('panel-activos');
                     _tabActual = 'activos';
 
-                    // Poner la query ANTES de que el panel sea visible
                     const input = document.getElementById('input-busqueda');
-                    const btnX  = document.getElementById('btn-limpiar-busqueda');
+                    const btnX = document.getElementById('btn-limpiar-busqueda');
                     if (input) { input.value = query; if (btnX) btnX.style.display = query ? '' : 'none'; }
                     renderActivos();
 
-                    // Animación de transición
                     if (panelSaliente && panelSaliente !== panelEntrante) {
                         panelSaliente.classList.add('tab-saliendo');
                         setTimeout(() => {
@@ -3705,15 +4836,29 @@
                 filtrarActivos() {
                     const input = document.getElementById('input-busqueda');
                     const btnX = document.getElementById('btn-limpiar-busqueda');
+
+                    // Mostramos u ocultamos la "X" al instante
                     if (btnX) btnX.style.display = input.value ? '' : 'none';
-                    renderActivos();
+
+                    // 1. Cancelamos la búsqueda anterior si el usuario sigue escribiendo
+                    if (_busqTimer) clearTimeout(_busqTimer);
+
+                    // 2. Programamos el renderizado para dentro de 300ms
+                    _busqTimer = setTimeout(() => {
+                        renderActivos();
+                    }, 300);
                 },
 
                 limpiarBusqueda() {
+                    // Cancelamos cualquier búsqueda pendiente por seguridad
+                    if (_busqTimer) clearTimeout(_busqTimer);
+
                     const input = document.getElementById('input-busqueda');
                     input.value = '';
                     document.getElementById('btn-limpiar-busqueda').style.display = 'none';
                     input.focus();
+
+                    // Al limpiar, sí ejecutamos el render de inmediato
                     renderActivos();
                 },
                 toggleGrabColapse(id) {
@@ -3729,18 +4874,16 @@
                     const expandiendo = _grabExpanded.has(id);
                     card.classList.toggle('collapsed', !expandiendo);
                     if (expandiendo) {
-                        // expandir: quitar collapsed primero para medir scrollHeight
                         grid.classList.remove('collapsed');
                         grid.style.maxHeight = grid.scrollHeight + 'px';
                         grid.addEventListener('transitionend', () => {
-                            grid.style.maxHeight = ''; // dejar libre para reflows futuros
+                            grid.style.maxHeight = '';
                         }, { once: true });
                     } else {
-                        // colapsar: fijar altura actual, luego animar a 0
                         grid.style.maxHeight = grid.scrollHeight + 'px';
-                        grid.getBoundingClientRect(); // forzar reflow
+                        grid.getBoundingClientRect();
                         grid.classList.add('collapsed');
-                        grid.style.maxHeight = ''; // el CSS .collapsed ya pone max-height:0
+                        grid.style.maxHeight = '';
                     }
                 },
 
@@ -3791,6 +4934,8 @@
                         }
                     }
 
+                    historial.empujar(macs.length > 1 ? `Agregar ${macs.length} dispositivos` : 'Agregar dispositivo');
+
                     const base = {
                         tipo,
                         marca: document.getElementById(`${prefijo}-marca`).value.trim(),
@@ -3829,22 +4974,17 @@
                     document.getElementById(`${prefijo}-canales-group`).style.display = esGrab ? '' : 'none';
                     document.getElementById(`${prefijo}-canales`).value = d.canales || 16;
 
-                    // ── Restricciones por estado productivo ──
-                    // grabador en producción (tiene grabador asignado con canales)
                     const grabAsociado = esGrab ? _data.grabadores.find(g => g.dispositivoId === id) : null;
                     const canalesOcupados = grabAsociado
                         ? grabAsociado.canales_data.filter(c => c.dispositivoId).length
                         : 0;
                     const enProduccionComoGrab = !!grabAsociado;
-                    // cámara u otro dispositivo asignado a un canal
                     const enProduccionComoCanal = _data.grabadores.some(g => g.canales_data.some(c => c.dispositivoId === id));
                     const enProduccion = enProduccionComoGrab || enProduccionComoCanal;
 
-                    // tipo: bloqueado si está en producción (cambiar tipo rompería la integridad)
                     const selTipo = document.getElementById(`${prefijo}-tipo`);
                     selTipo.disabled = enProduccion;
 
-                    // canales: bloqueado si el grabador tiene canales ocupados
                     const inputCanales = document.getElementById(`${prefijo}-canales`);
                     inputCanales.disabled = canalesOcupados > 0;
                     if (canalesOcupados > 0) {
@@ -3853,7 +4993,6 @@
                         inputCanales.title = '';
                     }
 
-                    // aviso de restricciones
                     let avisoHtml = '';
                     if (enProduccionComoGrab && canalesOcupados > 0) {
                         avisoHtml = `<div id="aviso-prod-disp" style="font-size:0.8rem;background:var(--input-bg);border-radius:var(--radius-sm);padding:0.6rem 0.75rem;margin-bottom:0.75rem;line-height:1.45">
@@ -3874,14 +5013,12 @@
                     if (existente) existente.remove();
                     if (avisoHtml && formBody) formBody.insertAdjacentHTML('afterbegin', avisoHtml);
 
-                    // botón eliminar: deshabilitado si está en producción
                     const btnEliminar = document.querySelector('#modal-editar-disp .btn-delete');
                     if (btnEliminar) {
                         btnEliminar.disabled = enProduccion;
                         btnEliminar.title = enProduccion ? 'No se puede eliminar: el dispositivo está en producción' : '';
                     }
 
-                    // Botón "Editar asignación": visible si es cámara asignada a canal, o si es NVR/DVR con grabador
                     const btnAsig = document.getElementById('btn-editar-asignacion');
                     if (esCamara) {
                         btnAsig.style.display = enProduccionComoCanal ? '' : 'none';
@@ -3894,7 +5031,6 @@
                     } else {
                         btnAsig.style.display = 'none';
                     }
-                    // snapshot para detectar cambios al guardar
                     _snapshotDisp = {
                         tipo: d.tipo,
                         estado: d.estado || '',
@@ -3907,10 +5043,8 @@
                         canales: String(d.canales || 16),
                     };
 
-                    // ── Botones de estado ──
                     _actualizarBotonesEstado(d.estado || '');
 
-                    // grabadores en producción: deshabilitar botones de estado
                     ['averiado', 'revisar', 'desafectado'].forEach(e => {
                         const btn = document.getElementById(`btn-estado-${e}`);
                         if (btn) {
@@ -3920,7 +5054,6 @@
                     });
 
                     MM.abrir('modal-editar-disp', { onEscape: () => UI.cerrarModalEditarDispositivo() });
-                    // etiqueta del botón cerrar: "Volver" si viene desde Ver activo del canal
                     const btnCerrarDisp = document.querySelector('#modal-editar-disp .btn-cancel');
                     if (btnCerrarDisp) btnCerrarDisp.innerHTML = _volverDesdeCanal
                         ? '<svg class="icon icon-line"><use href="#icon-undo"/></svg>Volver'
@@ -3941,7 +5074,6 @@
                 },
 
                 toggleEstadoDisp(estado) {
-                    // Si ya está activo, lo quita (vuelve a sin estado); si no, lo activa
                     const nuevo = _estadoEditando === estado ? '' : estado;
                     _actualizarBotonesEstado(nuevo);
                 },
@@ -3962,7 +5094,6 @@
                         return;
                     }
 
-                    // validaciones de integridad productiva
                     const dispActual = _data.dispositivos.find(x => x.id === _editandoDispId);
                     const grabAsociado = dispActual ? _data.grabadores.find(g => g.dispositivoId === _editandoDispId) : null;
                     if (grabAsociado) {
@@ -3981,7 +5112,6 @@
                             }
                         }
                     }
-                    // cámara u otro asignado a canal: no puede cambiar tipo
                     const enCanal = _data.grabadores.some(g => g.canales_data.some(c => c.dispositivoId === _editandoDispId));
                     if (enCanal && dispActual && tipo !== dispActual.tipo) {
                         document.getElementById(`${prefijo}-tipo`).classList.add('error');
@@ -4013,7 +5143,6 @@
                     };
 
                     const obj = _sanDisp({ ...base, id: _editandoDispId, mac: macs[0] || '' });
-                    // detectar cambios respecto al snapshot
                     const nuevoSnap = {
                         tipo: obj.tipo,
                         estado: obj.estado || '',
@@ -4028,13 +5157,11 @@
                     const huboCambios = JSON.stringify(nuevoSnap) !== JSON.stringify(_snapshotDisp);
                     if (!huboCambios) { toast('Sin cambios', 'info'); MM.cerrar('modal-editar-disp'); _editandoDispId = null; _snapshotDisp = null; return; }
 
-                    // ── Confirm desasignación de canal si el estado cambia a averiado/revisar/desafectado ──
                     const estadosConDesasignacion = ['averiado', 'revisar', 'desafectado'];
                     const esCamara = dispActual && !['nvr', 'dvr'].includes(dispActual.tipo);
                     const estadoCambioAInactivo = estadosConDesasignacion.includes(_estadoEditando) &&
                         !estadosConDesasignacion.includes(_snapshotDisp?.estado || '');
                     if (esCamara && estadoCambioAInactivo) {
-                        // buscar si tiene canal asignado
                         let grabConCanal = null, slotConCanal = null;
                         for (const g of _data.grabadores) {
                             const slot = g.canales_data.find(c => c.dispositivoId === _editandoDispId);
@@ -4045,9 +5172,14 @@
                             const msg = `Marcar como "${LABELS[_estadoEditando]}" quitará este dispositivo del Canal ${slotConCanal.canal} del ${grabConCanal.descripcion}\n ¿Confirmar?`;
                             const ok = await confirmarModal(msg, 'Guardar');
                             if (!ok) return;
-                            // desasignar: limpiar solo el dispositivoId del slot, conservar el resto
+
+                            historial.empujar('Actualizar estado dispositivo y liberar canal');
                             slotConCanal.dispositivoId = '';
+                        } else {
+                            historial.empujar('Editar dispositivo');
                         }
+                    } else {
+                        historial.empujar('Editar dispositivo');
                     }
 
                     const idx = _data.dispositivos.findIndex(x => x.id === _editandoDispId);
@@ -4082,7 +5214,6 @@
                 async eliminarDispositivo() {
                     if (!_editandoDispId) return;
                     const d = _data.dispositivos.find(x => x.id === _editandoDispId);
-                    // bloquear si es grabador con canales asignados
                     const grabAsoc = _data.grabadores.find(g => g.dispositivoId === _editandoDispId);
                     if (grabAsoc) {
                         const ocupados = grabAsoc.canales_data.filter(c => c.dispositivoId).length;
@@ -4091,7 +5222,6 @@
                             return;
                         }
                     }
-                    // bloquear si está asignado a un canal
                     const enCanal = _data.grabadores.some(g => g.canales_data.some(c => c.dispositivoId === _editandoDispId));
                     if (enCanal) {
                         toast('No se puede eliminar: el dispositivo está asignado a un canal en producción', 'error');
@@ -4099,7 +5229,8 @@
                     }
                     const ok = await confirmarModal(`¿Eliminar "${[d?.marca, d?.modelo].filter(Boolean).join(' ') || d?.mac || d?.serial || 'este dispositivo'}"?`);
                     if (!ok) return;
-                    // si tenía grabador sin canales, eliminarlo también
+
+                    historial.empujar('Eliminar dispositivo');
                     if (grabAsoc) {
                         _data.grabadores = _data.grabadores.filter(g => g.dispositivoId !== _editandoDispId);
                     }
@@ -4131,6 +5262,8 @@
                     const disp = _data.dispositivos.find(x => x.id === dispId);
                     if (!disp) { toast('Dispositivo no encontrado', 'error'); return; }
 
+                    historial.empujar('Agregar grabador');
+
                     const datos = {
                         id: S.genId(),
                         descripcion,
@@ -4159,7 +5292,6 @@
                     document.getElementById(`${prefijo}-rack`).value = g.rack || '';
                     document.getElementById(`${prefijo}-puerto`).value = g.puerto || '';
                     // canales mínimos = mayor número de canal ocupado (para preservar la configuración)
-                    const _canalesOcupadosGrab = g.canales_data.filter(c => c.dispositivoId).length;
                     const _maxCanalOcupado = g.canales_data
                         .filter(c => c.dispositivoId)
                         .reduce((max, c) => Math.max(max, c.canal), 0);
@@ -4246,7 +5378,7 @@
                     };
 
                     const idx = _data.grabadores.findIndex(x => x.id === _editandoGrabId);
-                    // detectar cambios respecto al snapshot
+
                     const nuevoSnapGrab = {
                         descripcion: datos.descripcion,
                         ip: datos.ip || '',
@@ -4257,6 +5389,8 @@
                     };
                     const huboCambiosGrab = JSON.stringify(nuevoSnapGrab) !== JSON.stringify(_snapshotGrab);
                     if (!huboCambiosGrab) { toast('Sin cambios', 'info'); MM.cerrar('modal-editar-grab'); _editandoGrabId = null; _snapshotGrab = null; return; }
+
+                    historial.empujar('Editar grabador');
 
                     if (idx !== -1) {
                         datos.canales_data = _data.grabadores[idx].canales_data;
@@ -4276,6 +5410,9 @@
                     }
                     const ok = await confirmarModal(`¿Eliminar el grabador "${g?.descripcion}"?`);
                     if (!ok) return;
+
+                    historial.empujar('Eliminar grabador');
+
                     _data.grabadores = _data.grabadores.filter(x => x.id !== _editandoGrabId);
                     guardar(); render(); MM.cerrar('modal-editar-grab'); _editandoGrabId = null;
                     toast('Grabador eliminado', 'success');
@@ -4291,33 +5428,21 @@
 
                     document.getElementById('modal-canal-titulo').textContent = `Canal ${nCanal} — ${g.descripcion}`;
 
-                    // Botón cancelar/volver
                     const btnCancel = document.getElementById('btn-canal-cancelar');
-
                     if (btnCancel) {
                         if (desdeDispId) {
-                            // Estructura para "Volver"
-                            btnCancel.innerHTML = `
-            <svg class="icon"><use href="#icon-undo"></use></svg>
-            <span>Volver</span>
-        `;
+                            btnCancel.innerHTML = `<svg class="icon"><use href="#icon-undo"></use></svg><span>Volver</span>`;
                         } else {
-                            // Estructura para "Cancelar" con icon-cancelar
-                            btnCancel.innerHTML = `
-            <svg class="icon"><use href="#icon-cancelar"></use></svg>
-            <span>Cancelar</span>
-        `;
+                            btnCancel.innerHTML = `<svg class="icon"><use href="#icon-cancelar"></use></svg><span>Cancelar</span>`;
                         }
                     }
 
-                    // ocupados: dispositivos ya asignados en otros canales del mismo grabador
                     _canalDispOcupados = new Set(
                         g.canales_data
                             .filter(c => c.canal !== nCanal && c.dispositivoId)
                             .map(c => c.dispositivoId)
                     );
 
-                    // inicializar combobox
                     const hiddenSel = document.getElementById('sel-canal-dispositivo');
                     const input = document.getElementById('canal-disp-input');
                     hiddenSel.value = slot?.dispositivoId || '';
@@ -4332,7 +5457,6 @@
 
                     MM.abrir('modal-canal', { onEscape: () => UI.cerrarModalCanal() });
 
-                    // snapshot para detectar cambios al guardar
                     _snapshotCanal = {
                         dispositivoId: slot?.dispositivoId || '',
                         descripcion: slot?.descripcion || '',
@@ -4355,14 +5479,12 @@
                     btnVerActivo.style.display = slot?.dispositivoId ? '' : 'none';
                 },
 
-                // ---- Combobox dispositivo en canal ----
                 _canalDispFiltrar() {
                     document.getElementById('canal-disp-input').classList.remove('error');
                     const query = document.getElementById('canal-disp-input').value.trim().toLowerCase();
                     const dd = document.getElementById('canal-disp-dropdown');
                     const hidden = document.getElementById('sel-canal-dispositivo');
 
-                    // si borró el texto, limpiar selección
                     if (!query) hidden.value = '';
 
                     const candidatos = _data.dispositivos
@@ -4385,8 +5507,6 @@
                     }
 
                     const items = [];
-
-                    // opción "vacío" siempre primera
                     items.push(`<div class="canal-disp-item canal-disp-item-vaciobtn" data-id="" data-idx="0">— Vacío —</div>`);
 
                     const ESTADO_LABELS_DISP = { averiado: 'averiado', revisar: 'a revisar', desafectado: 'desafectado' };
@@ -4464,16 +5584,12 @@
                     if (_canalDispHighlight >= 0) items[_canalDispHighlight].scrollIntoView({ block: 'nearest' });
                 },
 
-                // Filtra el input de Piso: solo permite dígitos, '-', y las letras P,B,E,S
-                // (que forman PB, EP, SS). Máx 4 caracteres (ya cubierto por maxlength).
                 _pisoFiltrar(el) {
                     const pos = el.selectionStart;
                     const anterior = el.value;
-                    // Permitir: dígitos 0-9, guión, y letras P B E S (mayúsculas)
                     const limpio = anterior.toUpperCase().replace(/[^0-9\-PBES]/g, '');
                     if (limpio !== anterior) {
                         el.value = limpio;
-                        // restaurar posición del cursor
                         const nuevaPos = Math.max(0, pos - (anterior.length - limpio.length));
                         el.setSelectionRange(nuevaPos, nuevaPos);
                     }
@@ -4509,18 +5625,16 @@
                 guardarAsignacionCanal() {
                     const g = _data.grabadores.find(x => x.id === _editandoCanalGrabId); if (!g) return;
                     const slot = g.canales_data.find(c => c.canal === _editandoCanalN); if (!slot) return;
-                    // validar consistencia del combobox: el texto debe corresponder al dispositivo seleccionado
+
                     const dispInput = document.getElementById('canal-disp-input');
                     const dispId = document.getElementById('sel-canal-dispositivo').value;
                     const textoInput = dispInput.value.trim();
                     if (textoInput && !dispId) {
-                        // hay texto pero ningún dispositivo seleccionado
                         dispInput.classList.add('error');
                         toast('Seleccioná un dispositivo de la lista', 'error');
                         return;
                     }
                     if (dispId) {
-                        // verificar que el texto visible corresponde al dispositivo en el hidden input
                         const d = _data.dispositivos.find(x => x.id === dispId);
                         const expectedText = d ? (d.mac || d.serial || d.id) : '';
                         if (!d || textoInput !== expectedText) {
@@ -4532,6 +5646,7 @@
                     }
                     dispInput.classList.remove('error');
                     if (!validarCampoIP('canal-ip')) return;
+
                     const nuevoSnapCanal = {
                         dispositivoId: document.getElementById('sel-canal-dispositivo').value || '',
                         descripcion: document.getElementById('canal-descripcion').value.trim(),
@@ -4545,14 +5660,17 @@
                     const huboCambiosCanal = JSON.stringify(nuevoSnapCanal) !== JSON.stringify(_snapshotCanal);
                     if (!huboCambiosCanal) { toast('Sin cambios', 'info'); MM.cerrar('modal-canal'); _editandoCanalGrabId = null; _editandoCanalN = null; _snapshotCanal = null; return; }
 
+                    const fueAsignado = !_snapshotCanal.dispositivoId && nuevoSnapCanal.dispositivoId;
+                    const fueDesasignado = _snapshotCanal.dispositivoId && !nuevoSnapCanal.dispositivoId;
+                    const msg = fueAsignado ? 'Dispositivo asignado' : fueDesasignado ? 'Canal liberado' : 'Canal actualizado';
+
+                    historial.empujar(msg);
+
                     Object.assign(slot, nuevoSnapCanal, {
                         dispositivoId: nuevoSnapCanal.dispositivoId || null,
                     });
                     guardar(); render(); MM.cerrar('modal-canal');
-                    // mensaje según qué cambió
-                    const fueAsignado = !_snapshotCanal.dispositivoId && nuevoSnapCanal.dispositivoId;
-                    const fueDesasignado = _snapshotCanal.dispositivoId && !nuevoSnapCanal.dispositivoId;
-                    const msg = fueAsignado ? 'Dispositivo asignado' : fueDesasignado ? 'Canal liberado' : 'Canal actualizado';
+
                     toast(msg, 'success');
                     _editandoCanalGrabId = null; _editandoCanalN = null; _snapshotCanal = null;
                 },
@@ -4560,109 +5678,138 @@
                 // ---- Importar / Exportar ----
                 abrirImportar() {
                     document.getElementById('file-import').value = '';
-                    document.getElementById('nombre-archivo').textContent = '';
+                    document.getElementById('importar-dropzone-label').textContent = 'Seleccioná o arrastrá un archivo .json';
+                    document.getElementById('importar-dropzone').style.borderColor = '';
                     document.getElementById('btn-combinar').disabled = true;
                     document.getElementById('btn-reemplazar').disabled = true;
-                    MM.abrir('modal-importar');
+                    _importarParsed = null;
+
+                    // Le pasamos el callback (cb) para que simule el clic automáticamente
+                    MM.abrir('modal-importar', {
+                        cb: () => {
+                            // Delay de 400ms para que la animación del modal termine primero
+                            setTimeout(() => {
+                                document.getElementById('file-import').click();
+                            }, 400);
+                        }
+                    });
                 },
 
                 cerrarImportar() { MM.cerrar('modal-importar'); },
 
-                async importarDatos(modo) {
-                    const file = document.getElementById('file-import').files[0];
-                    if (!file) { toast('Seleccioná un archivo primero', 'error'); return; }
-                    if (file.size > S.MAX_JSON) { toast('Archivo demasiado grande', 'error'); return; }
-                    if (file.type !== 'application/json') { toast('Solo se permiten archivos JSON', 'error'); return; }
+                onImportarFileChange(e) {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const label = document.getElementById('importar-dropzone-label');
+                    const zone = document.getElementById('importar-dropzone');
+                    const btnComb = document.getElementById('btn-combinar');
+                    const btnReem = document.getElementById('btn-reemplazar');
+
+                    if (file.size > S.MAX_JSON) {
+                        _importarParsed = null;
+                        label.innerHTML = `<span class="import-fail">✗ Archivo demasiado grande</span><span class="import-sub">Máximo permitido: 4 MB.</span>`;
+                        zone.style.borderColor = 'var(--c-red)';
+                        btnComb.disabled = true; btnReem.disabled = true;
+                        return;
+                    }
 
                     const reader = new FileReader();
-                    reader.onload = async e => {
+                    reader.onload = async ev => {
                         try {
-                            const contenido = e.target.result;
-                            if (!contenido?.trim()) { toast('Archivo vacío', 'error'); return; }
-
-                            // parse seguro
+                            const contenido = ev.target.result;
                             const data = S.safeParse(contenido);
+                            if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('Estructura inválida');
 
-                            if (!data || typeof data !== 'object' || Array.isArray(data)) {
-                                toast('Estructura de archivo inválida', 'error'); return;
-                            }
-
-                            // sanitizar primero, luego verificar hash sobre estructura canónica
                             const newDisps = Array.isArray(data.dispositivos) ? data.dispositivos.map(_sanDisp) : [];
                             const newGrabs = Array.isArray(data.grabadores) ? data.grabadores.map(_sanGrab) : [];
 
-                            // verificar hash si existe
+                            let esValida = true;
                             if (data.hash) {
                                 const calc = await S.sha256({ dispositivos: newDisps, grabadores: newGrabs });
-                                if (calc !== data.hash) {
-                                    const ok = await confirmarModal('El hash de integridad no coincide. El archivo puede haber sido modificado. ¿Importar de todas formas?', 'Importar');
-                                    if (!ok) return;
-                                }
+                                if (calc !== data.hash) esValida = false;
                             }
 
-                            // restaurar tipos custom del archivo
-                            if (data.tiposCustom && typeof data.tiposCustom === 'object' && !Array.isArray(data.tiposCustom)) {
-                                let tiposAgregados = 0;
-                                Object.entries(data.tiposCustom).forEach(([k, v]) => {
-                                    if (S.TIPOS_BUILTIN[k]) return; // nunca pisar builtins
-                                    if (typeof v?.label !== 'string' || !v.label) return;
-                                    if (modo === 'replace' || !S.TIPOS[k]) {
-                                        S.TIPOS[k] = { label: v.label, emoji: v.emoji || '📦', badge: 'badge-otro', dot: 'var(--c-gold)', builtin: false };
-                                        tiposAgregados++;
-                                    }
-                                });
-                                if (tiposAgregados) S.guardarTipos();
-                            }
+                            _importarParsed = { ...data, _disps: newDisps, _grabs: newGrabs, _valida: esValida };
 
-                            // restaurar edificios del archivo
-                            if (Array.isArray(data.edificios)) {
-                                const nuevos = data.edificios
-                                    .filter(e => typeof e === 'string' && e.trim().length > 0)
-                                    .map(e => S.sanitize(e.trim(), 60));
-                                if (modo === 'replace') {
-                                    // reemplazar lista completa
-                                    S.edificios.length = 0;
-                                    nuevos.forEach(e => S.edificios.push(e));
-                                } else {
-                                    // merge: agregar solo los que no existen (case-insensitive)
-                                    const existentes = new Set(S.edificios.map(e => e.toLowerCase()));
-                                    nuevos.forEach(e => {
-                                        if (!existentes.has(e.toLowerCase())) {
-                                            S.edificios.push(e);
-                                            existentes.add(e.toLowerCase());
-                                        }
-                                    });
-                                }
-                                S.guardarEdificios();
-                            }
+                            const textoAlerta = !esValida ? `<span style="color:var(--c-orange);font-size:0.75rem;display:block;margin-top:0.3rem">⚠️ Archivo alterado externamente</span>` : '';
+                            label.innerHTML = `<span class="import-ok">✓ ${esc(file.name)}</span><span class="import-sub">${newDisps.length} dispositivos · ${newGrabs.length} grabadores</span>${textoAlerta}`;
+                            zone.style.borderColor = !esValida ? 'var(--c-orange)' : 'var(--c-green)';
 
-                            if (modo === 'replace') {
-                                _data.dispositivos = newDisps;
-                                _data.grabadores = newGrabs;
-                                toast('Datos reemplazados correctamente', 'success');
-                            } else {
-                                // merge: no duplicar por id
-                                const idsD = new Set(_data.dispositivos.map(d => d.id));
-                                const idsG = new Set(_data.grabadores.map(g => g.id));
-                                newDisps.forEach(d => { if (!idsD.has(d.id)) _data.dispositivos.push(d); });
-                                newGrabs.forEach(g => { if (!idsG.has(g.id)) _data.grabadores.push(g); });
-                                toast('Datos combinados correctamente', 'success');
-                            }
-
-                            guardar(); render(); MM.cerrar('modal-importar');
+                            btnComb.disabled = false; btnReem.disabled = false;
                         } catch (err) {
-                            console.error(err);
-                            toast('Error al procesar el archivo', 'error');
+                            _importarParsed = null;
+                            label.innerHTML = `<span class="import-fail">✗ Archivo inválido</span><span class="import-sub">No tiene el formato correcto o está dañado.</span>`;
+                            zone.style.borderColor = 'var(--c-red)';
+                            btnComb.disabled = true; btnReem.disabled = true;
                         }
                     };
                     reader.readAsText(file);
+                },
+
+                async importarDatos(modo) {
+                    if (!_importarParsed) { toast('Seleccioná un archivo válido', 'error'); return; }
+                    const data = _importarParsed;
+
+                    if (!data._valida) {
+                        const ok = await confirmarModal('El hash de integridad no coincide. El archivo puede haber sido modificado. ¿Importar de todas formas?', 'Importar');
+                        if (!ok) return;
+                    }
+
+                    historial.empujar(modo === 'replace' ? 'Reemplazar datos (Importar)' : 'Combinar datos (Importar)');
+
+                    const newDisps = data._disps;
+                    const newGrabs = data._grabs;
+
+                    if (data.tiposCustom && typeof data.tiposCustom === 'object' && !Array.isArray(data.tiposCustom)) {
+                        Object.entries(data.tiposCustom).forEach(([k, v]) => {
+                            if (S.TIPOS_BUILTIN[k]) return;
+                            if (typeof v?.label !== 'string' || !v.label) return;
+                            if (modo === 'replace' || !S.TIPOS[k]) {
+                                S.TIPOS[k] = { label: v.label, emoji: v.emoji || '📦', badge: 'badge-otro', dot: 'var(--c-gold)', builtin: false };
+                            }
+                        });
+                        S.guardarTipos();
+                    }
+
+                    if (Array.isArray(data.edificios)) {
+                        const nuevos = data.edificios
+                            .filter(e => typeof e === 'string' && e.trim().length > 0)
+                            .map(e => S.sanitize(e.trim(), 60));
+                        if (modo === 'replace') {
+                            S.edificios.length = 0;
+                            nuevos.forEach(e => S.edificios.push(e));
+                        } else {
+                            const existentes = new Set(S.edificios.map(e => e.toLowerCase()));
+                            nuevos.forEach(e => {
+                                if (!existentes.has(e.toLowerCase())) {
+                                    S.edificios.push(e);
+                                    existentes.add(e.toLowerCase());
+                                }
+                            });
+                        }
+                        S.guardarEdificios();
+                    }
+
+                    if (modo === 'replace') {
+                        _data.dispositivos = newDisps;
+                        _data.grabadores = newGrabs;
+                        toast('Datos reemplazados correctamente', 'success');
+                    } else {
+                        const idsD = new Set(_data.dispositivos.map(d => d.id));
+                        const idsG = new Set(_data.grabadores.map(g => g.id));
+                        let dAdd = 0, gAdd = 0;
+                        newDisps.forEach(d => { if (!idsD.has(d.id)) { _data.dispositivos.push(d); dAdd++; } });
+                        newGrabs.forEach(g => { if (!idsG.has(g.id)) { _data.grabadores.push(g); gAdd++; } });
+                        toast(`Datos combinados (+${dAdd} disp, +${gAdd} grab)`, 'success');
+                    }
+
+                    guardar(); render(); MM.cerrar('modal-importar');
                 },
 
                 async exportarJSON() {
                     try {
                         const disps = _data.dispositivos.map(_sanDisp);
                         const grabs = _data.grabadores.map(_sanGrab);
-                        // exportar solo los tipos custom (los builtin se reconstruyen solos)
                         const tiposCustom = {};
                         Object.entries(S.TIPOS).forEach(([k, v]) => {
                             if (!v.builtin) tiposCustom[k] = { label: v.label, emoji: v.emoji };
@@ -4671,7 +5818,7 @@
                             dispositivos: disps,
                             grabadores: grabs,
                             tiposCustom,
-                            edificios: S.edificios.slice(), // copia del array
+                            edificios: S.edificios.slice(),
                             version: S.SCHEMA_V,
                             fecha: S.fechaISO(),
                             hash: await S.sha256({ dispositivos: disps, grabadores: grabs }),
@@ -4693,9 +5840,6 @@
             // HELPERS FORM
             // ==============================================================
 
-            // Resincroniza los grabadores que tienen asignado el dispositivo con dispId:
-            // actualiza tipo, marca, modelo, mac y canales desde el dispositivo en vivo,
-            // preservando canales_data, descripcion, ip y lugar del grabador.
             function _sincronizarGrabadores(dispId) {
                 const disp = _data.dispositivos.find(d => d.id === dispId);
                 if (!disp) return;
@@ -4714,7 +5858,6 @@
                 });
             }
 
-            // Puebla el select de tipos de dispositivo con los tipos registrados
             function _poblarSelectTipo(prefijo, seleccionado) {
                 const sel = document.getElementById(`${prefijo}-tipo`);
                 sel.innerHTML = '<option value="">Seleccionar…</option>';
@@ -4727,11 +5870,9 @@
                 });
             }
 
-            // Puebla el select de edificios con los edificios declarados en ajustes
             function _poblarSelectEdificio(selectId, seleccionado) {
                 const sel = document.getElementById(selectId);
                 if (!sel) return;
-                // preservar handler previo para no duplicar
                 sel.onchange = null;
                 sel.innerHTML = '<option value="">— Sin edificio —</option>';
                 S.edificios.forEach(nombre => {
@@ -4741,7 +5882,6 @@
                     if (nombre === seleccionado) opt.selected = true;
                     sel.appendChild(opt);
                 });
-                // si el valor seleccionado no está en la lista (dato viejo), agregar como opción
                 if (seleccionado && !S.edificios.includes(seleccionado)) {
                     const opt = document.createElement('option');
                     opt.value = seleccionado;
@@ -4749,27 +5889,20 @@
                     opt.selected = true;
                     sel.appendChild(opt);
                 }
-                // opción especial al final
                 const optAgregar = document.createElement('option');
                 optAgregar.value = '__agregar__';
                 optAgregar.textContent = '＋ Agregar edificio…';
                 sel.appendChild(optAgregar);
-                // interceptar selección de la opción especial
                 sel.onchange = function () {
                     if (sel.value === '__agregar__') {
-                        // restaurar el valor anterior antes de abrir el modal
                         sel.value = seleccionado || '';
                         UI.abrirEdificios('canal');
                     } else {
-                        // actualizar seleccionado para que el onchange futuro recuerde el valor
                         seleccionado = sel.value;
                     }
                 };
             }
 
-            // Puebla el selector de dispositivos NVR/DVR en el modal grabador.
-            // grabadoresEnUso: excluye dispositivos ya asignados a otro grabador,
-            // salvo el que se está editando actualmente.
             function _poblarSelectorGrabador(prefijo, seleccionadoId, minCanales = 0) {
                 const sel = document.getElementById(`${prefijo}-dispositivo-id`);
                 const enUso = new Set(
@@ -4824,10 +5957,8 @@
                 document.getElementById(`${prefijo}-dispositivo-id`).value = '';
             }
 
-            // limpiar clase error en inputs al escribir
             document.addEventListener('input', e => { if (e.target.tagName === 'INPUT') e.target.classList.remove('error'); });
 
-            // cerrar dropdown combobox al hacer click fuera
             document.addEventListener('mousedown', e => {
                 const cb = document.getElementById('canal-disp-combobox');
                 if (cb && !cb.contains(e.target)) {
@@ -4836,7 +5967,6 @@
                 }
             });
 
-            // click fuera del bloque de mosaicos dentro del card Resumen general → volver a vista por tipos
             document.getElementById('card-resumen-general').addEventListener('mousedown', e => {
                 if (!_dashTipoAbierto) return;
                 if (!e.target.closest('#dash-disp-tree')) {
@@ -4845,25 +5975,28 @@
                 }
             });
 
-            // file-import: mostrar nombre y habilitar botones
-            document.getElementById('file-import').addEventListener('change', function () {
-                const f = this.files[0];
-                document.getElementById('nombre-archivo').textContent = f ? f.name : '';
-                document.getElementById('btn-combinar').disabled = !f;
-                document.getElementById('btn-reemplazar').disabled = !f;
-            });
+            // drag-drop en la dropzone de importar
+            const dz = document.getElementById('importar-dropzone');
+            if (dz) {
+                dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('importar-dropzone-drag'); });
+                dz.addEventListener('dragleave', () => dz.classList.remove('importar-dropzone-drag'));
+                dz.addEventListener('drop', e => {
+                    e.preventDefault();
+                    dz.classList.remove('importar-dropzone-drag');
+                    const file = e.dataTransfer.files[0];
+                    if (file) {
+                        const dt = new DataTransfer(); dt.items.add(file);
+                        document.getElementById('file-import').files = dt.files;
+                        UI.onImportarFileChange({ target: { files: [file] } });
+                    }
+                });
+            }
 
-            // atajo de teclado unificado:
-            //   Enter en modales → guarda el modal activo
-            //   Escape fuera de input → limpia búsqueda
-            //   + / = → abre nuevo dispositivo
-            //   letra / número → va a activos y enfoca búsqueda
             document.addEventListener('keydown', e => {
                 const tag = document.activeElement?.tagName;
                 const enInput = tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA';
                 const modalAbierto = document.body.classList.contains('modal-open');
 
-                // Enter: solo en modales, no en textarea ni botón
                 if (e.key === 'Enter' && modalAbierto && tag !== 'TEXTAREA' && tag !== 'BUTTON') {
                     const modal = document.querySelector('.modal.show');
                     if (modal) {
@@ -4882,10 +6015,25 @@
                     return;
                 }
 
-                // Nada más se ejecuta si hay un modal abierto
+                // ── Alt + ← / → : cambiar pestaña ───────────────────
+                if (!modalAbierto && e.altKey) {
+                    const tabs = ['dashboard', 'activos', 'produccion'];
+                    const idxActual = tabs.indexOf(_tabActual);
+
+                    if (e.key === 'ArrowLeft') {
+                        e.preventDefault();
+                        if (idxActual > 0) UI.cambiarTab(tabs[idxActual - 1]);
+                        return;
+                    }
+                    if (e.key === 'ArrowRight') {
+                        e.preventDefault();
+                        if (idxActual < tabs.length - 1) UI.cambiarTab(tabs[idxActual + 1]);
+                        return;
+                    }
+                }
+
                 if (modalAbierto) return;
 
-                // Escape fuera de input: limpiar búsqueda
                 if (e.key === 'Escape' && !enInput) {
                     const input = document.getElementById('input-busqueda');
                     if (input && input.value) { UI.limpiarBusqueda(); input.blur(); return; }
@@ -4893,15 +6041,12 @@
 
                 if (enInput) return;
 
-                // + / = → nuevo dispositivo
                 if (e.key === '+' || e.key === '=') { UI.abrirNuevoDispositivo(); return; }
 
-                // letra A-Z / número: ir a activos y enfocar búsqueda
                 if (e.key.length === 1 && /^[a-zA-Z0-9:]$/.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey) {
                     if (_tabActual !== 'activos') UI.cambiarTab('activos');
                     const input = document.getElementById('input-busqueda');
                     input.focus();
-                    // no llamamos preventDefault: el caracter cae naturalmente en el input
                 }
             });
 
@@ -4929,7 +6074,6 @@
                     }
                 }
                 window.addEventListener('scroll', actualizarBoton, { passive: true });
-                // re-evaluar al cambiar de tab
                 const _cambiarTabOrig = UI.cambiarTab.bind(UI);
                 UI.cambiarTab = function (tab) {
                     _cambiarTabOrig(tab);
@@ -4941,8 +6085,10 @@
             // ARRANQUE
             // ==============================================================
             window.UI = UI;
+            window.historial = historial;
+            window.GistSync = GistSync;
             window._toggleTipoDetalle = _toggleTipoDetalle;
-            window._setCamarasVista = function(vista) {
+            window._setCamarasVista = function (vista) {
                 if (_dashCamarasVista === vista) return;
                 _dashCamarasVista = vista;
                 renderDashboard();
@@ -4950,11 +6096,9 @@
             cargar();
             render();
 
-            // restaurar indicador visual del botón de filtros
             document.getElementById('btn-filtros-busqueda')
                 ?.classList.toggle('tiene-desactivados', _busqActivos.size < BUSQ_CAMPOS.length);
 
-            // restaurar pestaña activa (máximo 1 hora)
             try {
                 const saved = JSON.parse(localStorage.getItem('cctv_tab') || 'null');
                 const TABS = ['dashboard', 'activos', 'produccion'];
@@ -4964,23 +6108,33 @@
                 }
             } catch (_) { }
 
+            GistSync.init();
+            GistSync.verificarAlAbrir();
+
         })();
+    </script>
+    <script>
+        // Registro del Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('SW registrado', reg.scope))
+                    .catch(err => console.warn('Error al registrar SW', err));
+            });
+        }
     </script>
 </body>
 
 </html>
 
-<!--
-// ====================================================================
-//         NOTAS CCTV ACTIVOS VERSION 227
-// ====================================================================
+<!--// ====================================================================
+    //                 NOTAS SISTEMA LUSHIBOSCA VERSION 229
+    // ====================================================================
+    
+     - CAMBIOS 
+     1) 
 
- - CAMBIOS:
-   
+     - BUGS CONOCIDOS:
+     1) 
 
- - PENDIENTE (futuras iteraciones):
-   · Undo/redo
-   · Más campos (fecha instalación)
-   · Vista de árbol / diagrama de red
-
--->
+    -->
