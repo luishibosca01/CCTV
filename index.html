@@ -1997,7 +1997,7 @@
                     </svg>
                     Ajustes
                 </h3>
-                <span class="modal-header-version">v229</span>
+                <span class="modal-header-version">v234</span>
             </div>
             <!-- Tipos de dispositivo -->
             <div style="margin-bottom:1.25rem">
@@ -2211,10 +2211,6 @@
                         </svg>
                     </a>
                 </div>
-                <p style="font-size:0.74rem;color:var(--text-muted);margin-top:0.35rem">
-                    ⚠️ El token se guarda de forma local. Usá un token con permisos mínimos (solo
-                    <code>gist</code>).
-                </p>
             </div>
 
             <!-- Gist ID -->
@@ -2260,6 +2256,14 @@
                     <div class="toggle-thumb"></div>
                 </div>
             </label>
+
+            <!-- Aviso de confidencialidad -->
+            <div
+                style="font-size:0.74rem;color:var(--text-muted);background:var(--input-bg);border-radius:var(--radius-sm);padding:0.6rem 0.75rem;margin-top:0.75rem;line-height:1.55">
+                🔒 <strong>Datos sensibles:</strong> El Gist contiene IPs, MACs y ubicaciones de tu infraestructura.
+                Asegurate de que esté configurado como <strong>secreto</strong> en GitHub y de no compartir el link.
+                El scope del token tiene que tener habilitado solamente el apartado <strong>gist.</strong>
+            </div>
 
             <!-- Estado sync -->
             <p id="gist-sync-status" class="gist-sync-status"></p>
@@ -2803,9 +2807,10 @@
                     <option value="marca">Marca / Modelo</option>
                 </select>
             </div>
-            
+
             <div class="form-group" style="margin-top: 1rem; margin-bottom: 1.5rem;">
-                <label class="gist-autosync-row" style="margin-bottom: 0; padding: 0.6rem 0.75rem; background: transparent; border: none; border-top: 1px solid var(--border); border-radius: 0;">
+                <label class="gist-autosync-row"
+                    style="margin-bottom: 0; padding: 0.6rem 0.75rem; background: transparent; border: none; border-top: 1px solid var(--border); border-radius: 0;">
                     <span class="gist-autosync-text">
                         <span class="gist-autosync-title" style="font-size: 0.88rem;">Recordar estado colapsado</span>
                     </span>
@@ -3557,6 +3562,22 @@
                     if (btnDn) btnDn.style.display = display;
                 }
 
+                async function _validarScopeToken(token) {
+                    // Verifica que el token solo tenga el scope "gist" y ninguno más sensible
+                    try {
+                        const res = await fetch('https://api.github.com/user', {
+                            headers: { Authorization: `token ${token}` }
+                        });
+                        if (!res.ok) return { ok: false, error: `Error HTTP ${res.status}` };
+                        const scopeHeader = res.headers.get('x-oauth-scopes') || '';
+                        const scopes = scopeHeader.split(',').map(s => s.trim()).filter(Boolean);
+                        const peligrosos = scopes.filter(s => !['gist', 'read:user'].includes(s));
+                        return { ok: true, scopes, peligrosos };
+                    } catch (e) {
+                        return { ok: false, error: e.message };
+                    }
+                }
+
                 function toggleToken() {
                     const inp = document.getElementById('gist-token');
                     const icon = document.getElementById('gist-eye-icon');
@@ -3607,6 +3628,17 @@
                         toast(nuevoAuto ? 'Sincronización automática activada' : 'Sincronización automática desactivada');
                     } else {
                         toast('Configuración guardada');
+                    }
+
+                    // Validar scope del token si es nuevo o cambió
+                    if (nuevoToken && nuevoToken !== tokenActual) {
+                        _validarScopeToken(nuevoToken).then(r => {
+                            if (!r.ok) return; // Si falla la verificación, no bloqueamos
+                            if (r.peligrosos && r.peligrosos.length > 0) {
+                                const listaScopes = r.peligrosos.join(', ');
+                                toast(`⚠️ El token tiene permisos extra: ${listaScopes}. Recomendamos usar solo scope "gist".`, 'warning');
+                            }
+                        });
                     }
 
                     UI.cerrarGist();
@@ -3850,6 +3882,19 @@
                     _actualizarLinkBtn();
                     _actualizarToggleUI();
                     if (_cfg.lastSync) _setStatusSync(); else _setStatus('');
+
+                    // Verificar scopes del token guardado y mostrar advertencia si corresponde
+                    const scopeWarn = document.getElementById('gist-scope-warning');
+                    if (scopeWarn) scopeWarn.style.display = 'none';
+                    if (_cfg.token) {
+                        _validarScopeToken(_cfg.token).then(r => {
+                            if (!r.ok || !scopeWarn) return;
+                            if (r.peligrosos && r.peligrosos.length > 0) {
+                                scopeWarn.style.display = '';
+                                scopeWarn.innerHTML = `⚠️ <strong>Permisos excesivos detectados:</strong> Este token tiene los scopes <code>${r.peligrosos.join(', ')}</code> además de <code>gist</code>. Recomendamos crear un token nuevo con solo el scope <code>gist</code>.`;
+                            }
+                        });
+                    }
                 }
 
                 function init() {
@@ -3961,24 +4006,24 @@
             let _dashCamarasVista = 'forma';
             let _activosColumnas = (() => { try { return parseInt(localStorage.getItem('cctv_activos_cols')) === 1 ? 1 : 2; } catch { return 2; } })();
             let _activosOrden = (() => { try { let v = localStorage.getItem('cctv_activos_orden'); if (v === 'tipo') v = 'forma'; return ['estado', 'forma', 'marca'].includes(v) ? v : 'forma'; } catch { return 'forma'; } })();
-            
+
             // ── MAGIA: Leemos si el usuario quiere recordar, y si es así, traemos la memoria ──
             let _activosRecordarEstado = (() => { try { return localStorage.getItem('cctv_activos_recordar') === 'true'; } catch { return false; } })();
-            
-            window.UI = window.UI || {}; 
+
+            window.UI = window.UI || {};
             window.UI._activosCollapsed = (() => {
                 if (_activosRecordarEstado) {
                     try {
                         const saved = JSON.parse(localStorage.getItem('cctv_act_collapsed'));
                         if (Array.isArray(saved)) return new Set(saved);
-                    } catch {}
+                    } catch { }
                 }
                 return new Set();
             })();
 
-            window.UI._guardarColapsados = function() {
+            window.UI._guardarColapsados = function () {
                 if (_activosRecordarEstado) {
-                    try { localStorage.setItem('cctv_act_collapsed', JSON.stringify([...window.UI._activosCollapsed])); } catch {}
+                    try { localStorage.setItem('cctv_act_collapsed', JSON.stringify([...window.UI._activosCollapsed])); } catch { }
                 }
             };
             // ─────────────────────────────────────────────────────────────────────────────────
@@ -4374,7 +4419,7 @@
                     const estadoBadgeHtml = estadoBadgeInfo ? `<span class="badge ${estadoBadgeInfo.clase}" style="white-space:nowrap">${estadoBadgeInfo.label}</span>` : '';
                     const derechaHtml = estadoBadgeHtml || asignInfo ? `<div style="font-size:0.78rem;color:var(--text-muted);text-align:right;flex-shrink:0;max-width:40%;line-height:1.35;overflow:hidden;display:flex;flex-direction:column;align-items:flex-end;gap:0.2rem">${estadoBadgeHtml}${asignInfo}</div>` : '';
 
-                    return `<div class="dispositivo-item tipo-${esc(d.tipo)} ${estadoClase} anim-in" onclick="UI.abrirEditarDispositivo('${esc(d.id)}')">
+                    return `<div class="dispositivo-item tipo-${esc(d.tipo)} ${estadoClase} anim-in" data-disp-id="${esc(d.id)}">
                     <div class="dispositivo-info">
                         <div class="dispositivo-nombre">${tc.emoji} ${esc(titulo)}</div>
                         <div class="dispositivo-meta"><span class="badge ${tc.badge || 'badge-otro'}">${tipoBadgeLabel}</span>${subtitulo ? `<span>${subtitulo}</span>` : ''}</div>
@@ -4383,16 +4428,16 @@
                 }
 
                 // --- 5. Volcado en HTML con Grupos Colapsables ---
-                
+
                 // Inyectamos el manejador de colapso en UI si no existe
                 if (!window.UI._toggleGrupoActivos) {
-                    window.UI._toggleGrupoActivos = function(groupId) {
+                    window.UI._toggleGrupoActivos = function (groupId) {
                         const col = window.UI._activosCollapsed;
                         const card = document.querySelector(`.grupo-activos-card[data-grupo="${CSS.escape(groupId)}"]`);
                         if (!card) return;
                         const grid = card.querySelector('.activos-grid-transition');
                         const chevron = card.querySelector('.nvr-chevron');
-                        
+
                         if (col.has(groupId)) {
                             col.delete(groupId);
                             grid.classList.remove('collapsed');
@@ -4407,7 +4452,7 @@
                             chevron.style.transform = 'rotate(-90deg)';
                             grid.style.maxHeight = '';
                         }
-                        
+
                         // Guardamos la memoria si la opción está activada
                         if (window.UI._guardarColapsados) window.UI._guardarColapsados();
                     };
@@ -4438,7 +4483,7 @@
                     html += `
                     <div class="grupo-activos-card" data-grupo="${esc(gLabel)}" style="margin-bottom: 0.85rem;">
                         <!-- ACÁ ESTÁ LA MAGIA STICKY Y NARANJA -->
-                        <div style="position: sticky; top: 56px; z-index: 10; background: var(--bg-card); display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; font-weight: 700; color: var(--c-orange); text-transform: uppercase; letter-spacing: 0.05em; padding: 0.6rem 0.25rem; border-bottom: 1px solid var(--border); margin-bottom: 0.6rem; cursor: pointer; transition: color 0.2s;" onclick="UI._toggleGrupoActivos('${esc(gLabel)}')">
+                        <div class="grupo-activos-header" data-toggle-grupo="${esc(gLabel)}" style="position: sticky; top: 56px; z-index: 10; background: var(--bg-card); display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; font-weight: 700; color: var(--c-orange); text-transform: uppercase; letter-spacing: 0.05em; padding: 0.6rem 0.25rem; border-bottom: 1px solid var(--border); margin-bottom: 0.6rem; cursor: pointer; transition: color 0.2s;">
                             <span style="display:flex; align-items:center; gap:0.5rem;">${esc(gLabel)} <span class="badge badge-otro" style="color:var(--c-orange); border-color:var(--c-orange); font-size:0.7rem;">${items.length}</span></span>
                             <svg class="nvr-chevron" style="${chevStyle}; stroke: var(--c-orange);" viewBox="0 0 24 24"><use href="#icon-chevron-down"/></svg>
                         </div>
@@ -4449,6 +4494,17 @@
                 });
 
                 lista.innerHTML = html;
+
+                // Delegación permanente (se registra una sola vez en el contenedor)
+                if (!lista._delegRegistrada) {
+                    lista._delegRegistrada = true;
+                    lista.addEventListener('click', function (e) {
+                        const item = e.target.closest('.dispositivo-item[data-disp-id]');
+                        if (item) { UI.abrirEditarDispositivo(item.dataset.dispId); return; }
+                        const header = e.target.closest('.grupo-activos-header[data-toggle-grupo]');
+                        if (header) { UI._toggleGrupoActivos(header.dataset.toggleGrupo); return; }
+                    });
+                }
             }
 
             /* ---------- PRODUCCIÓN ---------- */
@@ -4469,13 +4525,13 @@
                         const disp = c.dispositivoId ? _data.dispositivos.find(d => d.id === c.dispositivoId) : null;
                         if (disp) {
                             const tituloCanal = c.descripcion || disp.mac || disp.serial || '—';
-                            return `<div class="canal-slot ocupado" data-canal="${c.canal}" onclick="UI.abrirAsignarCanal(this.closest('[data-grab-id]').dataset.grabId, +this.dataset.canal)">
+                            return `<div class="canal-slot ocupado" data-canal="${c.canal}">
                             <div class="canal-numero">CANAL ${c.canal}</div>
                             <div class="canal-dispositivo-nombre" title="${esc(tituloCanal)}">${esc(tituloCanal)}</div>
                             ${c.ip ? `<div class="canal-dispositivo-ip">${esc(c.ip)}</div>` : ''}
                         </div>`;
                         } else {
-                            return `<div class="canal-slot vacio" data-canal="${c.canal}" onclick="UI.abrirAsignarCanal(this.closest('[data-grab-id]').dataset.grabId, +this.dataset.canal)">
+                            return `<div class="canal-slot vacio" data-canal="${c.canal}">
                             <div class="canal-numero">CANAL ${c.canal}</div>
                             <div class="canal-vacio-label">— Vacío —</div>
                         </div>`;
@@ -4484,7 +4540,7 @@
 
                     const collapsed = !_grabExpanded.has(g.id);
                     return `<div class="nvr-card anim-in${collapsed ? ' collapsed' : ''}" data-grab-id="${esc(g.id)}">
-                    <div class="nvr-card-header" onclick="UI.toggleGrabColapse(this.closest('[data-grab-id]').dataset.grabId)">
+                    <div class="nvr-card-header nvr-header-toggle">
                         <div class="nvr-card-header-info">
                             <div class="nvr-card-nombre">
                                 ${g.tipo === 'nvr' ? '📟' : '📼'} ${esc(g.descripcion)}
@@ -4497,13 +4553,39 @@
                             </div>
                         </div>
                         <svg class="nvr-chevron" viewBox="0 0 24 24"><use href="#icon-chevron-down"/></svg>
-                        <button class="icon-btn" style="flex-shrink:0" onclick="event.stopPropagation();UI.abrirEditarGrabador(this.closest('[data-grab-id]').dataset.grabId)">
+                        <button class="icon-btn nvr-btn-editar" style="flex-shrink:0">
                             <svg class="icon icon-line"><use href="#icon-edit"/></svg>
                         </button>
                     </div>
                     <div class="nvr-canales-grid${collapsed ? ' collapsed' : ''}">${canalesHtml}</div>
                 </div>`;
                 }).join('');
+
+                // Delegación permanente para producción
+                if (!lista._delegRegistrada) {
+                    lista._delegRegistrada = true;
+                    lista.addEventListener('click', function (e) {
+                        const btnEdit = e.target.closest('.nvr-btn-editar');
+                        if (btnEdit) {
+                            e.stopPropagation();
+                            const card = btnEdit.closest('[data-grab-id]');
+                            if (card) UI.abrirEditarGrabador(card.dataset.grabId);
+                            return;
+                        }
+                        const header = e.target.closest('.nvr-header-toggle');
+                        if (header) {
+                            const card = header.closest('[data-grab-id]');
+                            if (card) UI.toggleGrabColapse(card.dataset.grabId);
+                            return;
+                        }
+                        const slot = e.target.closest('.canal-slot[data-canal]');
+                        if (slot) {
+                            const card = slot.closest('[data-grab-id]');
+                            if (card) UI.abrirAsignarCanal(card.dataset.grabId, +slot.dataset.canal);
+                            return;
+                        }
+                    });
+                }
             }
 
             // ==============================================================
@@ -4610,7 +4692,7 @@
                     const selOrden = document.getElementById('sel-vista-orden');
                     if (selCol) selCol.value = _activosColumnas;
                     if (selOrden) selOrden.value = _activosOrden;
-                    
+
                     const toggle = document.getElementById('toggle-recordar-grupos');
                     if (toggle) toggle.classList.toggle('on', _activosRecordarEstado);
 
@@ -4619,13 +4701,13 @@
 
                 toggleRecordarGrupos() {
                     _activosRecordarEstado = !_activosRecordarEstado;
-                    try { localStorage.setItem('cctv_activos_recordar', String(_activosRecordarEstado)); } catch {}
-                    
+                    try { localStorage.setItem('cctv_activos_recordar', String(_activosRecordarEstado)); } catch { }
+
                     const toggle = document.getElementById('toggle-recordar-grupos');
                     if (toggle) toggle.classList.toggle('on', _activosRecordarEstado);
-                    
+
                     if (!_activosRecordarEstado) {
-                        try { localStorage.removeItem('cctv_act_collapsed'); } catch {}
+                        try { localStorage.removeItem('cctv_act_collapsed'); } catch { }
                         toast('Ya no se recordarán los grupos colapsados', 'info');
                     } else {
                         if (window.UI._guardarColapsados) window.UI._guardarColapsados();
@@ -5070,7 +5152,7 @@
                                 window.UI._estadoColapsadoPrevio = null;
                             }
                         }
-                        
+
                         renderActivos();
                     }, 300);
                 },
@@ -6301,49 +6383,49 @@
                     if (e.target.closest('button')) return;
 
                     // Detectamos si tocamos el encabezado de un Grupo de Activos o de un Grabador
-                    const headerActivos = e.target.closest('div[onclick^="UI._toggleGrupoActivos"]');
+                    const headerActivos = e.target.closest('.grupo-activos-header');
                     const headerNVR = e.target.closest('.nvr-card-header');
 
                     if (headerActivos || headerNVR) {
                         _longPressFired = false;
-                        
+
                         _pressTimer = setTimeout(() => {
                             _longPressFired = true;
-                            
+
                             // Vibramos un poquito en el celular para dar feedback táctil
-                            if (navigator.vibrate) navigator.vibrate(50); 
+                            if (navigator.vibrate) navigator.vibrate(50);
 
                             if (headerActivos) {
                                 const grupos = document.querySelectorAll('.grupo-activos-card');
                                 if (!grupos.length) return;
-                                
+
                                 // Calculamos cuántos están cerrados
                                 let colapsados = 0;
                                 grupos.forEach(g => { if (window.UI._activosCollapsed.has(g.dataset.grupo)) colapsados++; });
-                                
+
                                 // Si más de la mitad están cerrados, abrimos todos. Si no, cerramos todos.
                                 const abrirTodos = colapsados > (grupos.length / 2);
                                 grupos.forEach(g => {
                                     if (abrirTodos) window.UI._activosCollapsed.delete(g.dataset.grupo);
                                     else window.UI._activosCollapsed.add(g.dataset.grupo);
                                 });
-                                
+
                                 toast(abrirTodos ? 'Todos los grupos expandidos' : 'Todos los grupos colapsados', 'info');
                                 renderActivos();
-                            } 
+                            }
                             else if (headerNVR) {
                                 const grabs = document.querySelectorAll('.nvr-card');
                                 if (!grabs.length) return;
-                                
+
                                 let colapsados = 0;
                                 grabs.forEach(g => { if (!_grabExpanded.has(g.dataset.grabId)) colapsados++; });
-                                
+
                                 const abrirTodos = colapsados > (grabs.length / 2);
                                 grabs.forEach(g => {
                                     if (abrirTodos) _grabExpanded.add(g.dataset.grabId);
                                     else _grabExpanded.delete(g.dataset.grabId);
                                 });
-                                
+
                                 localStorage.setItem(KEY_EXPANDED, JSON.stringify({ ids: [..._grabExpanded], ts: Date.now() }));
                                 toast(abrirTodos ? 'Todos los grabadores expandidos' : 'Todos los grabadores colapsados', 'info');
                                 renderProduccion();
@@ -6421,11 +6503,11 @@
             // ==============================================================
             // ARRANQUE
             // ==============================================================
-            
+
             // Fusionamos la memoria temporal con el objeto principal de la UI
             Object.assign(UI, window.UI);
             window.UI = UI;
-            
+
             window.historial = historial;
             window.GistSync = GistSync;
             window._toggleTipoDetalle = _toggleTipoDetalle;
@@ -6469,7 +6551,7 @@
 </html>
 
 <!--// ====================================================================
-    //                 NOTAS SISTEMA LUSHIBOSCA VERSION 233
+    //                 NOTAS SISTEMA LUSHIBOSCA VERSION 234
     // ====================================================================
     
      - CAMBIOS 
