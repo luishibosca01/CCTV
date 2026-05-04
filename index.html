@@ -1780,6 +1780,9 @@
         <symbol id="icon-chevron-up" viewBox="0 0 24 24">
             <polyline points="18 15 12 9 6 15" />
         </symbol>
+        <symbol id="icon-chevron-down" viewBox="0 0 24 24">
+            <polyline points="6 9 12 15 18 9" />
+        </symbol>
         <!-- Íconos de Gist -->
         <symbol id="icon-cloud-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round">
@@ -1996,6 +1999,37 @@
                 </h3>
                 <span class="modal-header-version">v229</span>
             </div>
+            <!-- Tipos de dispositivo -->
+            <div style="margin-bottom:1.25rem">
+                <div
+                    style="font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:0.5rem;padding:0 0.25rem">
+                    Tipos de dispositivos</div>
+                <div class="btn-group" style="margin-top:0">
+                    <button onclick="UI.abrirTiposDispositivo()"
+                        style="justify-content:center;gap:0.75rem;background:var(--input-bg);border:1px solid var(--border)">
+                        <svg class="icon icon-line">
+                            <use href="#icon-grid" />
+                        </svg>
+                        Dispositivos
+                    </button>
+                </div>
+            </div>
+
+            <!-- Edificios -->
+            <div style="margin-bottom:1.25rem">
+                <div
+                    style="font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:0.5rem;padding:0 0.25rem">
+                    Ubicaciones</div>
+                <div class="btn-group" style="margin-top:0">
+                    <button onclick="UI.abrirEdificios()"
+                        style="justify-content:center;gap:0.75rem;background:var(--input-bg);border:1px solid var(--border)">
+                        <svg class="icon icon-line">
+                            <use href="#icon-building" />
+                        </svg>
+                        Edificios
+                    </button>
+                </div>
+            </div>
 
             <!-- Sincronización (Gist) -->
             <div style="margin-bottom:1.25rem">
@@ -2025,7 +2059,6 @@
                     </button>
                 </div>
             </div>
-
             <!-- Datos -->
             <div style="margin-bottom:1.25rem">
                 <div
@@ -2053,38 +2086,6 @@
                             <use href="#icon-trash" />
                         </svg>
                         Restablecer
-                    </button>
-                </div>
-            </div>
-
-            <!-- Tipos de dispositivo -->
-            <div style="margin-bottom:1.25rem">
-                <div
-                    style="font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:0.5rem;padding:0 0.25rem">
-                    Tipos de dispositivos</div>
-                <div class="btn-group" style="margin-top:0">
-                    <button onclick="UI.abrirTiposDispositivo()"
-                        style="justify-content:center;gap:0.75rem;background:var(--input-bg);border:1px solid var(--border)">
-                        <svg class="icon icon-line">
-                            <use href="#icon-grid" />
-                        </svg>
-                        Dispositivos
-                    </button>
-                </div>
-            </div>
-
-            <!-- Edificios -->
-            <div style="margin-bottom:1.25rem">
-                <div
-                    style="font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:0.5rem;padding:0 0.25rem">
-                    Ubicaciones</div>
-                <div class="btn-group" style="margin-top:0">
-                    <button onclick="UI.abrirEdificios()"
-                        style="justify-content:center;gap:0.75rem;background:var(--input-bg);border:1px solid var(--border)">
-                        <svg class="icon icon-line">
-                            <use href="#icon-building" />
-                        </svg>
-                        Edificios
                     </button>
                 </div>
             </div>
@@ -2797,13 +2798,24 @@
             <div class="form-group">
                 <label>Ordenar por</label>
                 <select id="sel-vista-orden" onchange="UI.setActivosOrden(this.value)">
-                    <option value="tipo">Tipo</option>
+                    <option value="forma">Tipo / Forma</option>
                     <option value="estado">Estado</option>
-                    <option value="forma">Forma</option>
                     <option value="marca">Marca / Modelo</option>
                 </select>
             </div>
-            <div class="btn-group">
+            
+            <div class="form-group" style="margin-top: 1rem; margin-bottom: 1.5rem;">
+                <label class="gist-autosync-row" style="margin-bottom: 0; padding: 0.6rem 0.75rem; background: transparent; border: none; border-top: 1px solid var(--border); border-radius: 0;">
+                    <span class="gist-autosync-text">
+                        <span class="gist-autosync-title" style="font-size: 0.88rem;">Recordar estado colapsado</span>
+                    </span>
+                    <div class="toggle-switch" id="toggle-recordar-grupos" onclick="UI.toggleRecordarGrupos()">
+                        <div class="toggle-thumb"></div>
+                    </div>
+                </label>
+            </div>
+
+            <div class="btn-group" style="margin-top:0">
                 <button class="btn-cancel" onclick="UI.cerrarVistaActivos()">
                     <svg class="icon icon-line">
                         <use href="#icon-cancelar" />
@@ -2870,13 +2882,29 @@
             'use strict';
 
             // ==============================================================
-            // SECURITY & UTILS  
+            // ESCAPE HTML (Global)
+            // ==============================================================
+            function esc(s) {
+                return s == null ? '' : String(s)
+                    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;');
+            }
+
+            // ==============================================================
+            // SECURITY & UTILS (Blindaje estilo Materiales)
             // ==============================================================
             const S = (() => {
                 const MAX_JSON = 4 * 1024 * 1024;
                 const SCHEMA_V = 1;
+                const MAX_STR = 500; // MAC puede contener varios items separados por coma
 
-                function sanitize(str, max = 200) {
+                // Constantes Regex estrictas
+                const RE_ID = /^[a-z0-9]+$/i;
+                const RE_FECHA = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/;
+
+                // 1. Sanitización básica
+                function sanitize(str, max = MAX_STR) {
                     if (typeof str !== 'string') return '';
                     return str
                         .replace(/[<>"'`]/g, '')
@@ -2888,6 +2916,12 @@
                         .substring(0, max);
                 }
 
+                function _strSeguro(v, maxLen = MAX_STR) {
+                    if (typeof v !== 'string') return null;
+                    const s = sanitize(v, maxLen);
+                    return s.length ? s : null;
+                }
+
                 function genId() {
                     if (window.crypto?.getRandomValues) {
                         const a = new Uint32Array(4);
@@ -2895,12 +2929,6 @@
                         return Array.from(a, n => n.toString(36)).join('');
                     }
                     return Date.now().toString(36) + Math.random().toString(36).slice(2);
-                }
-
-                async function sha256(data) {
-                    const buf = new TextEncoder().encode(JSON.stringify(data));
-                    const hash = await crypto.subtle.digest('SHA-256', buf);
-                    return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
                 }
 
                 function fechaISO() {
@@ -2913,21 +2941,48 @@
                     catch { return JSON.parse(JSON.stringify(o)); }
                 }
 
-                // Parse seguro contra prototype pollution
                 function safeParse(json) {
-                    return JSON.parse(json, (k, v) => {
-                        if (['__proto__', 'constructor', 'prototype'].includes(k)) return undefined;
-                        return v;
-                    });
+                    if (!json) return null;
+                    try {
+                        return JSON.parse(json, (k, v) => {
+                            if (['__proto__', 'constructor', 'prototype'].includes(k)) return undefined;
+                            return v;
+                        });
+                    } catch { return null; }
                 }
 
+                // 2. Firma Digital Determinística (Mapeo estricto en Arrays)
+                async function generarFirma(obj) {
+                    if (!obj) return '0';
+                    const core = {
+                        d: (obj.dispositivos || []).map(x => [
+                            x.id, x.tipo, x.estado || null, x.mac || null, x.serial || null, x.canales || null
+                        ]),
+                        g: (obj.grabadores || []).map(x => [
+                            x.id, x.dispositivoId || null, x.canales_n || 16,
+                            (x.canales_data || []).map(c => [c.canal, c.dispositivoId || null])
+                        ]),
+                        t: obj.tiposCustom || {},
+                        e: obj.edificios || []
+                    };
+                    const buf = new TextEncoder().encode(JSON.stringify(core));
+                    const hash = await crypto.subtle.digest('SHA-256', buf);
+                    return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+                }
+
+                async function verificarFirma(raw) {
+                    if (!raw || typeof raw !== 'object' || !raw.hash) return false;
+                    const firmaCalculada = await generarFirma(raw);
+                    return raw.hash === firmaCalculada;
+                }
+
+                // Definiciones
                 const TIPOS_BUILTIN = {
                     camara: { label: 'Cámara', emoji: '📹', badge: 'badge-camara', dot: 'var(--c-blue)', builtin: true },
                     nvr: { label: 'NVR', emoji: '📟', badge: 'badge-nvr', dot: 'var(--c-green)', builtin: true },
                     dvr: { label: 'DVR', emoji: '📼', badge: 'badge-dvr', dot: 'var(--c-orange)', builtin: true },
                 };
 
-                // tipos custom: se cargan desde localStorage y se fusionan
                 const KEY_TIPOS = 'cctv_tipos_custom';
                 let TIPOS = { ...TIPOS_BUILTIN };
 
@@ -2938,9 +2993,9 @@
                         const custom = safeParse(raw);
                         if (typeof custom !== 'object' || Array.isArray(custom)) return;
                         Object.entries(custom).forEach(([k, v]) => {
-                            if (TIPOS_BUILTIN[k]) return; // no pisar builtins
+                            if (TIPOS_BUILTIN[k]) return;
                             if (typeof v.label !== 'string' || typeof v.emoji !== 'string') return;
-                            TIPOS[k] = { label: v.label, emoji: v.emoji, badge: 'badge-otro', dot: 'var(--c-gold)', builtin: false };
+                            TIPOS[k] = { label: sanitize(v.label, 50), emoji: sanitize(v.emoji, 10), badge: 'badge-otro', dot: 'var(--c-gold)', builtin: false };
                         });
                     } catch { /* silent */ }
                 }
@@ -2952,10 +3007,8 @@
                     });
                     localStorage.setItem(KEY_TIPOS, JSON.stringify(custom));
                 }
-
                 cargarTipos();
 
-                // ── Edificios ──────────────────────────────────────────────
                 const KEY_EDIFICIOS = 'cctv_edificios';
                 let _edificios = [];
 
@@ -2965,21 +3018,140 @@
                         if (!raw) return;
                         const parsed = safeParse(raw);
                         if (Array.isArray(parsed)) {
-                            _edificios = parsed.filter(e => typeof e === 'string' && e.length > 0);
+                            _edificios = parsed.filter(e => typeof e === 'string' && e.trim().length > 0).map(e => sanitize(e, 60));
+                            // ── MAGIA: Ordenamos alfabéticamente al cargar ──
+                            _edificios.sort((a, b) => a.localeCompare(b));
                         }
                     } catch { /* silent */ }
                 }
 
                 function guardarEdificios() {
+                    // ── MAGIA: Mantenemos el orden estricto siempre antes de guardar ──
+                    _edificios.sort((a, b) => a.localeCompare(b));
                     localStorage.setItem(KEY_EDIFICIOS, JSON.stringify(_edificios));
                 }
-
                 cargarEdificios();
 
+                // 3. Sanitización Destructiva de Registros
+                function validarIPv4(ip) {
+                    if (!ip) return true; // Opcional
+                    const partes = ip.split('.');
+                    if (partes.length !== 4) return false;
+                    return partes.every(p => {
+                        if (!/^\d+$/.test(p)) return false;
+                        if (p.length > 1 && p[0] === '0') return false;
+                        const n = Number(p);
+                        return n >= 0 && n <= 255;
+                    });
+                }
+
+                function validarMAC(mac) {
+                    if (!mac) return true; // Opcional
+                    if (/^sinrelevarn?\d{1,3}$/i.test(mac)) return true;
+                    return /^([0-9A-Fa-f]{2}[:\-]){5}[0-9A-Fa-f]{2}$/.test(mac);
+                }
+
+                function sanitizarDisp(d, extraTipos = {}) {
+                    if (!d || typeof d !== 'object') return null;
+                    const id = _strSeguro(d.id, 32);
+                    if (!id || !RE_ID.test(id)) return null;
+
+                    // ── MAGIA: Miramos en los TIPOS locales y también en los que vienen del archivo ──
+                    const tipo = (TIPOS[d.tipo] || extraTipos[d.tipo]) ? d.tipo : 'otro';
+                    const FORMAS = ['domo', 'bullet', 'turret', 'minidomo', 'minibullet', 'domo-ptz'];
+                    const ESTADOS = ['', 'averiado', 'revisar', 'desafectado'];
+
+                    const obj = {
+                        id,
+                        tipo,
+                        estado: ESTADOS.includes(d.estado) ? d.estado : '',
+                        marca: sanitize(d.marca || '', 50),
+                        modelo: sanitize(d.modelo || '', 60),
+                        serial: sanitize(d.serial || '', 80),
+                        mac: sanitize(d.mac || '', 500),
+                        patrimonio: sanitize(d.patrimonio || '', 60),
+                    };
+
+                    if (tipo === 'camara') {
+                        const formaNorm = (d.forma || '').toLowerCase().replace(/\s+/g, '-');
+                        obj.forma = FORMAS.includes(formaNorm) ? formaNorm : '';
+                    }
+                    if (['nvr', 'dvr'].includes(tipo)) {
+                        const c = parseInt(d.canales);
+                        obj.canales = Number.isFinite(c) && c >= 1 && c <= 256 ? c : 16;
+                    }
+                    return obj;
+                }
+
+                function sanitizarGrab(g) {
+                    if (!g || typeof g !== 'object') return null;
+                    const id = _strSeguro(g.id, 32);
+                    if (!id || !RE_ID.test(id)) return null;
+
+                    const canales_n = parseInt(g.canales ?? g.canales_n);
+                    const n = Number.isFinite(canales_n) && canales_n >= 1 && canales_n <= 256 ? canales_n : 16;
+
+                    const slots = [];
+                    const canalMap = {};
+                    if (Array.isArray(g.canales_data)) {
+                        g.canales_data.forEach(c => {
+                            if (typeof c === 'object' && c.canal) canalMap[c.canal] = c;
+                        });
+                    }
+
+                    for (let i = 1; i <= n; i++) {
+                        const existente = canalMap[i] || null;
+                        slots.push({
+                            canal: i,
+                            dispositivoId: _strSeguro(existente?.dispositivoId, 32) || null,
+                            descripcion: sanitize(existente?.descripcion || '', 80),
+                            ip: validarIPv4(existente?.ip) ? sanitize(existente?.ip || '', 45) : '',
+                            puerto: sanitize(existente?.puerto || '', 10),
+                            edificio: sanitize(existente?.edificio || '', 60),
+                            piso: sanitize(existente?.piso || '', 4),
+                            rack: sanitize(existente?.rack || '', 40),
+                            comentarios: sanitize(existente?.comentarios || '', 300),
+                        });
+                    }
+
+                    return {
+                        id,
+                        descripcion: sanitize(g.descripcion || '', 80),
+                        tipo: ['nvr', 'dvr'].includes(g.tipo) ? g.tipo : 'nvr',
+                        marca: sanitize(g.marca || '', 50),
+                        modelo: sanitize(g.modelo || '', 60),
+                        ip: validarIPv4(g.ip) ? sanitize(g.ip || '', 45) : '',
+                        lugar: sanitize(g.lugar || '', 80),
+                        rack: sanitize(g.rack || '', 40),
+                        puerto: sanitize(g.puerto || '', 10),
+                        mac: sanitize(g.mac || '', 500),
+                        dispositivoId: _strSeguro(g.dispositivoId, 32) || null,
+                        canales_n: n,
+                        canales_data: slots,
+                    };
+                }
+
+                // 4. Sanitizar Data Completa
+                function sanitizarDataTotal(raw) {
+                    if (!raw || typeof raw !== 'object') return null;
+
+                    const dispositivos = Array.isArray(raw.dispositivos)
+                        ? raw.dispositivos.map(sanitizarDisp).filter(Boolean)
+                        : [];
+
+                    const grabadores = Array.isArray(raw.grabadores)
+                        ? raw.grabadores.map(sanitizarGrab).filter(Boolean)
+                        : [];
+
+                    return { dispositivos, grabadores };
+                }
+
                 return {
-                    sanitize, genId, sha256, fechaISO, deepClone, safeParse, MAX_JSON, SCHEMA_V, TIPOS_BUILTIN,
+                    sanitize, genId, fechaISO, deepClone, safeParse, MAX_JSON, SCHEMA_V, TIPOS_BUILTIN,
                     get TIPOS() { return TIPOS; }, guardarTipos, cargarTipos,
-                    get edificios() { return _edificios; }, guardarEdificios, cargarEdificios
+                    get edificios() { return _edificios; }, guardarEdificios, cargarEdificios,
+                    generarFirma, verificarFirma, sanitizarDisp, sanitizarGrab, sanitizarDataTotal,
+                    validarIPv4, validarMAC
                 };
             })();
 
@@ -3143,68 +3315,12 @@
                 catch { toast('Error al guardar (almacenamiento lleno)', 'error'); return false; }
             }
 
-            function _sanDisp(d) {
-                const tipo = S.TIPOS[d.tipo] ? d.tipo : 'otro';
-                const FORMAS = ['domo', 'bullet', 'turret', 'minidomo', 'minibullet', 'domo-ptz'];
-                const ESTADOS = ['', 'averiado', 'revisar', 'desafectado'];
-                const obj = {
-                    id: d.id || S.genId(),
-                    tipo,
-                    estado: ESTADOS.includes(d.estado) ? d.estado : '',
-                    marca: S.sanitize(d.marca || '', 50),
-                    modelo: S.sanitize(d.modelo || '', 60),
-                    serial: S.sanitize(d.serial || '', 80),
-                    mac: S.sanitize(d.mac || '', 20),
-                    patrimonio: S.sanitize(d.patrimonio || '', 60),
-                };
-                if (tipo === 'camara') {
-                    const formaNorm = (d.forma || '').toLowerCase().replace(/\s+/g, '-');
-                    obj.forma = FORMAS.includes(formaNorm) ? formaNorm : '';
-                }
-                if (['nvr', 'dvr'].includes(tipo)) {
-                    const c = parseInt(d.canales);
-                    obj.canales = Number.isFinite(c) && c >= 1 && c <= 256 ? c : 16;
-                }
-                return obj;
+            function _sanDisp(d, extraTipos = {}) {
+                return S.sanitizarDisp(d, extraTipos);
             }
 
             function _sanGrab(g) {
-                const canales = parseInt(g.canales ?? g.canales_n);
-                const n = Number.isFinite(canales) && canales >= 1 && canales <= 256 ? canales : 16;
-                const slots = [];
-                const canalMap = {};
-                if (Array.isArray(g.canales_data)) {
-                    g.canales_data.forEach(c => { canalMap[c.canal] = c; });
-                }
-                for (let i = 1; i <= n; i++) {
-                    const existente = canalMap[i] || null;
-                    slots.push({
-                        canal: i,
-                        dispositivoId: existente?.dispositivoId || null,
-                        descripcion: S.sanitize(existente?.descripcion || '', 80),
-                        ip: S.sanitize(existente?.ip || '', 45),
-                        puerto: S.sanitize(existente?.puerto || '', 10),
-                        edificio: S.sanitize(existente?.edificio || '', 60),
-                        piso: S.sanitize(existente?.piso || '', 4),
-                        rack: S.sanitize(existente?.rack || '', 40),
-                        comentarios: S.sanitize(existente?.comentarios || '', 300),
-                    });
-                }
-                return {
-                    id: g.id || S.genId(),
-                    descripcion: S.sanitize(g.descripcion || '', 80),
-                    tipo: ['nvr', 'dvr'].includes(g.tipo) ? g.tipo : 'nvr',
-                    marca: S.sanitize(g.marca || '', 50),
-                    modelo: S.sanitize(g.modelo || '', 60),
-                    ip: S.sanitize(g.ip || '', 45),
-                    lugar: S.sanitize(g.lugar || '', 80),
-                    rack: S.sanitize(g.rack || '', 40),
-                    puerto: S.sanitize(g.puerto || '', 10),
-                    mac: S.sanitize(g.mac || '', 20),
-                    dispositivoId: g.dispositivoId || null,
-                    canales_n: n,
-                    canales_data: slots,
-                };
+                return S.sanitizarGrab(g);
             }
 
             // ==============================================================
@@ -3496,23 +3612,25 @@
                     UI.cerrarGist();
                 }
 
-                // Generador de payload idéntico a exportarJSON
                 async function _generarPayload() {
-                    const disps = _data.dispositivos.map(_sanDisp);
-                    const grabs = _data.grabadores.map(_sanGrab);
+                    const disps = _data.dispositivos.map(_sanDisp).filter(Boolean);
+                    const grabs = _data.grabadores.map(_sanGrab).filter(Boolean);
                     const tiposCustom = {};
                     Object.entries(S.TIPOS).forEach(([k, v]) => {
                         if (!v.builtin) tiposCustom[k] = { label: v.label, emoji: v.emoji };
                     });
-                    return {
+                    const payload = {
                         dispositivos: disps,
                         grabadores: grabs,
                         tiposCustom,
                         edificios: S.edificios.slice(),
                         version: S.SCHEMA_V,
-                        fecha: S.fechaISO(),
-                        hash: await S.sha256({ dispositivos: disps, grabadores: grabs })
+                        fecha: S.fechaISO()
                     };
+
+                    // ── MAGIA NUEVA: Firmamos el objeto ──
+                    payload.hash = await S.generarFirma(payload);
+                    return payload;
                 }
 
                 async function _ejecutarSubida(silencioso = false) {
@@ -3588,7 +3706,7 @@
                     const idsG = new Set(_data.grabadores.map(g => g.id));
 
                     (remoto.dispositivos || []).forEach(d => {
-                        const san = _sanDisp(d);
+                        const san = _sanDisp(d, remoto.tiposCustom || {});
                         if (!idsD.has(san.id)) { _data.dispositivos.push(san); idsD.add(san.id); cDisps++; }
                     });
 
@@ -3657,13 +3775,10 @@
                         const remoto = S.safeParse(contenido);
                         if (!remoto || typeof remoto !== 'object') throw new Error('Formato inválido');
 
-                        // Verificación de firma
+                        // ── MAGIA NUEVA: Verificamos la firma ──
                         let esValida = true;
                         if (remoto.hash) {
-                            const newDisps = Array.isArray(remoto.dispositivos) ? remoto.dispositivos.map(_sanDisp) : [];
-                            const newGrabs = Array.isArray(remoto.grabadores) ? remoto.grabadores.map(_sanGrab) : [];
-                            const calc = await S.sha256({ dispositivos: newDisps, grabadores: newGrabs });
-                            if (calc !== remoto.hash) esValida = false;
+                            esValida = await S.verificarFirma(remoto);
                         }
 
                         const procesarBajada = () => {
@@ -3769,12 +3884,10 @@
                         const remoto = S.safeParse(contenido);
                         if (!remoto) return;
 
+                        // ── MAGIA NUEVA: Verificamos la firma ──
                         let esValida = true;
                         if (remoto.hash) {
-                            const newDisps = Array.isArray(remoto.dispositivos) ? remoto.dispositivos.map(_sanDisp) : [];
-                            const newGrabs = Array.isArray(remoto.grabadores) ? remoto.grabadores.map(_sanGrab) : [];
-                            const calc = await S.sha256({ dispositivos: newDisps, grabadores: newGrabs });
-                            if (calc !== remoto.hash) esValida = false;
+                            esValida = await S.verificarFirma(remoto);
                         }
 
                         const idsD = new Set(_data.dispositivos.map(m => m.id));
@@ -3847,7 +3960,28 @@
             let _dashTipoAbierto = null;
             let _dashCamarasVista = 'forma';
             let _activosColumnas = (() => { try { return parseInt(localStorage.getItem('cctv_activos_cols')) === 1 ? 1 : 2; } catch { return 2; } })();
-            let _activosOrden = (() => { try { const v = localStorage.getItem('cctv_activos_orden'); return ['tipo', 'estado', 'forma', 'marca'].includes(v) ? v : 'tipo'; } catch { return 'tipo'; } })();
+            let _activosOrden = (() => { try { let v = localStorage.getItem('cctv_activos_orden'); if (v === 'tipo') v = 'forma'; return ['estado', 'forma', 'marca'].includes(v) ? v : 'forma'; } catch { return 'forma'; } })();
+            
+            // ── MAGIA: Leemos si el usuario quiere recordar, y si es así, traemos la memoria ──
+            let _activosRecordarEstado = (() => { try { return localStorage.getItem('cctv_activos_recordar') === 'true'; } catch { return false; } })();
+            
+            window.UI = window.UI || {}; 
+            window.UI._activosCollapsed = (() => {
+                if (_activosRecordarEstado) {
+                    try {
+                        const saved = JSON.parse(localStorage.getItem('cctv_act_collapsed'));
+                        if (Array.isArray(saved)) return new Set(saved);
+                    } catch {}
+                }
+                return new Set();
+            })();
+
+            window.UI._guardarColapsados = function() {
+                if (_activosRecordarEstado) {
+                    try { localStorage.setItem('cctv_act_collapsed', JSON.stringify([...window.UI._activosCollapsed])); } catch {}
+                }
+            };
+            // ─────────────────────────────────────────────────────────────────────────────────
 
             function _estadosDeDisps(dispsDelTipo, idsEnProd) {
                 const res = { produccion: 0, disponible: 0, averiado: 0, revisar: 0, desafectado: 0 };
@@ -3904,7 +4038,7 @@
                         return `
                         <div class="stat-chip stat-chip-tipo${esActivo ? ' activo' : ''}" onclick="_toggleTipoDetalle('${tipoKey}')">
                             <div class="stat-chip-valor">${n}</div>
-                            <div class="stat-chip-label">${tc.emoji} ${tc.label}s</div>
+                            <div class="stat-chip-label">${tc.emoji} ${(tc.label + 's').toUpperCase()}</div>
                             <span class="stat-chip-arrow">▶</span>
                         </div>`;
                     }).join('');
@@ -3921,7 +4055,7 @@
                         const chipSeleccionado = `
                         <div class="stat-chip stat-chip-tipo activo" onclick="_toggleTipoDetalle('${_dashTipoAbierto}')">
                             <div class="stat-chip-valor">${n}</div>
-                            <div class="stat-chip-label">${tc.emoji} ${tc.label}s</div>
+                            <div class="stat-chip-label">${tc.emoji} ${(tc.label + 's').toUpperCase()}</div>
                             <span class="stat-chip-arrow">▶</span>
                         </div>`;
 
@@ -4100,69 +4234,84 @@
                     return;
                 }
 
-                const orden = { nvr: 0, dvr: 1, switch: 2, otro: 3, camara: 4 };
-                const dispLabel = d => d.mac || d.serial || '';
-                const ordenEstado = { produccion: 0, disponible: 1, revisar: 2, averiado: 3, desafectado: 4 };
-                let sorted = [...disps].sort((a, b) => {
-                    if (_activosOrden === 'estado') {
-                        const eA = a.estado ? ordenEstado[a.estado] ?? 9 : 0;
-                        const eB = b.estado ? ordenEstado[b.estado] ?? 9 : 0;
-                        return eA - eB || dispLabel(a).localeCompare(dispLabel(b));
-                    }
-                    if (_activosOrden === 'forma') {
-                        const fA = a.tipo === 'camara' ? (a.forma || 'zzz') : ('aaa_' + (orden[a.tipo] ?? 9));
-                        const fB = b.tipo === 'camara' ? (b.forma || 'zzz') : ('aaa_' + (orden[b.tipo] ?? 9));
-                        return fA.localeCompare(fB) || dispLabel(a).localeCompare(dispLabel(b));
-                    }
-                    if (_activosOrden === 'marca') {
-                        const mA = ((a.marca || '') + ' ' + (a.modelo || '')).trim().toLowerCase() || 'zzz';
-                        const mB = ((b.marca || '') + ' ' + (b.modelo || '')).trim().toLowerCase() || 'zzz';
-                        return mA.localeCompare(mB) || dispLabel(a).localeCompare(dispLabel(b));
-                    }
-                    return (orden[a.tipo] ?? 9) - (orden[b.tipo] ?? 9) || dispLabel(a).localeCompare(dispLabel(b));
-                });
-
+                // --- 1. Asignaciones (para conocer el estado real) ---
                 const asignaciones = {};
                 _data.grabadores.forEach(g => {
-                    if (g.dispositivoId) {
-                        asignaciones[g.dispositivoId] = { tipo: 'grabador', grab: g };
-                    }
+                    if (g.dispositivoId) asignaciones[g.dispositivoId] = { tipo: 'grabador', grab: g };
                     g.canales_data.forEach(c => {
-                        if (c.dispositivoId) {
-                            asignaciones[c.dispositivoId] = { tipo: 'canal', grab: g, slot: c };
-                        }
+                        if (c.dispositivoId) asignaciones[c.dispositivoId] = { tipo: 'canal', grab: g, slot: c };
                     });
                 });
 
+                function getEstadoEfectivo(d) {
+                    return d.estado || (asignaciones[d.id] ? 'produccion' : 'disponible');
+                }
+
+                // --- 2. Lógica de Ordenamiento y Agrupación ---
+                const ordenEstado = { produccion: 0, disponible: 1, revisar: 2, averiado: 3, desafectado: 4 };
+
+                // Define qué título se muestra arriba del grupo
+                function getGroupLabel(d) {
+                    if (_activosOrden === 'estado') {
+                        const est = getEstadoEfectivo(d);
+                        const map = { produccion: 'En producción', disponible: 'Disponibles', averiado: 'Averiados', revisar: 'A revisar', desafectado: 'Desafectados' };
+                        return map[est] || est.toUpperCase();
+                    }
+                    if (_activosOrden === 'marca') {
+                        return (d.marca || 'SIN MARCA').toUpperCase();
+                    }
+                    // DEFAULT (Tipo / Forma)
+                    if (d.tipo === 'camara') {
+                        return d.forma ? d.forma.replace(/-/g, ' ').toUpperCase() : 'CÁMARA (SIN FORMA)';
+                    }
+                    return (S.TIPOS[d.tipo]?.label || d.tipo).toUpperCase();
+                }
+
+                // Define la prioridad de ordenamiento (Alfabético puro por el nombre del grupo)
+                function getGroupSortKey(d) {
+                    if (_activosOrden === 'estado') return ordenEstado[getEstadoEfectivo(d)] ?? 9;
+                    if (_activosOrden === 'marca') return (d.marca || 'zzz').trim().toLowerCase();
+                    // DEFAULT: Orden Alfabético estricto por el Título del Grupo
+                    return getGroupLabel(d).toLowerCase();
+                }
+
+                const dispLabel = d => d.mac || d.serial || '';
+
+                let sorted = [...disps].sort((a, b) => {
+                    const keyA = getGroupSortKey(a);
+                    const keyB = getGroupSortKey(b);
+                    // 1. Ordenamos por el Grupo
+                    if (keyA !== keyB) {
+                        if (typeof keyA === 'number' && typeof keyB === 'number') return keyA - keyB;
+                        return String(keyA).localeCompare(String(keyB));
+                    }
+                    // 2. Orden secundario: Marca -> Modelo -> MAC/Serial
+                    const mA = (a.marca || '').toLowerCase();
+                    const mB = (b.marca || '').toLowerCase();
+                    if (mA !== mB) return mA.localeCompare(mB);
+                    const modA = (a.modelo || '').toLowerCase();
+                    const modB = (b.modelo || '').toLowerCase();
+                    if (modA !== modB) return modA.localeCompare(modB);
+                    return dispLabel(a).localeCompare(dispLabel(b));
+                });
+
+                // --- 3. Búsqueda ---
                 if (query) {
                     const tokens = query.split(/\s+/).filter(Boolean);
-                    const tokenRegexes = tokens.map(t =>
-                        new RegExp('(?<![a-z0-9])' + t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![a-z0-9])', 'i')
-                    );
+                    const tokenRegexes = tokens.map(t => new RegExp('(?<![a-z0-9])' + t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![a-z0-9])', 'i'));
 
                     function scoreDispositivo(d) {
                         const asigD = asignaciones[d.id];
-                        const hayCanal = _busqActivos.has('canal') && asigD?.tipo === 'canal'
-                            ? (asigD.slot.descripcion || '').toLowerCase() : '';
+                        const hayCanal = _busqActivos.has('canal') && asigD?.tipo === 'canal' ? (asigD.slot.descripcion || '').toLowerCase() : '';
                         const tipoKey = _busqActivos.has('tipo') ? d.tipo.toLowerCase() : '';
                         const tipoLabel = _busqActivos.has('tipo') ? (S.TIPOS[d.tipo]?.label || '').toLowerCase() : '';
                         const camposMap = { mac: d.mac, serial: d.serial, marca: d.marca, modelo: d.modelo, patrimonio: d.patrimonio, forma: d.forma };
-                        const campos = Object.entries(camposMap)
-                            .filter(([k, v]) => v && _busqActivos.has(k))
-                            .map(([, v]) => v.toLowerCase());
+                        const campos = Object.entries(camposMap).filter(([k, v]) => v && _busqActivos.has(k)).map(([, v]) => v.toLowerCase());
 
                         let estadoTextos = [];
                         if (_busqActivos.has('estado')) {
-                            const estadoEfectivo = d.estado
-                                ? d.estado
-                                : (asigD ? 'produccion' : 'disponible');
-                            const ESTADO_ALIAS = {
-                                produccion: ['produccion', 'producción', 'operativo', 'en produccion', 'en producción'],
-                                disponible: ['disponible'],
-                                averiado: ['averiado'],
-                                revisar: ['revisar', 'a revisar'],
-                                desafectado: ['desafectado'],
-                            };
+                            const estadoEfectivo = getEstadoEfectivo(d);
+                            const ESTADO_ALIAS = { produccion: ['produccion', 'producción', 'operativo'], disponible: ['disponible'], averiado: ['averiado'], revisar: ['revisar', 'a revisar'], desafectado: ['desafectado'] };
                             estadoTextos = ESTADO_ALIAS[estadoEfectivo] || [estadoEfectivo];
                         }
 
@@ -4170,9 +4319,9 @@
                         for (let ti = 0; ti < tokens.length; ti++) {
                             const t = tokens[ti];
                             const re = tokenRegexes[ti];
-                            if (tipoKey && tipoKey === t) { total += 0; continue; }
-                            if (tipoLabel && tipoLabel === t) { total += 1; continue; }
-                            if (tipoKey && (re.test(tipoKey) || re.test(tipoLabel))) { total += 2; continue; }
+                            if (tipoKey === t) { total += 0; continue; }
+                            if (tipoLabel === t) { total += 1; continue; }
+                            if (re.test(tipoKey) || re.test(tipoLabel)) { total += 2; continue; }
                             if (campos.some(c => re.test(c))) { total += 3; continue; }
                             if (campos.some(c => c.includes(t))) { total += 4; continue; }
                             if (hayCanal && re.test(hayCanal)) { total += 5; continue; }
@@ -4184,36 +4333,28 @@
                         return total;
                     }
 
-                    sorted = sorted
-                        .map(d => ({ d, score: scoreDispositivo(d) }))
+                    sorted = sorted.map(d => ({ d, score: scoreDispositivo(d) }))
                         .filter(({ score }) => score < Infinity)
                         .sort((a, b) => a.score - b.score)
                         .map(({ d }) => d);
                 }
 
                 if (sorted.length === 0) {
-                    lista.innerHTML = `<div class="empty-state">
-                    <svg class="icon icon-line" style="width:2rem;height:2rem;stroke:var(--text-muted)"><use href="#icon-search"/></svg>
-                    Sin resultados para "<strong>${esc(query)}</strong>".
-                </div>`;
+                    lista.innerHTML = `<div class="empty-state"><svg class="icon icon-line" style="width:2rem;height:2rem;stroke:var(--text-muted)"><use href="#icon-search"/></svg>Sin resultados para "<strong>${esc(query)}</strong>".</div>`;
                     document.getElementById('contador-dispositivos').textContent = '0';
                     return;
                 }
 
                 const contador = document.getElementById('contador-dispositivos');
-                if (contador) {
-                    contador.textContent = query
-                        ? `${sorted.length} / ${disps.length}`
-                        : sorted.length;
-                }
+                if (contador) contador.textContent = query ? `${sorted.length} / ${disps.length}` : sorted.length;
 
+                // --- 4. Creador de Tarjetas ---
                 function renderItem(d) {
                     const tc = S.TIPOS[d.tipo] || { emoji: '📦', label: d.tipo, badge: 'badge-otro' };
                     const titulo = d.mac || d.serial || '—';
                     const subtitulo = d.modelo ? esc(d.modelo) : '';
-                    const estadoClase = d.estado
-                        ? `estado-${d.estado}`
-                        : (asignaciones[d.id] ? 'estado-produccion' : 'estado-disponible');
+                    const estadoEfectivo = getEstadoEfectivo(d);
+                    const estadoClase = `estado-${estadoEfectivo}`;
                     const tipoBadgeLabel = (d.tipo === 'camara' && d.forma ? d.forma.replace(/-/g, ' ') : tc.label).toUpperCase();
                     let asignInfo = '';
                     const asig = asignaciones[d.id];
@@ -4221,56 +4362,93 @@
                         if (asig.tipo === 'canal') {
                             const linea2 = [esc(asig.grab.descripcion), `CANAL ${asig.slot.canal}`].join(' · ');
                             const linea3 = asig.slot.ip ? `<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(asig.slot.ip)}</div>` : '';
-                            const desc = asig.slot.descripcion
-                                ? `<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span class="badge badge-estado-produccion">${esc(asig.slot.descripcion)}</span></div>`
-                                : '';
+                            const desc = asig.slot.descripcion ? `<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span class="badge badge-estado-produccion">${esc(asig.slot.descripcion)}</span></div>` : '';
                             asignInfo = `${desc}<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${linea2}</div>${linea3}`;
                         } else {
-                            const ipHtml = asig.grab.ip
-                                ? `<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(asig.grab.ip)}</div>`
-                                : '';
+                            const ipHtml = asig.grab.ip ? `<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(asig.grab.ip)}</div>` : '';
                             asignInfo = `<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span class="badge badge-estado-produccion">${esc(asig.grab.descripcion)}</span></div>${ipHtml}`;
                         }
                     }
-                    const ESTADO_BADGE_INFO = {
-                        averiado: { label: 'Averiado', clase: 'badge-estado-averiado' },
-                        revisar: { label: 'A revisar', clase: 'badge-estado-revisar' },
-                        desafectado: { label: 'Desafectado', clase: 'badge-estado-desafectado' },
-                        disponible: { label: 'Disponible', clase: 'badge-estado-disponible' },
-                    };
-                    const estadoEfectivo = d.estado || (asig ? 'produccion' : 'disponible');
+                    const ESTADO_BADGE_INFO = { averiado: { label: 'Averiado', clase: 'badge-estado-averiado' }, revisar: { label: 'A revisar', clase: 'badge-estado-revisar' }, desafectado: { label: 'Desafectado', clase: 'badge-estado-desafectado' }, disponible: { label: 'Disponible', clase: 'badge-estado-disponible' } };
                     const estadoBadgeInfo = ESTADO_BADGE_INFO[estadoEfectivo];
-                    const estadoBadgeHtml = estadoBadgeInfo
-                        ? `<span class="badge ${estadoBadgeInfo.clase}" style="white-space:nowrap">${estadoBadgeInfo.label}</span>`
-                        : '';
-                    const derechaHtml = estadoBadgeHtml || asignInfo
-                        ? `<div style="font-size:0.78rem;color:var(--text-muted);text-align:right;flex-shrink:0;max-width:40%;line-height:1.35;overflow:hidden;display:flex;flex-direction:column;align-items:flex-end;gap:0.2rem">
-                            ${estadoBadgeHtml}
-                            ${asignInfo}
-                           </div>`
-                        : '';
-                    return `<div class="dispositivo-item tipo-${esc(d.tipo)} ${estadoClase} anim-in"
-                        onclick="UI.abrirEditarDispositivo('${esc(d.id)}')">
+                    const estadoBadgeHtml = estadoBadgeInfo ? `<span class="badge ${estadoBadgeInfo.clase}" style="white-space:nowrap">${estadoBadgeInfo.label}</span>` : '';
+                    const derechaHtml = estadoBadgeHtml || asignInfo ? `<div style="font-size:0.78rem;color:var(--text-muted);text-align:right;flex-shrink:0;max-width:40%;line-height:1.35;overflow:hidden;display:flex;flex-direction:column;align-items:flex-end;gap:0.2rem">${estadoBadgeHtml}${asignInfo}</div>` : '';
+
+                    return `<div class="dispositivo-item tipo-${esc(d.tipo)} ${estadoClase} anim-in" onclick="UI.abrirEditarDispositivo('${esc(d.id)}')">
                     <div class="dispositivo-info">
                         <div class="dispositivo-nombre">${tc.emoji} ${esc(titulo)}</div>
-                        <div class="dispositivo-meta">
-                            <span class="badge ${tc.badge || 'badge-otro'}">${tipoBadgeLabel}</span>
-                            ${subtitulo ? `<span>${subtitulo}</span>` : ''}
-                            ${!(d.serial && d.mac) && !d.patrimonio ? '' : ''}
-                        </div>
+                        <div class="dispositivo-meta"><span class="badge ${tc.badge || 'badge-otro'}">${tipoBadgeLabel}</span>${subtitulo ? `<span>${subtitulo}</span>` : ''}</div>
                         ${(d.serial && d.mac) || d.patrimonio ? `<div class="disp-linea3">${[d.serial && d.mac ? `S/N: ${esc(d.serial)}` : '', d.patrimonio ? `PAT: ${esc(d.patrimonio)}` : ''].filter(Boolean).join(' · ')}</div>` : ''}
-                    </div>
-                    ${derechaHtml}
-                </div>`;
+                    </div>${derechaHtml}</div>`;
                 }
 
-                if (_activosColumnas === 1) {
-                    lista.innerHTML = `<div class="lista-1col">${sorted.map(renderItem).join('')}</div>`;
-                } else {
-                    const col1 = sorted.filter((_, i) => i % 2 === 0).map(renderItem).join('');
-                    const col2 = sorted.filter((_, i) => i % 2 === 1).map(renderItem).join('');
-                    lista.innerHTML = `<div class="lista-2col"><div>${col1}</div><div>${col2}</div></div>`;
+                // --- 5. Volcado en HTML con Grupos Colapsables ---
+                
+                // Inyectamos el manejador de colapso en UI si no existe
+                if (!window.UI._toggleGrupoActivos) {
+                    window.UI._toggleGrupoActivos = function(groupId) {
+                        const col = window.UI._activosCollapsed;
+                        const card = document.querySelector(`.grupo-activos-card[data-grupo="${CSS.escape(groupId)}"]`);
+                        if (!card) return;
+                        const grid = card.querySelector('.activos-grid-transition');
+                        const chevron = card.querySelector('.nvr-chevron');
+                        
+                        if (col.has(groupId)) {
+                            col.delete(groupId);
+                            grid.classList.remove('collapsed');
+                            chevron.style.transform = '';
+                            grid.style.maxHeight = grid.scrollHeight + 'px';
+                            grid.addEventListener('transitionend', () => grid.style.maxHeight = '', { once: true });
+                        } else {
+                            col.add(groupId);
+                            grid.style.maxHeight = grid.scrollHeight + 'px';
+                            grid.getBoundingClientRect(); // Forzamos reflow para la animación
+                            grid.classList.add('collapsed');
+                            chevron.style.transform = 'rotate(-90deg)';
+                            grid.style.maxHeight = '';
+                        }
+                        
+                        // Guardamos la memoria si la opción está activada
+                        if (window.UI._guardarColapsados) window.UI._guardarColapsados();
+                    };
                 }
+
+                // Agrupamos los elementos ya ordenados
+                const grupos = {};
+                sorted.forEach(d => {
+                    const gLabel = getGroupLabel(d);
+                    if (!grupos[gLabel]) grupos[gLabel] = [];
+                    grupos[gLabel].push(d);
+                });
+
+                // Inyectamos estilo CSS local para la animación de las grillas
+                let html = `
+                <style>
+                    .activos-grid-transition { transition: max-height 0.3s ease, opacity 0.25s ease; overflow: hidden; }
+                    .activos-grid-transition.collapsed { max-height: 0 !important; opacity: 0 !important; }
+                </style>`;
+
+                const colClass = _activosColumnas === 1 ? 'lista-1col' : 'lista-2col';
+
+                Object.entries(grupos).forEach(([gLabel, items]) => {
+                    const isCollapsed = window.UI._activosCollapsed.has(gLabel);
+                    const colStyle = isCollapsed ? ' collapsed' : '';
+                    const chevStyle = isCollapsed ? 'transform: rotate(-90deg)' : '';
+
+                    html += `
+                    <div class="grupo-activos-card" data-grupo="${esc(gLabel)}" style="margin-bottom: 0.85rem;">
+                        <!-- ACÁ ESTÁ LA MAGIA STICKY Y NARANJA -->
+                        <div style="position: sticky; top: 56px; z-index: 10; background: var(--bg-card); display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; font-weight: 700; color: var(--c-orange); text-transform: uppercase; letter-spacing: 0.05em; padding: 0.6rem 0.25rem; border-bottom: 1px solid var(--border); margin-bottom: 0.6rem; cursor: pointer; transition: color 0.2s;" onclick="UI._toggleGrupoActivos('${esc(gLabel)}')">
+                            <span style="display:flex; align-items:center; gap:0.5rem;">${esc(gLabel)} <span class="badge badge-otro" style="color:var(--c-orange); border-color:var(--c-orange); font-size:0.7rem;">${items.length}</span></span>
+                            <svg class="nvr-chevron" style="${chevStyle}; stroke: var(--c-orange);" viewBox="0 0 24 24"><use href="#icon-chevron-down"/></svg>
+                        </div>
+                        <div class="activos-grid-transition ${colClass}${colStyle}">
+                            ${items.map(renderItem).join('')}
+                        </div>
+                    </div>`;
+                });
+
+                lista.innerHTML = html;
             }
 
             /* ---------- PRODUCCIÓN ---------- */
@@ -4432,7 +4610,27 @@
                     const selOrden = document.getElementById('sel-vista-orden');
                     if (selCol) selCol.value = _activosColumnas;
                     if (selOrden) selOrden.value = _activosOrden;
+                    
+                    const toggle = document.getElementById('toggle-recordar-grupos');
+                    if (toggle) toggle.classList.toggle('on', _activosRecordarEstado);
+
                     MM.abrir('modal-vista-activos');
+                },
+
+                toggleRecordarGrupos() {
+                    _activosRecordarEstado = !_activosRecordarEstado;
+                    try { localStorage.setItem('cctv_activos_recordar', String(_activosRecordarEstado)); } catch {}
+                    
+                    const toggle = document.getElementById('toggle-recordar-grupos');
+                    if (toggle) toggle.classList.toggle('on', _activosRecordarEstado);
+                    
+                    if (!_activosRecordarEstado) {
+                        try { localStorage.removeItem('cctv_act_collapsed'); } catch {}
+                        toast('Ya no se recordarán los grupos colapsados', 'info');
+                    } else {
+                        if (window.UI._guardarColapsados) window.UI._guardarColapsados();
+                        toast('Se recordarán los grupos colapsados al reiniciar', 'success');
+                    }
                 },
 
                 cerrarVistaActivos() {
@@ -4812,6 +5010,15 @@
                     const input = document.getElementById('input-busqueda');
                     const btnX = document.getElementById('btn-limpiar-busqueda');
                     if (input) { input.value = query; if (btnX) btnX.style.display = query ? '' : 'none'; }
+
+                    // ── MAGIA DE LA FOTO: Expandimos todo al saltar desde el Dashboard ──
+                    if (!window.UI._activosCollapsed) window.UI._activosCollapsed = new Set();
+                    if (!window.UI._estadoColapsadoPrevio) {
+                        window.UI._estadoColapsadoPrevio = new Set(window.UI._activosCollapsed);
+                    }
+                    window.UI._activosCollapsed.clear();
+                    // ────────────────────────────────────────────────────────────────────
+
                     renderActivos();
 
                     if (panelSaliente && panelSaliente !== panelEntrante) {
@@ -4836,21 +5043,40 @@
                 filtrarActivos() {
                     const input = document.getElementById('input-busqueda');
                     const btnX = document.getElementById('btn-limpiar-busqueda');
+                    const query = input.value;
 
                     // Mostramos u ocultamos la "X" al instante
-                    if (btnX) btnX.style.display = input.value ? '' : 'none';
+                    if (btnX) btnX.style.display = query ? '' : 'none';
 
                     // 1. Cancelamos la búsqueda anterior si el usuario sigue escribiendo
                     if (_busqTimer) clearTimeout(_busqTimer);
 
                     // 2. Programamos el renderizado para dentro de 300ms
                     _busqTimer = setTimeout(() => {
+                        // Nos aseguramos de que el Set principal exista
+                        if (!window.UI._activosCollapsed) window.UI._activosCollapsed = new Set();
+
+                        if (query.trim()) {
+                            // Si empezamos a buscar y no habíamos guardado el estado, le sacamos una "foto"
+                            if (!window.UI._estadoColapsadoPrevio) {
+                                window.UI._estadoColapsadoPrevio = new Set(window.UI._activosCollapsed);
+                            }
+                            // Forzamos a expandir todo (vaciando el set de colapsados)
+                            window.UI._activosCollapsed.clear();
+                        } else {
+                            // Si borró el texto a mano (quedó vacío), restauramos la foto
+                            if (window.UI._estadoColapsadoPrevio) {
+                                window.UI._activosCollapsed = new Set(window.UI._estadoColapsadoPrevio);
+                                window.UI._estadoColapsadoPrevio = null;
+                            }
+                        }
+                        
                         renderActivos();
                     }, 300);
                 },
 
                 limpiarBusqueda() {
-                    // Cancelamos cualquier búsqueda pendiente por seguridad
+                    // Cancelamos cualquier búsqueda pendiente
                     if (_busqTimer) clearTimeout(_busqTimer);
 
                     const input = document.getElementById('input-busqueda');
@@ -4858,9 +5084,17 @@
                     document.getElementById('btn-limpiar-busqueda').style.display = 'none';
                     input.focus();
 
-                    // Al limpiar, sí ejecutamos el render de inmediato
+                    // Restauramos la foto guardada (cuando toca la "X")
+                    if (window.UI._estadoColapsadoPrevio) {
+                        if (!window.UI._activosCollapsed) window.UI._activosCollapsed = new Set();
+                        window.UI._activosCollapsed = new Set(window.UI._estadoColapsadoPrevio);
+                        window.UI._estadoColapsadoPrevio = null;
+                    }
+
+                    // Al limpiar, ejecutamos el render de inmediato
                     renderActivos();
                 },
+
                 toggleGrabColapse(id) {
                     if (_grabExpanded.has(id)) {
                         _grabExpanded.delete(id);
@@ -5720,13 +5954,13 @@
                             const data = S.safeParse(contenido);
                             if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('Estructura inválida');
 
-                            const newDisps = Array.isArray(data.dispositivos) ? data.dispositivos.map(_sanDisp) : [];
-                            const newGrabs = Array.isArray(data.grabadores) ? data.grabadores.map(_sanGrab) : [];
+                            const newDisps = Array.isArray(data.dispositivos) ? data.dispositivos.map(d => _sanDisp(d, data.tiposCustom || {})).filter(Boolean) : [];
+                            const newGrabs = Array.isArray(data.grabadores) ? data.grabadores.map(_sanGrab).filter(Boolean) : [];
 
+                            // ── MAGIA NUEVA: Verificamos la firma ──
                             let esValida = true;
                             if (data.hash) {
-                                const calc = await S.sha256({ dispositivos: newDisps, grabadores: newGrabs });
-                                if (calc !== data.hash) esValida = false;
+                                esValida = await S.verificarFirma(data);
                             }
 
                             _importarParsed = { ...data, _disps: newDisps, _grabs: newGrabs, _valida: esValida };
@@ -5808,8 +6042,8 @@
 
                 async exportarJSON() {
                     try {
-                        const disps = _data.dispositivos.map(_sanDisp);
-                        const grabs = _data.grabadores.map(_sanGrab);
+                        const disps = _data.dispositivos.map(_sanDisp).filter(Boolean);
+                        const grabs = _data.grabadores.map(_sanGrab).filter(Boolean);
                         const tiposCustom = {};
                         Object.entries(S.TIPOS).forEach(([k, v]) => {
                             if (!v.builtin) tiposCustom[k] = { label: v.label, emoji: v.emoji };
@@ -5820,9 +6054,12 @@
                             tiposCustom,
                             edificios: S.edificios.slice(),
                             version: S.SCHEMA_V,
-                            fecha: S.fechaISO(),
-                            hash: await S.sha256({ dispositivos: disps, grabadores: grabs }),
+                            fecha: S.fechaISO()
                         };
+
+                        // ── MAGIA NUEVA: Firmamos el objeto ──
+                        payload.hash = await S.generarFirma(payload);
+
                         const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
                         const url = URL.createObjectURL(blob);
                         const a = Object.assign(document.createElement('a'), { href: url, download: `CCTV_${S.fechaISO().slice(0, 10)}.json` });
@@ -6043,12 +6280,112 @@
 
                 if (e.key === '+' || e.key === '=') { UI.abrirNuevoDispositivo(); return; }
 
-                if (e.key.length === 1 && /^[a-zA-Z0-9:]$/.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                const esCaracterValido = e.key.length === 1 && /^[a-zA-Z0-9:]$/.test(e.key);
+
+                if ((esCaracterValido || e.key === 'Backspace') && !e.ctrlKey && !e.metaKey && !e.altKey) {
                     if (_tabActual !== 'activos') UI.cambiarTab('activos');
                     const input = document.getElementById('input-busqueda');
                     input.focus();
                 }
             });
+
+            // ==============================================================
+            // LONG PRESS (Expandir / Colapsar todo)
+            // ==============================================================
+            (() => {
+                let _pressTimer;
+                let _longPressFired = false;
+
+                function handlePressStart(e) {
+                    // Evitamos que salte si mantienen apretado un botón (ej: botón editar del NVR)
+                    if (e.target.closest('button')) return;
+
+                    // Detectamos si tocamos el encabezado de un Grupo de Activos o de un Grabador
+                    const headerActivos = e.target.closest('div[onclick^="UI._toggleGrupoActivos"]');
+                    const headerNVR = e.target.closest('.nvr-card-header');
+
+                    if (headerActivos || headerNVR) {
+                        _longPressFired = false;
+                        
+                        _pressTimer = setTimeout(() => {
+                            _longPressFired = true;
+                            
+                            // Vibramos un poquito en el celular para dar feedback táctil
+                            if (navigator.vibrate) navigator.vibrate(50); 
+
+                            if (headerActivos) {
+                                const grupos = document.querySelectorAll('.grupo-activos-card');
+                                if (!grupos.length) return;
+                                
+                                // Calculamos cuántos están cerrados
+                                let colapsados = 0;
+                                grupos.forEach(g => { if (window.UI._activosCollapsed.has(g.dataset.grupo)) colapsados++; });
+                                
+                                // Si más de la mitad están cerrados, abrimos todos. Si no, cerramos todos.
+                                const abrirTodos = colapsados > (grupos.length / 2);
+                                grupos.forEach(g => {
+                                    if (abrirTodos) window.UI._activosCollapsed.delete(g.dataset.grupo);
+                                    else window.UI._activosCollapsed.add(g.dataset.grupo);
+                                });
+                                
+                                toast(abrirTodos ? 'Todos los grupos expandidos' : 'Todos los grupos colapsados', 'info');
+                                renderActivos();
+                            } 
+                            else if (headerNVR) {
+                                const grabs = document.querySelectorAll('.nvr-card');
+                                if (!grabs.length) return;
+                                
+                                let colapsados = 0;
+                                grabs.forEach(g => { if (!_grabExpanded.has(g.dataset.grabId)) colapsados++; });
+                                
+                                const abrirTodos = colapsados > (grabs.length / 2);
+                                grabs.forEach(g => {
+                                    if (abrirTodos) _grabExpanded.add(g.dataset.grabId);
+                                    else _grabExpanded.delete(g.dataset.grabId);
+                                });
+                                
+                                localStorage.setItem(KEY_EXPANDED, JSON.stringify({ ids: [..._grabExpanded], ts: Date.now() }));
+                                toast(abrirTodos ? 'Todos los grabadores expandidos' : 'Todos los grabadores colapsados', 'info');
+                                renderProduccion();
+                            }
+                        }, 500); // 500ms de mantención
+                    }
+                }
+
+                function handlePressEnd() {
+                    if (_pressTimer) {
+                        clearTimeout(_pressTimer);
+                        _pressTimer = null;
+                    }
+                    // Si se disparó el long-press, dejamos la trampa armada 100ms para 
+                    // cazar el clic automático del navegador. Si en ese tiempo no llega, 
+                    // la desarmamos para no comernos el próximo clic real del usuario.
+                    if (_longPressFired) {
+                        setTimeout(() => {
+                            _longPressFired = false;
+                        }, 100);
+                    }
+                }
+
+                // Eventos de inicio
+                document.addEventListener('mousedown', handlePressStart);
+                document.addEventListener('touchstart', handlePressStart, { passive: true });
+
+                // Eventos de cancelación
+                document.addEventListener('mouseup', handlePressEnd);
+                document.addEventListener('mouseleave', handlePressEnd);
+                document.addEventListener('touchend', handlePressEnd);
+                document.addEventListener('touchcancel', handlePressEnd);
+
+                // MAGIA: Interceptar el "clic" normal si el long-press ya se disparó
+                document.addEventListener('click', e => {
+                    if (_longPressFired) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        _longPressFired = false; // Desarmamos la trampa si atrapó el clic
+                    }
+                }, true); // Usamos fase de captura para atajarlo antes que el HTML
+            })();
 
             // ==============================================================
             // BOTÓN SCROLL TOP
@@ -6084,7 +6421,11 @@
             // ==============================================================
             // ARRANQUE
             // ==============================================================
+            
+            // Fusionamos la memoria temporal con el objeto principal de la UI
+            Object.assign(UI, window.UI);
             window.UI = UI;
+            
             window.historial = historial;
             window.GistSync = GistSync;
             window._toggleTipoDetalle = _toggleTipoDetalle;
@@ -6128,7 +6469,7 @@
 </html>
 
 <!--// ====================================================================
-    //                 NOTAS SISTEMA LUSHIBOSCA VERSION 229
+    //                 NOTAS SISTEMA LUSHIBOSCA VERSION 233
     // ====================================================================
     
      - CAMBIOS 
