@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Convertidor CCTV: TXT a JSON</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: #f5f6fa;
+            color: #1a1d23;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .card {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            max-width: 450px;
+            width: 100%;
+            text-align: center;
+        }
+        .dropzone {
+            border: 2px dashed #3b64d2;
+            background: rgba(59, 100, 210, 0.05);
+            padding: 2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 1.5rem 0;
+            transition: background 0.2s;
+        }
+        .dropzone:hover {
+            background: rgba(59, 100, 210, 0.1);
+        }
+        button {
+            background: #3b64d2;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+        }
+        button:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+        }
+        #log {
+            margin-top: 1rem;
+            font-size: 0.85rem;
+            color: #3b64d2;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>🛠️ Convertidor a CCTV</h2>
+        <p style="font-size: 0.9rem; color: #5a6070;">Subí tu archivo de Excel exportado a TXT (separado por tabulaciones). El script lo convertirá a JSON firmado.</p>
+        
+        <input type="file" id="fileInput" accept=".txt" style="display: none;">
+        
+        <div class="dropzone" onclick="document.getElementById('fileInput').click()">
+            📁 Clic acá para seleccionar un archivo .TXT
+        </div>
+
+        <button id="btnConvertir" disabled>Convertir y Descargar</button>
+        <div id="log"></div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const btnConvertir = document.getElementById('btnConvertir');
+        const log = document.getElementById('log');
+        let archivoSeleccionado = null;
+
+        // Helpers de limpieza y generación
+        const genId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+        const fechaISO = () => {
+            const d = new Date(), p = n => String(n).padStart(2, '0');
+            return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+        };
+        const normalizeKey = (str) => str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+        const isMAC = (str) => /^([0-9A-Fa-f]{2}[:\-.]){5}[0-9A-Fa-f]{2}$/.test(str);
+
+        // Evento al seleccionar archivo
+        fileInput.addEventListener('change', (e) => {
+            archivoSeleccionado = e.target.files[0];
+            if (archivoSeleccionado) {
+                log.textContent = `Archivo cargado: ${archivoSeleccionado.name}`;
+                btnConvertir.disabled = false;
+            }
+        });
+
+        // Evento principal de conversión
+        btnConvertir.addEventListener('click', () => {
+            if (!archivoSeleccionado) return;
+            
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const texto = e.target.result;
+                    const jsonGenerado = await procesarTexto(texto);
+                    descargarJSON(jsonGenerado, archivoSeleccionado.name);
+                    log.textContent = `¡Éxito! JSON generado con ${jsonGenerado.dispositivos.length} dispositivos.`;
+                    btnConvertir.disabled = true;
+                    fileInput.value = ''; // Reseteamos el input
+                } catch (error) {
+                    log.style.color = 'red';
+                    log.textContent = `Error: ${error.message}`;
+                }
+            };
+            reader.readAsText(archivoSeleccionado);
+        });
+
+        // Lógica dura de parseo
+        async function procesarTexto(texto) {
+            const dataJson = { dispositivos: [], grabadores: [], tiposCustom: {}, edificios: [], version: 1, fecha: fechaISO() };
+            const lineas = texto.trim().split('\n');
+            
+            // Empezamos en i=1 para saltarnos los títulos de las columnas
+            for (let i = 1; i < lineas.length; i++) {
+                const columnas = lineas[i].split('\t').map(c => c.trim());
+                if (columnas.length < 6) continue;
+
+                const [macOrSerial, patrimonioRaw, modelo, marca, formaRaw, tipoRaw] = columnas;
+
+                let mac = '', serial = '';
+                const idVal = macOrSerial.toUpperCase();
+                if (idVal !== 'NO' && !idVal.startsWith('SINRELEVAR')) {
+                    if (isMAC(idVal)) {
+                        mac = idVal.replace(/\./g, ':');
+                    } else {
+                        serial = idVal;
+                    }
+                }
+
+                const patrimonio = patrimonioRaw ? patrimonioRaw : '';
+                const forma = formaRaw ? formaRaw.toLowerCase().replace(/\s+/g, '-') : '';
+                
+                let tipoKey = '';
+                const tipoRawLower = tipoRaw.toLowerCase();
+                if (tipoRawLower === 'cámara' || tipoRawLower === 'camara') {
+                    tipoKey = 'camara';
+                } else if (tipoRawLower === 'nvr') {
+                    tipoKey = 'nvr';
+                } else if (tipoRawLower === 'dvr') {
+                    tipoKey = 'dvr';
+                } else {
+                    tipoKey = normalizeKey(tipoRaw);
+                    if (!dataJson.tiposCustom[tipoKey]) {
+                        dataJson.tiposCustom[tipoKey] = { label: tipoRaw, emoji: '📦' };
+                    }
+                }
+
+                const dispositivo = { id: genId(), tipo: tipoKey, estado: '', marca, modelo, serial, mac, patrimonio };
+                if (tipoKey === 'camara') {
+                    dispositivo.forma = forma;
+                } else if (tipoKey === 'nvr' || tipoKey === 'dvr') {
+                    dispositivo.canales = 16;
+                }
+
+                dataJson.dispositivos.push(dispositivo);
+            }
+
+            // Calculamos el hash de seguridad con la misma firma que la app CCTV
+            const core = {
+                d: dataJson.dispositivos.map(x => [x.id, x.tipo, x.estado || null, x.mac || null, x.serial || null, x.canales || null]),
+                g: [], // No importamos grabadores por ahora
+                t: dataJson.tiposCustom,
+                e: dataJson.edificios
+            };
+            
+            const buf = new TextEncoder().encode(JSON.stringify(core));
+            const hashBuffer = await crypto.subtle.digest('SHA-256', buf);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            dataJson.hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            
+            return dataJson;
+        }
+
+        // Helper para forzar la descarga en el navegador
+        function descargarJSON(data, nombreOriginal) {
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = nombreOriginal.replace('.txt', '.json');
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
