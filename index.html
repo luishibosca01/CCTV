@@ -104,7 +104,7 @@
            LAYOUT
         ============================================================ */
         .container {
-            max-width: 1200px;
+            max-width: 1300px;
             margin: 0 auto;
             padding: 0.5rem;
         }
@@ -611,7 +611,6 @@
         ============================================================ */
         .dispositivo-item {
             border: 1px solid var(--border);
-            border-left: 4px solid transparent;
             border-radius: var(--radius);
             padding: 0.75rem;
             margin-bottom: 0.5rem;
@@ -621,28 +620,7 @@
             cursor: pointer;
             background: var(--input-bg);
             gap: 0.5rem;
-        }
-
-        /* border-left por estado (sobreescribe tipo) */
-        .dispositivo-item.estado-produccion {
-            border-left-color: var(--c-blue);
-        }
-
-        .dispositivo-item.estado-disponible {
-            border-left-color: var(--c-green);
-        }
-
-        .dispositivo-item.estado-averiado {
-            border-left-color: var(--c-red);
-        }
-
-        .dispositivo-item.estado-revisar {
-            border-left-color: var(--c-purple);
-        }
-
-        .dispositivo-item.estado-desafectado {
-            border-left-color: var(--text-muted);
-        }
+        }        
 
         .dispositivo-info {
             flex: 1;
@@ -779,9 +757,8 @@
         .nvr-card {
             border: 1px solid var(--border);
             border-radius: var(--radius);
-            background: var(--input-bg);
             margin-bottom: 0.75rem;
-            overflow: hidden;
+            background: var(--bg-card); /* Fondo unificado */
         }
 
         .nvr-card-header {
@@ -792,6 +769,18 @@
             cursor: pointer;
             border-bottom: 1px solid var(--border);
             background: var(--bg-card);
+            position: sticky;
+            top: 56px;
+            z-index: 10;
+            border-top-left-radius: calc(var(--radius) - 1px);
+            border-top-right-radius: calc(var(--radius) - 1px);
+            transition: border-radius 0.2s ease;
+        }
+
+        .nvr-card.collapsed .nvr-card-header {
+            border-bottom: none;
+            border-bottom-left-radius: calc(var(--radius) - 1px);
+            border-bottom-right-radius: calc(var(--radius) - 1px);
         }
 
         .nvr-card-header-info {
@@ -819,7 +808,7 @@
             grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
             gap: 0.5rem;
             padding: 0.75rem;
-            max-height: 2000px;
+            max-height: 6000px;
             opacity: 1;
         }
 
@@ -846,8 +835,80 @@
             transform: rotate(-90deg);
         }
 
-        .nvr-card.collapsed .nvr-card-header {
-            border-bottom: none;
+        /* Badge Azul/Verde extendido para la nueva clase */
+        .canal-slot-lista.ocupado .canal-numero {
+            background: var(--c-blue);
+        }
+
+        .canal-slot-lista.vacio .canal-numero {
+            background: var(--c-green);
+        }
+
+        /* ── MODIFICADOR VISTA LISTA ── */
+        .nvr-canales-grid.vista-lista {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .canal-slot-lista {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 0.5rem 0.65rem;
+            background: var(--bg-card);
+            display: grid;
+            /* Le damos 56px en vez de 48px para que respiren los 3 dígitos */
+            grid-template-columns: 56px 1fr 110px; 
+            gap: 0.75rem;
+            align-items: center;
+            cursor: pointer;
+            transition: filter 0.15s;
+        }
+
+        .canal-slot-lista.vacio { border-style: dashed; }
+
+        .canal-slot-lista .canal-numero {
+            width: 100%;
+            text-align: center;
+            box-sizing: border-box;
+            margin: 0;
+            white-space: nowrap; 
+        }
+
+        .canal-slot-lista .canal-dispositivo-nombre {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .canal-slot-lista .canal-dispositivo-ip {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-family: monospace;
+            text-align: right;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .canal-slot-lista .canal-vacio-label {
+            font-size: 0.8rem;
+            color: var(--text-disabled);
+            font-style: italic;
+        }
+
+        @media (max-width: 500px) {
+            .canal-slot-lista {
+                grid-template-columns: 56px 1fr 85px; 
+            }
+        }
+
+        @media (hover: hover) and (pointer: fine) {
+            .canal-slot-lista:hover {
+                filter: var(--hover);
+            }
         }
 
         .canal-slot {
@@ -855,7 +916,8 @@
             border-radius: var(--radius-sm);
             padding: 0.55rem 0.65rem;
             background: var(--bg-card);
-            height: 72px;
+            /* Cambiamos height fijo por min-height para que se adapte a las 3 líneas */
+            min-height: 78px;
             display: flex;
             flex-direction: column;
             gap: 0.2rem;
@@ -864,29 +926,41 @@
             overflow: hidden;
         }
 
-        .canal-slot.ocupado {
-            border-left: 3px solid var(--c-blue);
-        }
-
         .canal-slot.vacio {
             border-style: dashed;
-            opacity: 0.65;
+            /* Eliminamos la opacidad para que el verde resalte bien brillante */
         }
 
         .canal-numero {
-            font-size: 0.7rem;
-            font-weight: 700;
-            color: var(--text-muted);
+            font-size: 0.65rem;
+            color: var(--c-white);
+            padding: 0.15rem 0.4rem;
+            border-radius: var(--radius);
+            width: fit-content;
+            letter-spacing: 0.03em;
+        }
+
+        /* Badge Azul para canales en uso */
+        .canal-slot.ocupado .canal-numero {
+            background: var(--c-blue);
+        }
+
+        /* Badge Verde para canales libres */
+        .canal-slot.vacio .canal-numero {
+            background: var(--c-green);
         }
 
         .canal-dispositivo-nombre {
             font-size: 0.82rem;
             font-weight: 600;
             color: var(--text-main);
-            line-height: 1.2;
-            white-space: nowrap;
+            line-height: 1.25;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
             overflow: hidden;
             text-overflow: ellipsis;
+            white-space: normal;
         }
 
         .canal-dispositivo-ip {
@@ -1634,16 +1708,40 @@
                 filter: var(--hover);
             }
         }
+
+        /* ============================================================
+           ESCUDO ANTI-FLICKER TABS (Primer Renderizado)
+        ============================================================ */
+        body[data-tab-inicial="activos"] #panel-dashboard,
+        body[data-tab-inicial="produccion"] #panel-dashboard { display: none !important; }
+        
+        body[data-tab-inicial="activos"] #panel-activos,
+        body[data-tab-inicial="produccion"] #panel-produccion { display: block !important; }
+
+        body[data-tab-inicial="activos"] #tab-dashboard,
+        body[data-tab-inicial="produccion"] #tab-dashboard { color: var(--text-muted) !important; }
+        
+        body[data-tab-inicial="activos"] #tab-activos,
+        body[data-tab-inicial="produccion"] #tab-produccion { color: var(--text-main) !important; }
+
+        body[data-tab-inicial="activos"] .tabs::before { transform: translateX(100%) !important; transition: none !important; }
+        body[data-tab-inicial="produccion"] .tabs::before { transform: translateX(200%) !important; transition: none !important; }
     </style>
 </head>
 
 <body>
-    <!-- Flash anti-parpadeo tema oscuro -->
+    <!-- Flash anti-parpadeo (Tema oscuro y Pestañas) -->
     <script>
         (function () {
             try {
+                // 1. Evitar parpadeo de tema
                 var t = localStorage.getItem('cctv_tema');
                 if (t === 'true' || t === null) document.body.classList.add('dark-mode');
+
+                // 2. Evitar parpadeo de pestañas
+                var saved = JSON.parse(localStorage.getItem('cctv_tab') || 'null');
+                var tab = (saved && saved.tab && (Date.now() - saved.ts) < 3600000) ? saved.tab : 'dashboard';
+                document.body.setAttribute('data-tab-inicial', tab);
             } catch (e) { }
         })();
     </script>
@@ -1971,8 +2069,17 @@
                         <use href="#icon-server" />
                     </svg>
                     Grabadores (NVR / DVR)
-                    <button class="icon-btn btn-edit" onclick="UI.abrirNuevoGrabador()" title="Agregar grabador"
+
+                    <!-- BOTÓN VISTA -->
+                    <button class="icon-btn" onclick="UI.abrirVistaProduccion()" title="Opciones de vista"
                         style="margin-left:auto;width:auto">
+                        <svg class="icon icon-line">
+                            <use href="#icon-sliders" />
+                        </svg>
+                    </button>
+                    <!-- BOTÓN AGREGAR -->
+                    <button class="icon-btn btn-edit" onclick="UI.abrirNuevoGrabador()" title="Agregar grabador"
+                        style="width:auto">
                         <svg class="icon icon-line">
                             <use href="#icon-plus" />
                         </svg>
@@ -2108,33 +2215,30 @@
     ============================================================ -->
     <div class="modal" id="modal-tipos-dispositivo">
         <div class="modal-content modal-content--flex">
-            <h3
-                style="padding:1.5rem 0.75rem 1rem;margin:0;position:sticky;top:0;background:var(--bg-card);z-index:2;border-bottom:1px solid var(--border)">
-                <svg class="icon icon-line">
-                    <use href="#icon-grid" />
-                </svg>
+            <h3 style="padding:1.5rem 0.75rem 1rem;margin:0;position:sticky;top:0;background:var(--bg-card);z-index:2;border-bottom:1px solid var(--border)">
+                <svg class="icon icon-line"><use href="#icon-grid" /></svg>
                 Dispositivos
             </h3>
+            
             <div style="flex:1;overflow-y:auto;padding:1rem 0.75rem">
-                <div id="lista-tipos-custom" style="margin-bottom:0.75rem"></div>
-                <div style="display:flex;gap:0.5rem;align-items:center">
-                    <input type="text" id="nuevo-tipo-label" placeholder="Ej: Router, PC, Joystick…" maxlength="100"
-                        style="flex:1">
+                <!-- Acá solo dejamos la lista, le sacamos el margin-bottom para que no deje espacio hueco -->
+                <div id="lista-tipos-custom"></div>
+            </div>
+            
+            <!-- ── CONTENEDOR STICKY INFERIOR ── -->
+            <div style="padding:0.75rem;border-top:1px solid var(--border);position:sticky;bottom:0;background:var(--bg-card);z-index:2">
+                
+                <!-- Input movido acá, con un margin-bottom para separarlo del botón volver -->
+                <div style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.75rem">
+                    <input type="text" id="nuevo-tipo-label" placeholder="Ej: Router, PC, Joystick…" maxlength="100" style="flex:1">
                     <button onclick="UI.agregarTipoCustom()" class="icon-btn btn-edit" title="Agregar tipo">
-                        <svg class="icon icon-line">
-                            <use href="#icon-plus" />
-                        </svg>
+                        <svg class="icon icon-line"><use href="#icon-plus" /></svg>
                     </button>
                 </div>
-            </div>
-            <div
-                style="padding:0.75rem;border-top:1px solid var(--border);position:sticky;bottom:0;background:var(--bg-card);z-index:2">
+                
                 <div class="btn-group" style="margin-top:0">
                     <button class="btn-cancel" onclick="UI.cerrarTiposDispositivo()">
-                        <svg class="icon icon-line">
-                            <use href="#icon-undo" />
-                        </svg>
-                        Volver
+                        <svg class="icon icon-line"><use href="#icon-undo" /></svg> Volver
                     </button>
                 </div>
             </div>
@@ -2146,33 +2250,30 @@
     ============================================================ -->
     <div class="modal" id="modal-edificios">
         <div class="modal-content modal-content--flex">
-            <h3
-                style="padding:1.5rem 0.75rem 1rem;margin:0;position:sticky;top:0;background:var(--bg-card);z-index:2;border-bottom:1px solid var(--border)">
-                <svg class="icon icon-line">
-                    <use href="#icon-building" />
-                </svg>
+            <h3 style="padding:1.5rem 0.75rem 1rem;margin:0;position:sticky;top:0;background:var(--bg-card);z-index:2;border-bottom:1px solid var(--border)">
+                <svg class="icon icon-line"><use href="#icon-building" /></svg>
                 Edificios
             </h3>
+            
             <div style="flex:1;overflow-y:auto;padding:1rem 0.75rem">
-                <div id="lista-edificios" style="margin-bottom:0.75rem"></div>
-                <div style="display:flex;gap:0.5rem;align-items:center">
-                    <input type="text" id="nuevo-edificio-nombre" placeholder="Ej: Torre A, Edificio Central…"
-                        maxlength="100" style="flex:1">
+                <!-- Acá solo dejamos la lista -->
+                <div id="lista-edificios"></div>
+            </div>
+            
+            <!-- ── CONTENEDOR STICKY INFERIOR ── -->
+            <div style="padding:0.75rem;border-top:1px solid var(--border);position:sticky;bottom:0;background:var(--bg-card);z-index:2">
+                
+                <!-- Input movido acá -->
+                <div style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.75rem">
+                    <input type="text" id="nuevo-edificio-nombre" placeholder="Ej: Torre A, Edificio Central…" maxlength="100" style="flex:1">
                     <button onclick="UI.agregarEdificio()" class="icon-btn btn-edit" title="Agregar edificio">
-                        <svg class="icon icon-line">
-                            <use href="#icon-plus" />
-                        </svg>
+                        <svg class="icon icon-line"><use href="#icon-plus" /></svg>
                     </button>
                 </div>
-            </div>
-            <div
-                style="padding:0.75rem;border-top:1px solid var(--border);position:sticky;bottom:0;background:var(--bg-card);z-index:2">
+                
                 <div class="btn-group" style="margin-top:0">
                     <button class="btn-cancel" onclick="UI.cerrarEdificios()">
-                        <svg class="icon icon-line">
-                            <use href="#icon-undo" />
-                        </svg>
-                        Volver
+                        <svg class="icon icon-line"><use href="#icon-undo" /></svg> Volver
                     </button>
                 </div>
             </div>
@@ -2776,6 +2877,34 @@
                     <svg class="icon icon-line">
                         <use href="#icon-undo" />
                     </svg> Volver
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         MODAL — Vista de Producción
+    ============================================================ -->
+    <div class="modal" id="modal-vista-produccion">
+        <div class="modal-content" style="max-width:360px">
+            <h3>
+                <svg class="icon icon-line">
+                    <use href="#icon-sliders" />
+                </svg>
+                Vista de canales
+            </h3>
+            <div class="form-group">
+                <label>Formato de visualización</label>
+                <select id="sel-vista-produccion" onchange="UI.setProduccionVista(this.value)">
+                    <option value="mosaico">Mosaico (Tarjetas)</option>
+                    <option value="lista">Lista (Filas)</option>
+                </select>
+            </div>
+            <div class="btn-group" style="margin-top:1.5rem">
+                <button class="btn-cancel" onclick="MM.cerrar('modal-vista-produccion')">
+                    <svg class="icon icon-line">
+                        <use href="#icon-cancelar" />
+                    </svg> Cerrar
                 </button>
             </div>
         </div>
@@ -3732,19 +3861,51 @@
                 }
 
                 function _combinarDatosRemotos(remoto) {
-                    let cDisps = 0, cGrabs = 0, cTipos = 0, cEdif = 0;
+                    let cDispsAdd = 0, cDispsUpd = 0;
+                    let cGrabsAdd = 0, cGrabsUpd = 0;
+                    let cTipos = 0, cEdif = 0;
 
-                    const idsD = new Set(_data.dispositivos.map(d => d.id));
-                    const idsG = new Set(_data.grabadores.map(g => g.id));
+                    const mapD = new Map(_data.dispositivos.map(d => [d.id, d]));
+                    const mapG = new Map(_data.grabadores.map(g => [g.id, g]));
 
                     (remoto.dispositivos || []).forEach(d => {
                         const san = _sanDisp(d, remoto.tiposCustom || {});
-                        if (!idsD.has(san.id)) { _data.dispositivos.push(san); idsD.add(san.id); cDisps++; }
+                        if (!san) return;
+                        if (!mapD.has(san.id)) {
+                            _data.dispositivos.push(san); mapD.set(san.id, san); cDispsAdd++;
+                        } else {
+                            // Enriquecemos los campos que estén vacíos en nuestra base local
+                            const loc = mapD.get(san.id);
+                            let updated = false;
+                            ['marca', 'modelo', 'serial', 'mac', 'patrimonio', 'forma', 'estado'].forEach(k => {
+                                if (!loc[k] && san[k]) { loc[k] = san[k]; updated = true; }
+                            });
+                            if (updated) cDispsUpd++;
+                        }
                     });
 
                     (remoto.grabadores || []).forEach(g => {
                         const san = _sanGrab(g);
-                        if (!idsG.has(san.id)) { _data.grabadores.push(san); idsG.add(san.id); cGrabs++; }
+                        if (!san) return;
+                        if (!mapG.has(san.id)) {
+                            _data.grabadores.push(san); mapG.set(san.id, san); cGrabsAdd++;
+                        } else {
+                            const loc = mapG.get(san.id);
+                            let updated = false;
+                            ['marca', 'modelo', 'ip', 'lugar', 'rack', 'puerto', 'mac', 'dispositivoId'].forEach(k => {
+                                if (!loc[k] && san[k]) { loc[k] = san[k]; updated = true; }
+                            });
+                            // Enriquecemos los canales
+                            san.canales_data.forEach(cRem => {
+                                const cLoc = loc.canales_data.find(c => c.canal === cRem.canal);
+                                if (cLoc) {
+                                    ['dispositivoId', 'descripcion', 'ip', 'puerto', 'edificio', 'piso', 'rack', 'comentarios'].forEach(k => {
+                                        if (!cLoc[k] && cRem[k]) { cLoc[k] = cRem[k]; updated = true; }
+                                    });
+                                }
+                            });
+                            if (updated) cGrabsUpd++;
+                        }
                     });
 
                     if (remoto.tiposCustom && typeof remoto.tiposCustom === 'object') {
@@ -3773,7 +3934,7 @@
                         if (cEdif > 0) S.guardarEdificios();
                     }
 
-                    return { cDisps, cGrabs, cTipos, cEdif };
+                    return { cDispsAdd, cDispsUpd, cGrabsAdd, cGrabsUpd, cTipos, cEdif };
                 }
 
                 async function bajar() {
@@ -3816,29 +3977,41 @@
                         const procesarBajada = () => {
                             _setBusy(true);
 
-                            // ── PRE-CHECK: Verificamos si hay novedades antes de tocar el historial ──
-                            const idsD = new Set(_data.dispositivos.map(d => d.id));
-                            const idsG = new Set(_data.grabadores.map(g => g.id));
-                            const catT = new Set(Object.keys(S.TIPOS));
-                            const catE = new Set(S.edificios.map(e => e.toLowerCase()));
+                            // SIMULACION DE CAMBIOS (Deep Clone)
+                            const dataStringAntes = JSON.stringify(_data);
+                            const tiposStringAntes = JSON.stringify(S.TIPOS);
+                            const edifStringAntes = JSON.stringify(S.edificios);
 
-                            const cDisps = (remoto.dispositivos || []).filter(d => !idsD.has(d.id)).length;
-                            const cGrabs = (remoto.grabadores || []).filter(g => !idsG.has(g.id)).length;
-                            const cTipos = Object.keys(remoto.tiposCustom || {}).filter(k => !catT.has(k) && !S.TIPOS_BUILTIN[k] && remoto.tiposCustom[k]?.label).length;
-                            const cEdif = (remoto.edificios || []).filter(e => e && typeof e === 'string' && e.trim() && !catE.has(e.trim().toLowerCase())).length;
+                            const backupData = S.deepClone(_data);
+                            const backupTipos = S.deepClone(S.TIPOS);
+                            const backupEdif = [...S.edificios];
 
-                            if (cDisps === 0 && cGrabs === 0 && cTipos === 0 && cEdif === 0) {
+                            const resMerge = _combinarDatosRemotos(remoto);
+
+                            const dataStringDespues = JSON.stringify(_data);
+                            const tiposStringDespues = JSON.stringify(S.TIPOS);
+                            const edifStringDespues = JSON.stringify(S.edificios);
+
+                            const huboCambios = (dataStringAntes !== dataStringDespues || tiposStringAntes !== tiposStringDespues || edifStringAntes !== edifStringDespues);
+
+                            // Revertimos la simulación
+                            _data = backupData;
+                            Object.keys(S.TIPOS).forEach(k => delete S.TIPOS[k]);
+                            Object.assign(S.TIPOS, backupTipos);
+                            S.edificios.length = 0;
+                            S.edificios.push(...backupEdif);
+
+                            if (!huboCambios) {
                                 _cfg.token = token; _cfg.gistId = gistId; _cfg.lastSync = new Date().toISOString();
                                 _guardarCfg(); _setStatusSync();
-                                toast('Sin cambios remotos', 'info');
+                                toast('Sin cambios remotos para combinar', 'info');
                                 _setBusy(false);
-                                return; // ⬅ Cortamos acá, el historial ni se entera
+                                return; // Cortamos acá si no hay ni datos nuevos ni campos para enriquecer
                             }
-                            // ───────────────────────────────────────────────────────────────────────────
 
-                            // Recién ahora, sabiendo que hay cambios reales, guardamos la foto para el Undo
+                            // Recién ahora, sabiendo que hay cambios reales, guardamos la foto para el Undo y aplicamos
                             historial.empujar(esValida ? 'Bajar desde Gist' : 'Bajar desde Gist (Forzado)');
-                            const resMerge = _combinarDatosRemotos(remoto);
+                            _combinarDatosRemotos(remoto);
 
                             guardar();
                             render();
@@ -3846,12 +4019,14 @@
                             _guardarCfg(); _setStatusSync();
 
                             const msgs = [];
-                            if (resMerge.cDisps) msgs.push(`+${resMerge.cDisps} disp`);
-                            if (resMerge.cGrabs) msgs.push(`+${resMerge.cGrabs} grab`);
+                            if (resMerge.cDispsAdd) msgs.push(`+${resMerge.cDispsAdd} disp`);
+                            if (resMerge.cDispsUpd) msgs.push(`~${resMerge.cDispsUpd} disp`);
+                            if (resMerge.cGrabsAdd) msgs.push(`+${resMerge.cGrabsAdd} grab`);
+                            if (resMerge.cGrabsUpd) msgs.push(`~${resMerge.cGrabsUpd} grab`);
                             if (resMerge.cTipos) msgs.push(`+${resMerge.cTipos} tipos`);
                             if (resMerge.cEdif) msgs.push(`+${resMerge.cEdif} edif`);
 
-                            toast(esValida ? `Datos combinados (${msgs.join(' · ')})` : `Datos alterados combinados (${msgs.join(' · ')})`, esValida ? 'success' : 'info');
+                            toast(esValida ? `Datos combinados (${msgs.join(', ')})` : `Datos alterados combinados (${msgs.join(', ')})`, esValida ? 'success' : 'info');
                             _setBusy(false);
                         };
 
@@ -3935,32 +4110,48 @@
                             esValida = await S.verificarFirma(remoto);
                         }
 
-                        const idsD = new Set(_data.dispositivos.map(m => m.id));
-                        const idsG = new Set(_data.grabadores.map(m => m.id));
-                        const catT = new Set(Object.keys(S.TIPOS));
-                        const catE = new Set(S.edificios.map(e => e.toLowerCase()));
+                        // ── PRE-CHECK INTELIGENTE MEDIANTE SIMULACIÓN ──
+                        const dataStringAntes = JSON.stringify(_data);
+                        const tiposStringAntes = JSON.stringify(S.TIPOS);
+                        const edifStringAntes = JSON.stringify(S.edificios);
 
-                        const dispNuevos = (remoto.dispositivos || []).filter(m => !idsD.has(m.id));
-                        const grabNuevos = (remoto.grabadores || []).filter(m => !idsG.has(m.id));
-                        const tiposNuevos = Object.keys(remoto.tiposCustom || {}).filter(k => !catT.has(k) && !S.TIPOS_BUILTIN[k]);
-                        const edifNuevos = (remoto.edificios || []).filter(e => e && typeof e === 'string' && !catE.has(e.toLowerCase()));
+                        const backupData = S.deepClone(_data);
+                        const backupTipos = S.deepClone(S.TIPOS);
+                        const backupEdif = [...S.edificios];
 
-                        if (!dispNuevos.length && !grabNuevos.length && !tiposNuevos.length && !edifNuevos.length) return;
+                        const resMerge = _combinarDatosRemotos(remoto);
+
+                        const dataStringDespues = JSON.stringify(_data);
+                        const tiposStringDespues = JSON.stringify(S.TIPOS);
+                        const edifStringDespues = JSON.stringify(S.edificios);
+
+                        const huboCambios = (dataStringAntes !== dataStringDespues || tiposStringAntes !== tiposStringDespues || edifStringAntes !== edifStringDespues);
+
+                        // Revertimos la simulación
+                        _data = backupData;
+                        Object.keys(S.TIPOS).forEach(k => delete S.TIPOS[k]);
+                        Object.assign(S.TIPOS, backupTipos);
+                        S.edificios.length = 0;
+                        S.edificios.push(...backupEdif);
+
+                        if (!huboCambios) return;
 
                         const desc = document.querySelector('.gist-novedades-desc');
                         if (desc) {
                             desc.innerHTML = esValida
-                                ? 'Se encontraron registros en GitHub que no están en este dispositivo:'
+                                ? 'Se encontraron mejoras o registros en GitHub que no están en este dispositivo:'
                                 : 'Se encontraron registros en GitHub.<br><strong style="color:var(--c-orange); margin-top: 0.4rem; display: block;">⚠️ Atención: Los datos fueron alterados manualmente.</strong>';
                         }
 
                         const detalle = document.getElementById('gist-novedades-detalle');
                         if (detalle) {
                             const chips = [];
-                            if (dispNuevos.length) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Dispositivos</span><span class="gist-novedades-chip-count">+${dispNuevos.length}</span></div>`);
-                            if (grabNuevos.length) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Grabadores</span><span class="gist-novedades-chip-count">+${grabNuevos.length}</span></div>`);
-                            if (tiposNuevos.length) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Tipos Custom</span><span class="gist-novedades-chip-count">+${tiposNuevos.length}</span></div>`);
-                            if (edifNuevos.length) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Edificios</span><span class="gist-novedades-chip-count">+${edifNuevos.length}</span></div>`);
+                            if (resMerge.cDispsAdd) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Dispositivos nuevos</span><span class="gist-novedades-chip-count">+${resMerge.cDispsAdd}</span></div>`);
+                            if (resMerge.cDispsUpd) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Dispositivos a enriquecer</span><span class="gist-novedades-chip-count" style="color:var(--c-purple)">~${resMerge.cDispsUpd}</span></div>`);
+                            if (resMerge.cGrabsAdd) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Grabadores nuevos</span><span class="gist-novedades-chip-count">+${resMerge.cGrabsAdd}</span></div>`);
+                            if (resMerge.cGrabsUpd) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Grabadores a enriquecer</span><span class="gist-novedades-chip-count" style="color:var(--c-purple)">~${resMerge.cGrabsUpd}</span></div>`);
+                            if (resMerge.cTipos) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Tipos Custom</span><span class="gist-novedades-chip-count">+${resMerge.cTipos}</span></div>`);
+                            if (resMerge.cEdif) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Edificios</span><span class="gist-novedades-chip-count">+${resMerge.cEdif}</span></div>`);
                             detalle.innerHTML = chips.join('');
                         }
 
@@ -3968,16 +4159,18 @@
                         if (btnOk) {
                             btnOk.onclick = () => {
                                 historial.empujar(esValida ? 'Bajar novedades desde Gist' : 'Bajar novedades desde Gist (Forzado)');
-                                const resMerge = _combinarDatosRemotos(remoto);
+                                _combinarDatosRemotos(remoto);
                                 guardar();
                                 render();
                                 MM.cerrar('modal-gist-novedades');
                                 const msgs = [];
-                                if (resMerge.cDisps) msgs.push(`+${resMerge.cDisps} disp`);
-                                if (resMerge.cGrabs) msgs.push(`+${resMerge.cGrabs} grab`);
+                                if (resMerge.cDispsAdd) msgs.push(`+${resMerge.cDispsAdd} disp`);
+                                if (resMerge.cDispsUpd) msgs.push(`~${resMerge.cDispsUpd} disp`);
+                                if (resMerge.cGrabsAdd) msgs.push(`+${resMerge.cGrabsAdd} grab`);
+                                if (resMerge.cGrabsUpd) msgs.push(`~${resMerge.cGrabsUpd} grab`);
                                 if (resMerge.cTipos) msgs.push(`+${resMerge.cTipos} tipos`);
                                 if (resMerge.cEdif) msgs.push(`+${resMerge.cEdif} edif`);
-                                toast(esValida ? `Datos combinados (${msgs.join(' · ')})` : `Datos alterados combinados (${msgs.join(' · ')})`, esValida ? 'success' : 'info');
+                                toast(esValida ? `Datos combinados (${msgs.join(', ')})` : `Datos alterados combinados (${msgs.join(', ')})`, esValida ? 'success' : 'info');
                             };
                         }
 
@@ -4009,6 +4202,8 @@
 
             // ── MAGIA: Leemos si el usuario quiere recordar, y si es así, traemos la memoria ──
             let _activosRecordarEstado = (() => { try { return localStorage.getItem('cctv_activos_recordar') === 'true'; } catch { return false; } })();
+            // Memoria de la vista de producción
+            let _produccionVista = (() => { try { return localStorage.getItem('cctv_prod_vista') || 'mosaico'; } catch { return 'mosaico'; } })();
 
             window.UI = window.UI || {};
             window.UI._activosCollapsed = (() => {
@@ -4047,7 +4242,7 @@
 
             function renderDashboard() {
                 const disps = _data.dispositivos;
-                const grabs = _data.grabadores;
+                const grabs = [..._data.grabadores].sort((a, b) => (a.descripcion || '').localeCompare(b.descripcion || ''));
 
                 const idsEnProd = new Set([
                     ...grabs.flatMap(g => g.canales_data.filter(c => c.dispositivoId).map(c => c.dispositivoId)),
@@ -4083,7 +4278,7 @@
                         return `
                         <div class="stat-chip stat-chip-tipo${esActivo ? ' activo' : ''}" onclick="_toggleTipoDetalle('${tipoKey}')">
                             <div class="stat-chip-valor">${n}</div>
-                            <div class="stat-chip-label">${tc.emoji} ${(tc.label + 's').toUpperCase()}</div>
+                            <div class="stat-chip-label">${tc.emoji} ${(tc.label + (tipoKey === 'camara' ? 's' : '')).toUpperCase()}</div>
                             <span class="stat-chip-arrow">▶</span>
                         </div>`;
                     }).join('');
@@ -4100,7 +4295,7 @@
                         const chipSeleccionado = `
                         <div class="stat-chip stat-chip-tipo activo" onclick="_toggleTipoDetalle('${_dashTipoAbierto}')">
                             <div class="stat-chip-valor">${n}</div>
-                            <div class="stat-chip-label">${tc.emoji} ${(tc.label + 's').toUpperCase()}</div>
+                            <div class="stat-chip-label">${tc.emoji} ${(tc.label + (_dashTipoAbierto === 'camara' ? 's' : '')).toUpperCase()}</div>
                             <span class="stat-chip-arrow">▶</span>
                         </div>`;
 
@@ -4139,24 +4334,76 @@
                 })();
 
                 // ── Grabadores resumen ───────────────────────────────────
-                document.getElementById('dash-grabadores').innerHTML = grabs.length === 0
-                    ? `<div style="color:var(--text-disabled);font-size:0.85rem">Sin grabadores en producción</div>`
-                    : grabs.map(g => {
+                const dashGrabadores = document.getElementById('dash-grabadores');
+
+                if (grabs.length === 0) {
+                    dashGrabadores.innerHTML = `<div style="color:var(--text-disabled);font-size:0.85rem">Sin grabadores en producción</div>`;
+                } else {
+                    // 1. Calcular totales globales
+                    let totalCanales = 0;
+                    let totalOcupados = 0;
+                    
+                    grabs.forEach(g => {
+                        totalCanales += g.canales_n;
+                        totalOcupados += g.canales_data.filter(c => c.dispositivoId).length;
+                    });
+                    
+                    const totalLibres = totalCanales - totalOcupados;
+                    const pctOcupado = totalCanales > 0 ? Math.round((totalOcupados / totalCanales) * 100) : 0;
+                    const pctLibre = totalCanales > 0 ? (100 - pctOcupado) : 0;
+
+                    // 2. Armar el panel de estadísticas globales
+                    const htmlTotales = `
+                    <div style="margin-bottom: 1.25rem; background: var(--bg-card); padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                        <div style="text-align:center; font-size:0.8rem; font-weight:700; color:var(--text-main); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.8rem;">
+                            Canales de grabación
+                        </div>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:0.5rem;">
+                            <div style="text-align:center;">
+                                <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; letter-spacing:0.05em; margin-bottom:0.2rem">Capacidad Instalada</div>
+                                <div style="font-size:1.3rem; font-weight:700; color:var(--text-main); font-family:monospace">${totalCanales}</div>
+                            </div>
+                            <div style="text-align:center; border-left: 1px solid var(--border); border-right: 1px solid var(--border);">
+                                <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; letter-spacing:0.05em; margin-bottom:0.2rem">Utilizados</div>
+                                <div style="font-size:1.3rem; font-weight:700; color:var(--c-blue); font-family:monospace">${totalOcupados} <span style="font-size:0.8rem; color:var(--text-muted)">(${pctOcupado}%)</span></div>
+                            </div>
+                            <div style="text-align:center;">
+                                <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; letter-spacing:0.05em; margin-bottom:0.2rem">Disponibles</div>
+                                <div style="font-size:1.3rem; font-weight:700; color:var(--c-green); font-family:monospace">${totalLibres} <span style="font-size:0.8rem; color:var(--text-muted)">(${pctLibre}%)</span></div>
+                            </div>
+                        </div>
+                    </div>`;
+
+                    // 3. Armar la lista individual (con la lógica del semáforo)
+                    const htmlLista = grabs.map(g => {
                         const ocup = g.canales_data.filter(c => c.dispositivoId).length;
                         const libre = g.canales_n - ocup;
                         const pct = Math.round((ocup / g.canales_n) * 100);
+                        
+                        let colorBarra = 'var(--c-red)';
+                        if (pct < 35) colorBarra = 'var(--c-green)';
+                        else if (pct < 65) colorBarra = 'var(--c-blue)';
+                        else if (pct < 85) colorBarra = 'var(--c-orange)';
+                        
                         return `<div style="padding:0.6rem 0;border-bottom:1px solid var(--border)">
                         <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.3rem">
                             <span style="font-weight:700;font-size:0.92rem">${esc(g.descripcion)}</span>
                             <span class="badge badge-${g.tipo}-filled">${g.tipo.toUpperCase()}</span>
-                            <span style="margin-left:auto;font-size:0.78rem;color:var(--text-muted)">${g.ip ? esc(g.ip) : ''}</span>
+                            <span style="margin-left:auto;font-size:0.8rem;color:var(--text-muted);font-family:monospace">${g.ip ? esc(g.ip) : ''}</span>
                         </div>
-                        <div style="font-size:0.8rem;color:var(--text-muted)">${ocup}/${g.canales_n} canales ocupados · ${libre} libres</div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.8rem;color:var(--text-muted)">
+                            <span>${ocup}/${g.canales_n} canales ocupados · ${libre} libres</span>
+                            <span style="font-weight:600; color:var(--text-main)">${pct}%</span>
+                        </div>
                         <div style="height:4px;background:var(--border);border-radius:var(--radius-pill);margin-top:0.4rem;overflow:hidden">
-                            <div style="height:100%;width:${pct}%;background:var(--c-blue);border-radius:var(--radius-pill);transition:width 0.4s"></div>
+                            <div style="height:100%;width:${pct}%;background:${colorBarra};border-radius:var(--radius-pill);transition:width 0.4s, background-color 0.4s"></div>
                         </div>
                     </div>`;
                     }).join('');
+
+                    // 4. Inyectar todo junto
+                    dashGrabadores.innerHTML = htmlTotales + htmlLista;
+                }
 
                 // ── Cámaras resumen ──────────────────────────────────────
                 const camarasDisps = disps.filter(d => d.tipo === 'camara');
@@ -4421,8 +4668,10 @@
 
                     return `<div class="dispositivo-item tipo-${esc(d.tipo)} ${estadoClase} anim-in" data-disp-id="${esc(d.id)}">
                     <div class="dispositivo-info">
-                        <div class="dispositivo-nombre">${tc.emoji} ${esc(titulo)}</div>
-                        <div class="dispositivo-meta"><span class="badge ${tc.badge || 'badge-otro'}">${tipoBadgeLabel}</span>${subtitulo ? `<span>${subtitulo}</span>` : ''}</div>
+                        <div class="dispositivo-nombre">
+                            ${tc.emoji} ${esc(titulo)} <span style="color:var(--text-muted); font-weight:normal; margin:0 0.2rem">-</span> ${tipoBadgeLabel} 
+                        </div>
+                        <div class="dispositivo-meta">${subtitulo ? `<span>${subtitulo}</span>` : ''}</div>
                         ${(d.serial && d.mac) || d.patrimonio ? `<div class="disp-linea3">${[d.serial && d.mac ? `S/N: ${esc(d.serial)}` : '', d.patrimonio ? `PAT: ${esc(d.patrimonio)}` : ''].filter(Boolean).join(' · ')}</div>` : ''}
                     </div>${derechaHtml}</div>`;
                 }
@@ -4482,7 +4731,6 @@
 
                     html += `
                     <div class="grupo-activos-card" data-grupo="${esc(gLabel)}" style="margin-bottom: 0.85rem;">
-                        <!-- ACÁ ESTÁ LA MAGIA STICKY Y NARANJA -->
                         <div class="grupo-activos-header" data-toggle-grupo="${esc(gLabel)}" style="position: sticky; top: 56px; z-index: 10; background: var(--bg-card); display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; font-weight: 700; color: var(--c-orange); text-transform: uppercase; letter-spacing: 0.05em; padding: 0.6rem 0.25rem; border-bottom: 1px solid var(--border); margin-bottom: 0.6rem; cursor: pointer; transition: color 0.2s;">
                             <span style="display:flex; align-items:center; gap:0.5rem;">${esc(gLabel)} <span class="badge badge-otro" style="color:var(--c-orange); border-color:var(--c-orange); font-size:0.7rem;">${items.length}</span></span>
                             <svg class="nvr-chevron" style="${chevStyle}; stroke: var(--c-orange);" viewBox="0 0 24 24"><use href="#icon-chevron-down"/></svg>
@@ -4510,7 +4758,7 @@
             /* ---------- PRODUCCIÓN ---------- */
             function renderProduccion() {
                 const lista = document.getElementById('lista-grabadores');
-                const grabs = _data.grabadores;
+                const grabs = [..._data.grabadores].sort((a, b) => (a.descripcion || '').localeCompare(b.descripcion || ''));
 
                 if (grabs.length === 0) {
                     lista.innerHTML = `<div class="empty-state">
@@ -4523,41 +4771,69 @@
                 lista.innerHTML = grabs.map(g => {
                     const canalesHtml = g.canales_data.map(c => {
                         const disp = c.dispositivoId ? _data.dispositivos.find(d => d.id === c.dispositivoId) : null;
+                        
                         if (disp) {
                             const tituloCanal = c.descripcion || disp.mac || disp.serial || '—';
-                            return `<div class="canal-slot ocupado" data-canal="${c.canal}">
-                            <div class="canal-numero">CANAL ${c.canal}</div>
-                            <div class="canal-dispositivo-nombre" title="${esc(tituloCanal)}">${esc(tituloCanal)}</div>
-                            ${c.ip ? `<div class="canal-dispositivo-ip">${esc(c.ip)}</div>` : ''}
-                        </div>`;
+                            
+                            // Si es vista Lista (Filas)
+                            if (_produccionVista === 'lista') {
+                                return `<div class="canal-slot-lista ocupado" data-canal="${c.canal}">
+                                    <div class="canal-numero">CH ${c.canal}</div>
+                                    <div class="canal-dispositivo-nombre" title="${esc(tituloCanal)}">${esc(tituloCanal)}</div>
+                                    <div class="canal-dispositivo-ip" title="${c.ip ? esc(c.ip) : ''}">${c.ip ? esc(c.ip) : ''}</div>
+                                </div>`;
+                            } 
+                            // Si es vista Mosaico (Tarjetas)
+                            else {
+                                return `<div class="canal-slot ocupado" data-canal="${c.canal}">
+                                    <div class="canal-dispositivo-nombre" style="flex:1" title="${esc(tituloCanal)}">${esc(tituloCanal)}</div>
+                                    <div style="display:flex; justify-content:space-between; align-items:flex-end; width:100%; margin-top:auto; gap:0.5rem;">
+                                        <div class="canal-dispositivo-ip" style="flex:1; min-width:0;">${c.ip ? esc(c.ip) : ''}</div>
+                                        <div class="canal-numero" style="flex-shrink:0;">CH ${c.canal}</div>
+                                    </div>
+                                </div>`;
+                            }
                         } else {
-                            return `<div class="canal-slot vacio" data-canal="${c.canal}">
-                            <div class="canal-numero">CANAL ${c.canal}</div>
-                            <div class="canal-vacio-label">— Vacío —</div>
-                        </div>`;
+                            if (_produccionVista === 'lista') {
+                                return `<div class="canal-slot-lista vacio" data-canal="${c.canal}">
+                                    <div class="canal-numero">CH ${c.canal}</div>
+                                    <div class="canal-vacio-label">— Vacío —</div>
+                                    <div></div>
+                                </div>`;
+                            } else {
+                                return `<div class="canal-slot vacio" data-canal="${c.canal}">
+                                    <div class="canal-vacio-label" style="flex:1">— Vacío —</div>
+                                    <div style="display:flex; justify-content:flex-end; align-items:flex-end; width:100%; margin-top:auto;">
+                                        <div class="canal-numero" style="flex-shrink:0;">CH ${c.canal}</div>
+                                    </div>
+                                </div>`;
+                            }
                         }
                     }).join('');
 
+                    const ocupados = g.canales_data.filter(c => c.dispositivoId).length;
+                    const libres = g.canales_n - ocupados;
                     const collapsed = !_grabExpanded.has(g.id);
+                    const gridClass = _produccionVista === 'lista' ? 'nvr-canales-grid vista-lista' : 'nvr-canales-grid';
+                    
                     return `<div class="nvr-card anim-in${collapsed ? ' collapsed' : ''}" data-grab-id="${esc(g.id)}">
                     <div class="nvr-card-header nvr-header-toggle">
                         <div class="nvr-card-header-info">
-                            <div class="nvr-card-nombre">
-                                ${g.tipo === 'nvr' ? '📟' : '📼'} ${esc(g.descripcion)}
-                                <span class="badge badge-${g.tipo}-filled" style="margin-left:0.3rem">${g.tipo.toUpperCase()}</span>
+                            <div class="nvr-card-nombre" style="display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap">
+                                <span>${g.tipo === 'nvr' ? '📟' : '📼'} ${esc(g.descripcion)}</span>
+                                <span class="badge badge-${g.tipo}-filled">${g.tipo.toUpperCase()}</span>
+                                ${g.ip ? `<span style="font-size:0.85rem; font-weight:500; color:var(--text-muted); font-family:monospace; margin-left:0.2rem">${esc(g.ip)}</span>` : ''}
                             </div>
                             <div class="nvr-card-meta">
-                                ${g.marca ? esc(g.marca) + ' ' : ''}${g.modelo ? esc(g.modelo) : ''}
-                                ${g.ip ? ' · ' + esc(g.ip) : ''}
-                                · ${g.canales_n} canales
+                                ${g.modelo ? `${esc(g.modelo)} · ` : ''}<span style="color:var(--text-main);font-weight:600">${ocupados}/${g.canales_n}</span> ocupados · <span style="font-weight:600">${libres}</span> libres
                             </div>
                         </div>
                         <svg class="nvr-chevron" viewBox="0 0 24 24"><use href="#icon-chevron-down"/></svg>
-                        <button class="icon-btn nvr-btn-editar" style="flex-shrink:0">
+                        <button class="icon-btn nvr-btn-editar" style="flex-shrink:0" title="Editar Grabador">
                             <svg class="icon icon-line"><use href="#icon-edit"/></svg>
                         </button>
                     </div>
-                    <div class="nvr-canales-grid${collapsed ? ' collapsed' : ''}">${canalesHtml}</div>
+                    <div class="${gridClass}${collapsed ? ' collapsed' : ''}">${canalesHtml}</div>
                 </div>`;
                 }).join('');
 
@@ -4578,7 +4854,7 @@
                             if (card) UI.toggleGrabColapse(card.dataset.grabId);
                             return;
                         }
-                        const slot = e.target.closest('.canal-slot[data-canal]');
+                        const slot = e.target.closest('.canal-slot[data-canal], .canal-slot-lista[data-canal]');
                         if (slot) {
                             const card = slot.closest('[data-grab-id]');
                             if (card) UI.abrirAsignarCanal(card.dataset.grabId, +slot.dataset.canal);
@@ -4605,7 +4881,18 @@
             let _canalDispHighlight = -1;
             let _edificiosOrigen = 'ajustes';
             let _edificiosSnapForm = null;
-            let _tabActual = 'dashboard';
+            // ── Leemos la memoria desde el primer milisegundo ──
+            let _tabActual = (() => {
+                try {
+                    const saved = JSON.parse(localStorage.getItem('cctv_tab') || 'null');
+                    const TABS = ['dashboard', 'activos', 'produccion'];
+                    const UNA_HORA = 60 * 60 * 1000;
+                    if (saved && TABS.includes(saved.tab) && (Date.now() - saved.ts) < UNA_HORA) {
+                        return saved.tab;
+                    }
+                } catch (_) { }
+                return 'dashboard';
+            })();
             let _busqTimer = null;
             let _importarParsed = null;
 
@@ -4780,6 +5067,19 @@
                     if (btnAll) btnAll.textContent = _busqActivos.size === BUSQ_CAMPOS.length ? 'Desactivar todo' : 'Activar todo';
                     _guardarBusqActivos();
                     renderActivos();
+                },
+
+                abrirVistaProduccion() {
+                    const sel = document.getElementById('sel-vista-produccion');
+                    if (sel) sel.value = _produccionVista;
+                    MM.abrir('modal-vista-produccion');
+                },
+
+                setProduccionVista(vista) {
+                    if (_produccionVista === vista) return;
+                    _produccionVista = vista;
+                    try { localStorage.setItem('cctv_prod_vista', vista); } catch (_) {}
+                    renderProduccion();
                 },
 
                 cerrarAjustes() {
@@ -5037,14 +5337,14 @@
                     // Limpieza general al cambiar de pestaña
                     if (_dashTipoAbierto) {
                         _dashTipoAbierto = null;
-                        renderDashboard();
+                        setTimeout(() => renderDashboard(), 200); // 🕒 Esperamos que termine la animación
                     }
                     const inputBusq = document.getElementById('input-busqueda');
                     if (inputBusq && inputBusq.value) {
                         inputBusq.value = '';
                         const btnX = document.getElementById('btn-limpiar-busqueda');
                         if (btnX) btnX.style.display = 'none';
-                        renderActivos();
+                        setTimeout(() => renderActivos(), 200); // 🕒 Esperamos que termine la animación
                     }
 
                     ['dashboard', 'activos', 'produccion'].forEach(t => {
@@ -5080,7 +5380,7 @@
                     const estadoQ = ESTADO_QUERY[estado] || estado;
                     const query = [tipoLabel, estadoQ].filter(Boolean).join(' ');
 
-                    if (_dashTipoAbierto) { _dashTipoAbierto = null; renderDashboard(); }
+                    if (_dashTipoAbierto) { _dashTipoAbierto = null; setTimeout(() => renderDashboard(), 200); }
                     ['dashboard', 'activos', 'produccion'].forEach(t => {
                         document.getElementById('tab-' + t).classList.toggle('activa', t === 'activos');
                     });
@@ -5321,7 +5621,7 @@
                         </div>`;
                     } else if (enProduccionComoCanal) {
                         avisoHtml = `<div id="aviso-prod-disp" style="font-size:0.8rem;background:var(--input-bg);border-radius:var(--radius-sm);padding:0.6rem 0.75rem;margin-bottom:0.75rem;line-height:1.45">
-                            ℹ️ Este dispositivo está asignado a un grabador en producción. No se puede eliminar
+                            ℹ️ Este dispositivo está asignado a un grabador en producción.
                         </div>`;
                     }
                     const formBody = document.querySelector('#modal-editar-disp [style*="overflow-y:auto"]');
@@ -6111,12 +6411,51 @@
                         _data.grabadores = newGrabs;
                         toast('Datos reemplazados correctamente', 'success');
                     } else {
-                        const idsD = new Set(_data.dispositivos.map(d => d.id));
-                        const idsG = new Set(_data.grabadores.map(g => g.id));
-                        let dAdd = 0, gAdd = 0;
-                        newDisps.forEach(d => { if (!idsD.has(d.id)) { _data.dispositivos.push(d); dAdd++; } });
-                        newGrabs.forEach(g => { if (!idsG.has(g.id)) { _data.grabadores.push(g); gAdd++; } });
-                        toast(`Datos combinados (+${dAdd} disp, +${gAdd} grab)`, 'success');
+                        const mapD = new Map(_data.dispositivos.map(d => [d.id, d]));
+                        const mapG = new Map(_data.grabadores.map(g => [g.id, g]));
+                        let dAdd = 0, dUpd = 0, gAdd = 0, gUpd = 0;
+
+                        newDisps.forEach(san => {
+                            if (!mapD.has(san.id)) {
+                                _data.dispositivos.push(san); mapD.set(san.id, san); dAdd++;
+                            } else {
+                                const loc = mapD.get(san.id);
+                                let updated = false;
+                                ['marca', 'modelo', 'serial', 'mac', 'patrimonio', 'forma', 'estado'].forEach(k => {
+                                    if (!loc[k] && san[k]) { loc[k] = san[k]; updated = true; }
+                                });
+                                if (updated) dUpd++;
+                            }
+                        });
+
+                        newGrabs.forEach(san => {
+                            if (!mapG.has(san.id)) {
+                                _data.grabadores.push(san); mapG.set(san.id, san); gAdd++;
+                            } else {
+                                const loc = mapG.get(san.id);
+                                let updated = false;
+                                ['marca', 'modelo', 'ip', 'lugar', 'rack', 'puerto', 'mac', 'dispositivoId'].forEach(k => {
+                                    if (!loc[k] && san[k]) { loc[k] = san[k]; updated = true; }
+                                });
+                                san.canales_data.forEach(cRem => {
+                                    const cLoc = loc.canales_data.find(c => c.canal === cRem.canal);
+                                    if (cLoc) {
+                                        ['dispositivoId', 'descripcion', 'ip', 'puerto', 'edificio', 'piso', 'rack', 'comentarios'].forEach(k => {
+                                            if (!cLoc[k] && cRem[k]) { cLoc[k] = cRem[k]; updated = true; }
+                                        });
+                                    }
+                                });
+                                if (updated) gUpd++;
+                            }
+                        });
+
+                        const msgs = [];
+                        if (dAdd) msgs.push(`+${dAdd} disp`);
+                        if (dUpd) msgs.push(`~${dUpd} disp`);
+                        if (gAdd) msgs.push(`+${gAdd} grab`);
+                        if (gUpd) msgs.push(`~${gUpd} grab`);
+
+                        toast(msgs.length ? `Datos combinados (${msgs.join(', ')})` : 'Sin datos nuevos para combinar', msgs.length ? 'success' : 'info');
                     }
 
                     guardar(); render(); MM.cerrar('modal-importar');
@@ -6410,9 +6749,13 @@
                                     else window.UI._activosCollapsed.add(g.dataset.grupo);
                                 });
 
+                                // ── Guardamos la memoria ──
+                                if (window.UI._guardarColapsados) window.UI._guardarColapsados();
+
                                 toast(abrirTodos ? 'Todos los grupos expandidos' : 'Todos los grupos colapsados', 'info');
                                 renderActivos();
                             }
+
                             else if (headerNVR) {
                                 const grabs = document.querySelectorAll('.nvr-card');
                                 if (!grabs.length) return;
@@ -6516,20 +6859,25 @@
                 _dashCamarasVista = vista;
                 renderDashboard();
             };
+
+            // Aplicamos la pestaña guardada AL INSTANTE
+            ['dashboard', 'activos', 'produccion'].forEach(t => {
+                const btn = document.getElementById('tab-' + t);
+                const panel = document.getElementById('panel-' + t);
+                if (btn) btn.classList.toggle('activa', t === _tabActual);
+                if (panel) panel.style.display = t === _tabActual ? '' : 'none';
+            });
+
+            // ── MAGIA 3: Retiramos el escudo de CSS para permitir que las animaciones vuelvan a funcionar ──
+            requestAnimationFrame(() => {
+                document.body.removeAttribute('data-tab-inicial');
+            });
+
             cargar();
             render();
 
             document.getElementById('btn-filtros-busqueda')
                 ?.classList.toggle('tiene-desactivados', _busqActivos.size < BUSQ_CAMPOS.length);
-
-            try {
-                const saved = JSON.parse(localStorage.getItem('cctv_tab') || 'null');
-                const TABS = ['dashboard', 'activos', 'produccion'];
-                const UNA_HORA = 60 * 60 * 1000;
-                if (saved && TABS.includes(saved.tab) && (Date.now() - saved.ts) < UNA_HORA) {
-                    UI.cambiarTab(saved.tab);
-                }
-            } catch (_) { }
 
             GistSync.init();
             GistSync.verificarAlAbrir();
@@ -6551,7 +6899,7 @@
 </html>
 
 <!--// ====================================================================
-    //                 NOTAS SISTEMA LUSHIBOSCA VERSION 234
+    //                 NOTAS SISTEMA LUSHIBOSCA VERSION 237
     // ====================================================================
     
      - CAMBIOS 
