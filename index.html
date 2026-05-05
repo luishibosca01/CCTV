@@ -175,16 +175,6 @@
             letter-spacing: 0.04em;
         }
 
-        .card h2 {
-            font-size: 1rem;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: var(--text-main);
-            min-height: 44px;
-        }
-
         /* ── Títulos de las tarjetas ── */
         .card h2 {
             font-size: 0.9rem;
@@ -193,6 +183,7 @@
             align-items: center;
             gap: 0.5rem;
             color: var(--text-main);
+            min-height: 44px;
         }
 
         /* ============================================================
@@ -1670,6 +1661,526 @@
                 filter: var(--hover);
             }
         }
+
+        /* ============================================================
+           CLASES UTILITARIAS — REFACTOR v242
+           Declaradas aquí para ser usadas en etapas posteriores.
+           Ningún elemento las referencia todavía en esta versión.
+        ============================================================ */
+
+        /* Variable para modales angostos (ej: Confirmar, Filtros) */
+        :root {
+            --modal-max-w-sm: 360px;
+        }
+
+        /* ── Encabezados de sección dentro de modales ── */
+        /* Reemplaza: style="font-size:0.75rem;font-weight:700;color:var(--text-muted);
+           text-transform:uppercase;letter-spacing:.05em;margin-bottom:0.5rem;padding:0 0.25rem" */
+        .section-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+            padding: 0 0.25rem;
+        }
+
+        /* ── Secciones dentro de modal Ajustes ── */
+        /* Reemplaza: style="margin-bottom:1.25rem" en los div de ajustes */
+        .ajustes-section {
+            margin-bottom: 1.25rem;
+        }
+
+        /* ── Header sticky de modales flex ── */
+        /* Reemplaza: style="padding:1.5rem 0.75rem 1rem;margin:0;position:sticky;top:0;
+           background:var(--bg-card);z-index:2;border-bottom:1px solid var(--border)" en h3 */
+        .modal-sticky-header {
+            padding: 1.5rem 0.75rem 1rem;
+            margin: 0;
+            position: sticky;
+            top: 0;
+            background: var(--bg-card);
+            z-index: 2;
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* ── Footer sticky de modales flex ── */
+        /* Reemplaza: style="padding:0.75rem;border-top:1px solid var(--border);
+           position:sticky;bottom:0;background:var(--bg-card);z-index:2" */
+        .modal-sticky-footer {
+            padding: 0.75rem;
+            border-top: 1px solid var(--border);
+            position: sticky;
+            bottom: 0;
+            background: var(--bg-card);
+            z-index: 2;
+        }
+
+        /* Variante con flex column para footers con múltiples grupos de botones */
+        /* Reemplaza: style="...;display:flex;flex-direction:column;gap:0.5rem" */
+        .modal-sticky-footer--col {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        /* ── Área scrolleable central de modales flex ── */
+        /* Reemplaza: style="flex:1;overflow-y:auto;padding:1rem 0.75rem" */
+        .modal-scroll-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem 0.75rem;
+        }
+
+        /* ── Fila input + botón icono ── */
+        /* Reemplaza: style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.75rem"
+           y variantes similares */
+        .input-flex-row {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        /* Variante sin margin-bottom (ej: dentro de form-group) */
+        .input-flex-row--no-mb {
+            display: flex;
+            gap: 0.4rem;
+            align-items: flex-end;
+        }
+
+        /* ── Botones inline en títulos h2 (margin-left:auto + width:auto) ── */
+        /* Reemplaza: style="margin-left:auto;width:auto" y style="width:auto" en icon-btn */
+        .btn-inline {
+            margin-left: auto;
+            width: auto !important;
+        }
+
+        .btn-inline + .btn-inline,
+        .btn-inline ~ .btn-inline {
+            margin-left: 0;
+        }
+
+        /* ── Layout para h2 con acciones a la derecha ── */
+        /* El .card h2 ya es flex; esta clase documenta semánticamente el patrón */
+        .card-title-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            width: 100%;
+        }
+
+        /* ── Contador badge en título de Dispositivos ── */
+        /* Reemplaza: style="font-size:0.78rem;font-weight:600;color:var(--text-muted);
+           background:var(--input-bg);border-radius:var(--radius-pill);
+           padding:0.1rem 0.6rem;margin-left:0.25rem" */
+        .contador-badge {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: var(--input-bg);
+            border-radius: var(--radius-pill);
+            padding: 0.1rem 0.6rem;
+            margin-left: 0.25rem;
+        }
+
+        /* ── Aviso de producción en modal editar dispositivo ── */
+        /* Reemplaza: style="font-size:0.8rem;background:var(--input-bg);
+           border-radius:var(--radius-sm);padding:0.6rem 0.75rem;
+           margin-bottom:0.75rem;line-height:1.45" */
+        .aviso-prod {
+            font-size: 0.8rem;
+            background: var(--input-bg);
+            border-radius: var(--radius-sm);
+            padding: 0.6rem 0.75rem;
+            margin-bottom: 0.75rem;
+            line-height: 1.45;
+        }
+
+        /* ── Nota de privacidad en modal Gist ── */
+        /* Reemplaza: style="font-size:0.74rem;color:var(--text-muted);
+           background:var(--input-bg);border-radius:var(--radius-sm);
+           padding:0.6rem 0.75rem;margin-top:0.75rem;line-height:1.55" */
+        .gist-privacy-note {
+            font-size: 0.74rem;
+            color: var(--text-muted);
+            background: var(--input-bg);
+            border-radius: var(--radius-sm);
+            padding: 0.6rem 0.75rem;
+            margin-top: 0.75rem;
+            line-height: 1.55;
+        }
+
+        /* ── Fila de sincronización Gist en ajustes (flex con botones secundarios) ── */
+        /* Reemplaza: style="display:flex;gap:0.5rem;align-items:stretch;margin-bottom:0.5rem" */
+        .gist-sync-row {
+            display: flex;
+            gap: 0.5rem;
+            align-items: stretch;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Botón secundario de Gist (icono, con borde, en ajustes) */
+        /* Reemplaza: style="display:none;background:var(--input-bg);border:1px solid var(--border);
+           border-radius:var(--radius);color:var(--text-muted)" en btn-ajustes-gist-* */
+        .btn-gist-action {
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text-muted);
+        }
+
+        /* ── Botón de ajustes (input-bg + border, centered) ── */
+        /* Reemplaza: style="justify-content:center;gap:0.75rem;
+           background:var(--input-bg);border:1px solid var(--border)" */
+        .btn-ajustes {
+            justify-content: center;
+            gap: 0.75rem;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+        }
+
+        /* ── Icono de tab (tamaño reducido en botones de tab) ── */
+        /* Reemplaza: style="width:.95em;height:.95em" en SVG de .tab-btn */
+        .tab-icon {
+            width: 0.95em;
+            height: 0.95em;
+        }
+
+        /* ── Contenedor altura mínima del dashboard de cámaras ── */
+        /* Reemplaza: style="min-height:28rem" en #dash-camaras */
+        .dash-camaras-container {
+            min-height: 28rem;
+        }
+
+        /* ── Texto de párrafo en modal filtros ── */
+        /* Reemplaza: style="font-size:0.85rem;color:var(--text-muted);line-height:1.4;margin:0" */
+        .modal-filtros-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+            margin: 0;
+        }
+
+        /* ── Fila header del modal filtros (flex + space-between) ── */
+        /* Reemplaza: style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem" */
+        .modal-filtros-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        /* ── Botón toggle "Activar/Desactivar todo" en filtros ── */
+        /* Reemplaza: style="width:auto;padding:0.3rem 0.75rem;font-size:0.8rem;
+           min-width:9rem;flex-shrink:0;margin-left:0.75rem" */
+        .btn-toggle-all {
+            width: auto;
+            padding: 0.3rem 0.75rem;
+            font-size: 0.8rem;
+            min-width: 9rem;
+            flex-shrink: 0;
+            margin-left: 0.75rem;
+        }
+
+        /* ── Lista de filtros con gap ── */
+        /* Reemplaza: style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.25rem"
+           en #filtros-busqueda-lista */
+        .filtros-lista {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1.25rem;
+        }
+
+        /* ── Dashboard: panel de canales de grabación ── */
+        /* Reemplaza los divs inline del htmlTotales en renderDashboard */
+        .dash-grab-totales {
+            margin-bottom: 1.25rem;
+            background: var(--bg-card);
+            padding: 0.8rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+        }
+
+        .dash-grab-totales-title {
+            text-align: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-main);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.8rem;
+        }
+
+        .dash-grab-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 0.5rem;
+        }
+
+        .dash-grab-col {
+            text-align: center;
+        }
+
+        .dash-grab-col--mid {
+            text-align: center;
+            border-left: 1px solid var(--border);
+            border-right: 1px solid var(--border);
+        }
+
+        .dash-grab-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.2rem;
+        }
+
+        .dash-grab-val {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text-main);
+            font-family: monospace;
+        }
+
+        .dash-grab-val--blue {
+            color: var(--c-blue);
+        }
+
+        .dash-grab-val--green {
+            color: var(--c-green);
+        }
+
+        .dash-grab-val-sub {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* ── Dashboard: fila individual de grabador ── */
+        /* Reemplaza los divs inline del htmlLista en renderDashboard */
+        .dash-grab-row {
+            padding: 0.6rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .dash-grab-row:last-child {
+            border-bottom: none;
+        }
+
+        .dash-grab-row-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .dash-grab-row-nombre {
+            font-weight: 700;
+            font-size: 0.92rem;
+        }
+
+        .dash-grab-row-ip {
+            margin-left: auto;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-family: monospace;
+        }
+
+        .dash-grab-row-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .dash-grab-row-pct {
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .dash-grab-barra {
+            height: 4px;
+            background: var(--border);
+            border-radius: var(--radius-pill);
+            margin-top: 0.4rem;
+            overflow: hidden;
+        }
+
+        /* El fill de la barra mantiene color dinámico via style="" (valor calculado en JS) */
+        .dash-grab-barra-fill {
+            height: 100%;
+            border-radius: var(--radius-pill);
+            transition: width 0.3s ease;
+        }
+
+        /* ── Fila de tipo personalizado en _renderTiposCustom ── */
+        /* Reemplaza: style="display:flex;align-items:center;gap:0.5rem;
+           padding:0.35rem 0;border-bottom:1px solid var(--border)" */
+        .tipo-custom-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.35rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tipo-custom-row:last-child {
+            border-bottom: none;
+        }
+
+        .tipo-custom-emoji {
+            font-size: 1.1rem;
+            width: 28px;
+            text-align: center;
+        }
+
+        .tipo-custom-label {
+            flex: 1;
+            font-size: 0.9rem;
+        }
+
+        /* Variante small del btn-delete para listas (32x32) */
+        /* Reemplaza: style="width:32px;height:32px;min-width:unset;color:var(--c-white)" */
+        .btn-delete--sm {
+            width: 32px !important;
+            height: 32px;
+            min-width: unset !important;
+            color: var(--c-white);
+        }
+
+        /* SVG pequeño dentro de btn-delete--sm */
+        /* Reemplaza: style="width:14px;height:14px" en SVG interno */
+        .icon--sm {
+            width: 14px;
+            height: 14px;
+        }
+
+        /* ── Texto de estado inline en listas de dispositivos ── */
+        /* Reemplaza: style="font-size:0.75rem" en spans "(en uso)", "(averiado)", etc. */
+        .estado-tag {
+            font-size: 0.75rem;
+        }
+
+        /* ── Sin resultados en modal confirmar ── */
+        /* Reemplaza: style="color:var(--text-muted);line-height:1.5;margin-bottom:1.25rem"
+           en #modal-confirmar-texto */
+        .modal-confirmar-texto {
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin-bottom: 1.25rem;
+        }
+
+        /* ── Texto vacio en dashboard grabadores ── */
+        /* Reemplaza: style="color:var(--text-disabled);font-size:0.85rem" */
+        .dash-empty-text {
+            color: var(--text-disabled);
+            font-size: 0.85rem;
+        }
+
+        /* ── Alerta de importación con color (en onImportarFileChange) ── */
+        /* Reemplaza: style="color:var(--c-orange);font-size:0.75rem;
+           display:block;margin-top:0.3rem" */
+        .import-warn {
+            color: var(--c-orange-solid);
+            font-size: 0.75rem;
+            display: block;
+            margin-top: 0.3rem;
+        }
+
+        /* ── Chip de estado clicable en dashboard (colores semánticos) ── */
+        /* Reemplaza: style="color:${e.color}" en stat-chip-valor de chips de estado */
+        .stat-chip-val--produccion { color: var(--c-blue); }
+        .stat-chip-val--disponible { color: var(--c-green); }
+        .stat-chip-val--averiado   { color: var(--c-red); }
+        .stat-chip-val--revisar    { color: var(--c-purple); }
+        .stat-chip-val--desafectado { color: var(--text-muted); }
+
+        /* ── Contenedor sin grabadores en panel producción (display:none dinámico ok) ── */
+        /* El display:none se mantiene via JS; esta clase es solo semántica */
+        .panel-produccion--card-mt {
+            margin-top: 1rem;
+        }
+
+        /* ── Flex-shrink:0 utilitario para botón tema en ajustes ── */
+        #btn-alternar-tema {
+            flex-shrink: 0;
+        }
+
+        /* ── Barra de búsqueda — posición relativa del contenedor inner ── */
+        /* Reemplaza: style="position:relative" en #barra-busqueda */
+        .search-inner {
+            position: relative;
+        }
+
+        /* ── SVG lupa en barra de búsqueda ── */
+        /* Reemplaza: style="position:absolute;left:0.75rem;top:50%;
+           transform:translateY(-50%);width:1.1rem;height:1.1rem;
+           stroke:var(--text-muted);pointer-events:none;transition:stroke 0.2s" */
+        .icon-search-lupa {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 1.1rem;
+            height: 1.1rem;
+            stroke: var(--text-muted);
+            pointer-events: none;
+            transition: stroke 0.2s;
+        }
+
+        /* ── Botón limpiar búsqueda (X) ── */
+        /* Reemplaza: style="display:none;position:absolute;right:2.25rem;top:50%;
+           transform:translateY(-50%);width:28px;height:28px;
+           min-width:unset;padding:0;background:transparent;border:none" */
+        #btn-limpiar-busqueda {
+            position: absolute;
+            right: 2.25rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 28px;
+            height: 28px;
+            min-width: unset;
+            padding: 0;
+            background: transparent;
+            border: none;
+        }
+
+        /* ── Botón filtros búsqueda ── */
+        /* Reemplaza: style="position:absolute;right:0.35rem;top:50%;
+           transform:translateY(-50%);width:28px;height:28px;
+           min-width:unset;padding:0;background:transparent;border:none" */
+        #btn-filtros-busqueda {
+            position: absolute;
+            right: 0.35rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 28px;
+            height: 28px;
+            min-width: unset;
+            padding: 0;
+            background: transparent;
+            border: none;
+        }
+
+        /* SVG dentro del botón filtros */
+        /* Reemplaza: style="width:1rem;height:1rem;stroke:var(--text-muted)" */
+        #btn-filtros-busqueda svg {
+            width: 1rem;
+            height: 1rem;
+            stroke: var(--text-muted);
+        }
+
+        /* Input de búsqueda con espacio para lupa y botones */
+        /* Reemplaza: style="padding-left:2.5rem;padding-right:4.5rem" en #input-busqueda */
+        #input-busqueda {
+            padding-left: 2.5rem;
+            padding-right: 4.5rem;
+        }
+
     </style>
 </head>
 
@@ -2063,7 +2574,7 @@
                     </svg>
                     Ajustes
                 </h3>
-                <span class="modal-header-version">v238</span>
+                <span class="modal-header-version">v242</span>
             </div>
             <!-- Tipos de dispositivo -->
             <div style="margin-bottom:1.25rem">
@@ -7409,12 +7920,35 @@
 </html>
 
 <!--// ====================================================================
-    //                 NOTAS SISTEMA LUSHIBOSCA VERSION 241
+    //                 NOTAS SISTEMA LUSHIBOSCA VERSION 242
     // ====================================================================
     
-     - CAMBIOS 
-     1) 
-
+     - CAMBIOS v242 (Refactor Etapa 1)
+     1) Eliminado bloque .card h2 duplicado (se unificaron las dos definiciones
+        en una sola, conservando font-size:0.9rem y min-height:44px)
+     2) Corregido número de versión en modal Ajustes (era v238)
+     3) Agregado bloque "CLASES UTILITARIAS — REFACTOR v242" al final del <style>:
+        - Variables: --modal-max-w-sm
+        - Estructura modal: .modal-sticky-header, .modal-sticky-footer,
+          .modal-sticky-footer--col, .modal-scroll-body
+        - Layout: .input-flex-row, .input-flex-row--no-mb, .btn-inline,
+          .card-title-actions, .ajustes-section, .section-label
+        - Componentes: .contador-badge, .aviso-prod, .gist-privacy-note,
+          .gist-sync-row, .btn-gist-action, .btn-ajustes
+        - Búsqueda: .search-inner, .icon-search-lupa, #btn-limpiar-busqueda,
+          #btn-filtros-busqueda, #input-busqueda (padding)
+        - Dashboard: .dash-grab-totales, .dash-grab-grid, .dash-grab-col,
+          .dash-grab-col--mid, .dash-grab-label, .dash-grab-val,
+          .dash-grab-val--blue, .dash-grab-val--green, .dash-grab-val-sub,
+          .dash-grab-row y sub-clases, .dash-grab-barra, .dash-grab-barra-fill,
+          .dash-empty-text, .dash-camaras-container, .panel-produccion--card-mt
+        - Tipos custom: .tipo-custom-row, .tipo-custom-emoji, .tipo-custom-label,
+          .btn-delete--sm, .icon--sm
+        - Chips estado: .stat-chip-val--produccion/disponible/averiado/revisar/desafectado
+        - Utilitarias: .tab-icon, .filtros-lista, .modal-filtros-desc,
+          .modal-filtros-header, .btn-toggle-all, .estado-tag,
+          .modal-confirmar-texto, .import-warn, #btn-alternar-tema
+     
      - BUGS CONOCIDOS:
      1) 
 
