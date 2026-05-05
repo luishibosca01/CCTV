@@ -2031,6 +2031,21 @@
                 </h2>
                 <div id="lista-grabadores"></div>
             </div>
+
+            <div class="card" style="margin-top: 1rem;">
+                <h2>
+                    <svg class="icon icon-line">
+                        <use href="#icon-grid" />
+                    </svg> Otros dispositivos
+                    <button class="icon-btn btn-edit" onclick="UI.abrirNuevoOtroProd()" title="Agregar dispositivo"
+                        style="margin-left:auto;width:auto">
+                        <svg class="icon icon-line">
+                            <use href="#icon-plus" />
+                        </svg>
+                    </button>
+                </h2>
+                <div id="lista-otros-prod"></div>
+            </div>
         </div>
 
     </div><!-- /container -->
@@ -2383,6 +2398,106 @@
     <div id="toast" class="toast"></div>
 
     <!-- ============================================================
+         MODAL — Otros Dispositivos (Producción)
+    ============================================================ -->
+    <div class="modal" id="modal-otro-prod">
+        <div class="modal-content modal-content--flex">
+            
+            <h3 style="padding:1.5rem 0.75rem 1rem;margin:0;position:sticky;top:0;background:var(--bg-card);z-index:2;border-bottom:1px solid var(--border)">
+                <svg class="icon icon-line">
+                    <use href="#icon-link" />
+                </svg>
+                <span id="modal-otro-prod-titulo">Agregar a Producción</span>
+            </h3>
+
+            <div style="flex:1;overflow-y:auto;padding:1rem 0.75rem">
+                <div class="form-group">
+                    <label>Descripción</label>
+                    <input type="text" id="otro-prod-descripcion" placeholder="Ej: Monitor Sala de Guardia"
+                        maxlength="80">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group" style="flex:1;min-width:0;display:flex;align-items:flex-end;gap:0.4rem">
+                        <div style="flex:1;min-width:0">
+                            <label>Dispositivo asignado *</label>
+                            <div id="otro-prod-disp-combobox" style="position:relative">
+                                <input type="text" id="otro-prod-disp-input" placeholder="Buscar por MAC, modelo…"
+                                    maxlength="100" autocomplete="off" spellcheck="false"
+                                    oninput="UI._otroProdDispFiltrar()" onfocus="UI._otroProdDispFiltrar()"
+                                    onkeydown="UI._otroProdDispKeydown(event)">
+                                <input type="hidden" id="sel-otro-prod-dispositivo">
+                                <div id="otro-prod-disp-dropdown"
+                                    style="display:none; position:absolute; top:calc(100% + 4px); left:0; right:0; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-sm); box-shadow:0 4px 16px rgba(0,0,0,0.15); max-height:220px; overflow-y:auto; z-index:200;">
+                                </div>
+                            </div>
+                        </div>
+                        <button id="btn-ver-activo-otro-prod" class="icon-btn btn-backup"
+                            onclick="UI.verActivoDesdeOtroProd()" style="display:none;flex-shrink:0;margin-bottom:1px"
+                            title="Ver activo">
+                            <svg class="icon icon-line">
+                                <use href="#icon-external-link" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="form-group">
+                        <label>IP</label>
+                        <input type="text" id="otro-prod-ip" placeholder="Ej: 192.168.1.50" maxlength="45">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Edificio</label>
+                        <select id="otro-prod-edificio"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Piso</label>
+                        <input type="text" id="otro-prod-piso" placeholder="Ej: PB, 3" maxlength="4"
+                            oninput="UI._pisoFiltrar(this)">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Rack</label>
+                        <input type="text" id="otro-prod-rack" placeholder="Ej: Rack-02" maxlength="40">
+                    </div>
+                    <div class="form-group">
+                        <label>Puerto</label>
+                        <input type="text" id="otro-prod-puerto" placeholder="Ej: 80" maxlength="10">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Comentarios</label>
+                    <textarea id="otro-prod-comentarios" placeholder="Notas adicionales…" rows="2" maxlength="300"
+                        style="resize:vertical;width:100%;box-sizing:border-box;padding:0.5rem;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-card);color:var(--text-main);font-family:inherit;font-size:0.9rem"></textarea>
+                </div>
+            </div>
+
+            <div style="padding:0.75rem;border-top:1px solid var(--border);position:sticky;bottom:0;background:var(--bg-card);z-index:2;display:flex;flex-direction:column;gap:0.5rem">
+                <div class="btn-group" style="margin-top:0">
+                    <button class="btn-edit" onclick="UI.guardarOtroProd()">
+                        <svg class="icon icon-line">
+                            <use href="#icon-save" />
+                        </svg> Guardar
+                    </button>
+                    <button class="btn-delete" id="btn-eliminar-otro-prod" onclick="UI.eliminarOtroProd()">
+                        <svg class="icon icon-line">
+                            <use href="#icon-trash" />
+                        </svg> Eliminar
+                    </button>
+                </div>
+                <div class="btn-group" style="margin-top:0">
+                    <button class="btn-cancel" onclick="UI.cerrarOtroProd()">Cancelar</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ============================================================
          MODAL — Nuevo Dispositivo
     ============================================================ -->
     <div class="modal" id="modal-nuevo-disp">
@@ -2602,11 +2717,11 @@
                     <option value="">Seleccionar…</option>
                 </select>
             </div>
-            <div class="form-row">                
+            <div class="form-row">
                 <div class="form-group">
-                <label>Rack</label>
-                <input type="text" id="nuevo-grab-rack" placeholder="Ej: Rack Principal" maxlength="40">
-            </div>
+                    <label>Rack</label>
+                    <input type="text" id="nuevo-grab-rack" placeholder="Ej: Rack Principal" maxlength="40">
+                </div>
                 <div class="form-group">
                     <label>Puerto</label>
                     <input type="text" id="nuevo-grab-puerto" placeholder="Ej: 8000" maxlength="10">
@@ -2624,9 +2739,9 @@
                 </div>
             </div>
             <div class="form-group">
-                    <label>IP</label>
-                    <input type="text" id="nuevo-grab-ip" placeholder="Ej: 192.168.1.10" maxlength="45">
-                </div>
+                <label>IP</label>
+                <input type="text" id="nuevo-grab-ip" placeholder="Ej: 192.168.1.10" maxlength="45">
+            </div>
             <div class="btn-group">
                 <button class="btn-edit" onclick="UI.guardarNuevoGrabador()">
                     <svg class="icon icon-line">
@@ -2664,11 +2779,11 @@
                     </svg>
                 </button>
             </div>
-            <div class="form-row">                
+            <div class="form-row">
                 <div class="form-group">
-                <label>Rack</label>
-                <input type="text" id="editar-grab-rack" placeholder="Ej: Rack Principal" maxlength="40">
-            </div>
+                    <label>Rack</label>
+                    <input type="text" id="editar-grab-rack" placeholder="Ej: Rack Principal" maxlength="40">
+                </div>
                 <div class="form-group">
                     <label>Puerto</label>
                     <input type="text" id="editar-grab-puerto" placeholder="Ej: 8000" maxlength="10">
@@ -2686,9 +2801,9 @@
                 </div>
             </div>
             <div class="form-group">
-                    <label>IP</label>
-                    <input type="text" id="editar-grab-ip" placeholder="Ej: 192.168.1.10" maxlength="45">
-                </div>
+                <label>IP</label>
+                <input type="text" id="editar-grab-ip" placeholder="Ej: 192.168.1.10" maxlength="45">
+            </div>
             <div class="btn-group">
                 <button class="btn-edit" onclick="UI.guardarEdicionGrabador()">
                     <svg class="icon icon-line">
@@ -3003,7 +3118,7 @@
             }
 
             // ==============================================================
-            // SECURITY & UTILS (Blindaje estilo Materiales)
+            // SECURITY & UTILS
             // ==============================================================
             const S = (() => {
                 const MAX_JSON = 4 * 1024 * 1024;
@@ -3072,6 +3187,9 @@
                         g: (obj.grabadores || []).map(x => [
                             x.id, x.dispositivoId || null, x.canales_n || 16,
                             (x.canales_data || []).map(c => [c.canal, c.dispositivoId || null])
+                        ]),
+                        op: (obj.otros_prod || []).map(x => [
+                            x.id, x.dispositivoId || null, x.descripcion || null
                         ]),
                         t: obj.tiposCustom || {},
                         e: obj.edificios || []
@@ -3243,6 +3361,24 @@
                     };
                 }
 
+                function sanitizarOtroProd(o) {
+                    if (!o || typeof o !== 'object') return null;
+                    const id = _strSeguro(o.id, 32);
+                    if (!id || !RE_ID.test(id)) return null;
+
+                    return {
+                        id,
+                        dispositivoId: _strSeguro(o.dispositivoId, 32) || null,
+                        descripcion: sanitize(o.descripcion || '', 80),
+                        ip: validarIPv4(o.ip) ? sanitize(o.ip || '', 45) : '',
+                        edificio: sanitize(o.edificio || '', 60),
+                        piso: sanitize(o.piso || '', 4),
+                        rack: sanitize(o.rack || '', 40),
+                        puerto: sanitize(o.puerto || '', 10),
+                        comentarios: sanitize(o.comentarios || '', 300),
+                    };
+                }
+
                 // 4. Sanitizar Data Completa
                 function sanitizarDataTotal(raw) {
                     if (!raw || typeof raw !== 'object') return null;
@@ -3262,7 +3398,7 @@
                     sanitize, genId, fechaISO, deepClone, safeParse, MAX_JSON, SCHEMA_V, TIPOS_BUILTIN,
                     get TIPOS() { return TIPOS; }, guardarTipos, cargarTipos,
                     get edificios() { return _edificios; }, guardarEdificios, cargarEdificios,
-                    generarFirma, verificarFirma, sanitizarDisp, sanitizarGrab, sanitizarDataTotal,
+                    generarFirma, verificarFirma, sanitizarDisp, sanitizarGrab, sanitizarOtroProd, sanitizarDataTotal,
                     validarIPv4, validarMAC
                 };
             })();
@@ -3406,7 +3542,7 @@
             // DATA  (localStorage)
             // ==============================================================
             const KEY = 'cctv_data_v1';
-            let _data = { dispositivos: [], grabadores: [] };
+            let _data = { dispositivos: [], grabadores: [], otros_prod: [] };
 
             function cargar() {
                 try {
@@ -3415,7 +3551,8 @@
                     const d = S.safeParse(raw);
                     _data.dispositivos = Array.isArray(d.dispositivos) ? d.dispositivos : [];
                     _data.grabadores = Array.isArray(d.grabadores) ? d.grabadores : [];
-                } catch { _data = { dispositivos: [], grabadores: [] }; }
+                    _data.otros_prod = Array.isArray(d.otros_prod) ? d.otros_prod : [];
+                } catch { _data = { dispositivos: [], grabadores: [], otros_prod: [] }; }
             }
 
             function guardar() {
@@ -3758,6 +3895,7 @@
                 async function _generarPayload() {
                     const disps = _data.dispositivos.map(_sanDisp).filter(Boolean);
                     const grabs = _data.grabadores.map(_sanGrab).filter(Boolean);
+                    const otros = (_data.otros_prod || []).map(S.sanitizarOtroProd).filter(Boolean);
                     const tiposCustom = {};
                     Object.entries(S.TIPOS).forEach(([k, v]) => {
                         if (!v.builtin) tiposCustom[k] = { label: v.label, emoji: v.emoji };
@@ -3765,6 +3903,7 @@
                     const payload = {
                         dispositivos: disps,
                         grabadores: grabs,
+                        otros_prod: otros,
                         tiposCustom,
                         edificios: S.edificios.slice(),
                         version: S.SCHEMA_V,
@@ -3845,10 +3984,12 @@
                 function _combinarDatosRemotos(remoto) {
                     let cDispsAdd = 0, cDispsUpd = 0;
                     let cGrabsAdd = 0, cGrabsUpd = 0;
+                    let cOtrosAdd = 0, cOtrosUpd = 0;
                     let cTipos = 0, cEdif = 0;
 
                     const mapD = new Map(_data.dispositivos.map(d => [d.id, d]));
                     const mapG = new Map(_data.grabadores.map(g => [g.id, g]));
+                    const mapO = new Map((_data.otros_prod || []).map(o => [o.id, o]));
 
                     (remoto.dispositivos || []).forEach(d => {
                         const san = _sanDisp(d, remoto.tiposCustom || {});
@@ -3856,7 +3997,6 @@
                         if (!mapD.has(san.id)) {
                             _data.dispositivos.push(san); mapD.set(san.id, san); cDispsAdd++;
                         } else {
-                            // Enriquecemos los campos que estén vacíos en nuestra base local
                             const loc = mapD.get(san.id);
                             let updated = false;
                             ['marca', 'modelo', 'serial', 'mac', 'patrimonio', 'forma', 'estado'].forEach(k => {
@@ -3877,7 +4017,6 @@
                             ['marca', 'modelo', 'ip', 'edificio', 'piso', 'rack', 'puerto', 'mac', 'dispositivoId'].forEach(k => {
                                 if (!loc[k] && san[k]) { loc[k] = san[k]; updated = true; }
                             });
-                            // Enriquecemos los canales
                             san.canales_data.forEach(cRem => {
                                 const cLoc = loc.canales_data.find(c => c.canal === cRem.canal);
                                 if (cLoc) {
@@ -3887,6 +4026,22 @@
                                 }
                             });
                             if (updated) cGrabsUpd++;
+                        }
+                    });
+
+                    (remoto.otros_prod || []).forEach(o => {
+                        const san = S.sanitizarOtroProd(o);
+                        if (!san) return;
+                        if (!mapO.has(san.id)) {
+                            if (!_data.otros_prod) _data.otros_prod = [];
+                            _data.otros_prod.push(san); mapO.set(san.id, san); cOtrosAdd++;
+                        } else {
+                            const loc = mapO.get(san.id);
+                            let updated = false;
+                            ['dispositivoId', 'descripcion', 'ip', 'edificio', 'piso', 'rack', 'puerto', 'comentarios'].forEach(k => {
+                                if (!loc[k] && san[k]) { loc[k] = san[k]; updated = true; }
+                            });
+                            if (updated) cOtrosUpd++;
                         }
                     });
 
@@ -3916,7 +4071,7 @@
                         if (cEdif > 0) S.guardarEdificios();
                     }
 
-                    return { cDispsAdd, cDispsUpd, cGrabsAdd, cGrabsUpd, cTipos, cEdif };
+                    return { cDispsAdd, cDispsUpd, cGrabsAdd, cGrabsUpd, cOtrosAdd, cOtrosUpd, cTipos, cEdif };
                 }
 
                 async function bajar() {
@@ -4132,6 +4287,10 @@
                             if (resMerge.cDispsUpd) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Dispositivos a enriquecer</span><span class="gist-novedades-chip-count" style="color:var(--c-purple)">~${resMerge.cDispsUpd}</span></div>`);
                             if (resMerge.cGrabsAdd) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Grabadores nuevos</span><span class="gist-novedades-chip-count">+${resMerge.cGrabsAdd}</span></div>`);
                             if (resMerge.cGrabsUpd) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Grabadores a enriquecer</span><span class="gist-novedades-chip-count" style="color:var(--c-purple)">~${resMerge.cGrabsUpd}</span></div>`);
+                            if (resMerge.cOtrosAdd) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Otros disp. nuevos</span><span class="gist-novedades-chip-count">+${resMerge.cOtrosAdd}</span></div>`);
+                            if (resMerge.cOtrosUpd) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Otros a enriquecer</span><span class="gist-novedades-chip-count" style="color:var(--c-purple)">~${resMerge.cOtrosUpd}</span></div>`);
+                            if (resMerge.cOtrosAdd) msgs.push(`+${resMerge.cOtrosAdd} otros`);
+                            if (resMerge.cOtrosUpd) msgs.push(`~${resMerge.cOtrosUpd} otros`);
                             if (resMerge.cTipos) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Tipos Custom</span><span class="gist-novedades-chip-count">+${resMerge.cTipos}</span></div>`);
                             if (resMerge.cEdif) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Edificios</span><span class="gist-novedades-chip-count">+${resMerge.cEdif}</span></div>`);
                             detalle.innerHTML = chips.join('');
@@ -4150,6 +4309,8 @@
                                 if (resMerge.cDispsUpd) msgs.push(`~${resMerge.cDispsUpd} disp`);
                                 if (resMerge.cGrabsAdd) msgs.push(`+${resMerge.cGrabsAdd} grab`);
                                 if (resMerge.cGrabsUpd) msgs.push(`~${resMerge.cGrabsUpd} grab`);
+                                if (resMerge.cOtrosAdd) msgs.push(`+${resMerge.cOtrosAdd} otros`);
+                                if (resMerge.cOtrosUpd) msgs.push(`~${resMerge.cOtrosUpd} otros`);
                                 if (resMerge.cTipos) msgs.push(`+${resMerge.cTipos} tipos`);
                                 if (resMerge.cEdif) msgs.push(`+${resMerge.cEdif} edif`);
                                 toast(esValida ? `Datos combinados (${msgs.join(', ')})` : `Datos alterados combinados (${msgs.join(', ')})`, esValida ? 'success' : 'info');
@@ -4181,12 +4342,8 @@
             let _dashCamarasVista = 'forma';
             let _activosColumnas = (() => { try { return parseInt(localStorage.getItem('cctv_activos_cols')) === 1 ? 1 : 2; } catch { return 2; } })();
             let _activosOrden = (() => { try { let v = localStorage.getItem('cctv_activos_orden'); if (v === 'tipo') v = 'forma'; return ['estado', 'forma', 'marca'].includes(v) ? v : 'forma'; } catch { return 'forma'; } })();
-
-            // ── MAGIA: Leemos si el usuario quiere recordar, y si es así, traemos la memoria ──
             let _activosRecordarEstado = (() => { try { return localStorage.getItem('cctv_activos_recordar') === 'true'; } catch { return false; } })();
-            // Memoria de la vista de producción
-            let _produccionVista = (() => { try { return localStorage.getItem('cctv_prod_vista') || 'mosaico'; } catch { return 'mosaico'; } })();
-
+            let _produccionVista = (() => { try { return localStorage.getItem('cctv_prod_vista') || 'lista'; } catch { return 'lista'; } })();
             window.UI = window.UI || {};
             window.UI._activosCollapsed = (() => {
                 if (_activosRecordarEstado) {
@@ -4229,6 +4386,7 @@
                 const idsEnProd = new Set([
                     ...grabs.flatMap(g => g.canales_data.filter(c => c.dispositivoId).map(c => c.dispositivoId)),
                     ...grabs.filter(g => g.dispositivoId).map(g => g.dispositivoId),
+                    ...(_data.otros_prod || []).filter(o => o.dispositivoId).map(o => o.dispositivoId)
                 ]);
 
                 // ── Resumen general ──────────────────────────────────────
@@ -4516,6 +4674,9 @@
                         if (c.dispositivoId) asignaciones[c.dispositivoId] = { tipo: 'canal', grab: g, slot: c };
                     });
                 });
+                (_data.otros_prod || []).forEach(o => {
+                    if (o.dispositivoId) asignaciones[o.dispositivoId] = { tipo: 'otro_prod', item: o };
+                });
 
                 function getEstadoEfectivo(d) {
                     return d.estado || (asignaciones[d.id] ? 'produccion' : 'disponible');
@@ -4638,11 +4799,17 @@
                             const linea3 = asig.slot.ip ? `<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(asig.slot.ip)}</div>` : '';
                             const desc = asig.slot.descripcion ? `<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span class="badge badge-estado-produccion">${esc(asig.slot.descripcion)}</span></div>` : '';
                             asignInfo = `${desc}<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${linea2}</div>${linea3}`;
+                        } else if (asig.tipo === 'otro_prod') {
+                            // ⬅️ ACÁ ESTÁ LO NUEVO QUE TE FALTABA
+                            const ipHtml = asig.item.ip ? `<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(asig.item.ip)}</div>` : '';
+                            asignInfo = `<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span class="badge badge-estado-produccion">En Producción</span></div><div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(asig.item.descripcion || 'Sin descripción')}</div>${ipHtml}`;
                         } else {
+                            // Esto es para los Grabadores
                             const ipHtml = asig.grab.ip ? `<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(asig.grab.ip)}</div>` : '';
                             asignInfo = `<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span class="badge badge-estado-produccion">${esc(asig.grab.descripcion)}</span></div>${ipHtml}`;
                         }
                     }
+
                     const ESTADO_BADGE_INFO = { averiado: { label: 'Averiado', clase: 'badge-estado-averiado' }, revisar: { label: 'A revisar', clase: 'badge-estado-revisar' }, desafectado: { label: 'Desafectado', clase: 'badge-estado-desafectado' }, disponible: { label: 'Disponible', clase: 'badge-estado-disponible' } };
                     const estadoBadgeInfo = ESTADO_BADGE_INFO[estadoEfectivo];
                     const estadoBadgeHtml = estadoBadgeInfo ? `<span class="badge ${estadoBadgeInfo.clase}" style="white-space:nowrap">${estadoBadgeInfo.label}</span>` : '';
@@ -4844,7 +5011,42 @@
                         }
                     });
                 }
-            }
+                // --- OTROS DISPOSITIVOS ---
+                const listaOtros = document.getElementById('lista-otros-prod');
+                const otros = _data.otros_prod || [];
+                if (otros.length === 0) {
+                    listaOtros.innerHTML = `<div style="color:var(--text-disabled);font-size:0.85rem;text-align:center;padding:1.5rem 0;">Sin otros dispositivos en producción</div>`;
+                } else {
+                    listaOtros.innerHTML = otros.map(o => {
+                        const disp = o.dispositivoId ? _data.dispositivos.find(d => d.id === o.dispositivoId) : null;
+                        const tc = disp ? (S.TIPOS[disp.tipo] || { emoji: '📦' }) : { emoji: '❓' };
+                        const desc = o.descripcion || (disp ? (disp.mac || disp.serial || 'Sin descripción') : 'Sin dispositivo asignado');
+                        const p = o.ip || '';
+                        return `
+                        <div class="dispositivo-item anim-in" data-otro-id="${esc(o.id)}">
+                            <div class="dispositivo-info">
+                                <div class="dispositivo-nombre">${tc.emoji} ${esc(desc)}</div>
+                                <div class="dispositivo-meta">
+                                    ${disp ? `<span class="badge badge-otro">${S.TIPOS[disp.tipo]?.label?.toUpperCase() || disp.tipo.toUpperCase()}</span>` : ''}
+                                    ${disp && disp.modelo ? `<span>${esc(disp.modelo)}</span>` : ''}
+                                </div>
+                            </div>
+                            <div style="font-size:0.8rem;color:var(--text-muted);text-align:right">
+                                ${p ? `<div style="font-family:monospace; margin-bottom:0.2rem; color:var(--text-main)">${esc(p)}</div>` : ''}
+                                ${o.edificio ? `<div>${esc(o.edificio)}${o.piso ? ` (Píso ${esc(o.piso)})` : ''}</div>` : ''}
+                            </div>
+                        </div>`;
+                    }).join('');
+                }
+            // Delegación permanente para Otros Dispositivos
+                if (!listaOtros._delegRegistrada) {
+                    listaOtros._delegRegistrada = true;
+                    listaOtros.addEventListener('click', function (e) {
+                        const item = e.target.closest('.dispositivo-item[data-otro-id]');
+                        if (item) { UI.abrirEditarOtroProd(item.dataset.otroId); }
+                    });
+                }
+            } 
 
             // ==============================================================
             // UI — CONTROLADOR PÚBLICO
@@ -4852,6 +5054,7 @@
             let _editandoDispId = null;
             let _estadoEditando = '';
             let _editandoGrabId = null;
+            let _editandoOtroProdId = null;
             let _snapshotDisp = null;
             let _snapshotGrab = null;
             let _snapshotCanal = null;
@@ -5173,7 +5376,7 @@
 
                 abrirEdificios(origen = 'ajustes') {
                     _edificiosOrigen = origen;
-                    
+
                     if (origen === 'canal') {
                         _edificiosSnapForm = {
                             dispositivoId: document.getElementById('sel-canal-dispositivo').value || '',
@@ -5200,19 +5403,26 @@
                         MM.cerrar('modal-nuevo-grab');
                     } else if (origen === 'editar-grab') {
                         _edificiosSnapForm = {
-                            nombre: document.getElementById('editar-grab-nombre').value || '',
-                            dispositivoId: document.getElementById('editar-grab-dispositivo-id').value || '',
-                            ip: document.getElementById('editar-grab-ip').value || '',
-                            puerto: document.getElementById('editar-grab-puerto').value || '',
-                            edificio: document.getElementById('editar-grab-edificio').value || '',
-                            piso: document.getElementById('editar-grab-piso').value || '',
-                            rack: document.getElementById('editar-grab-rack').value || ''
+                            // ... (esto ya lo tenés)
                         };
                         MM.cerrar('modal-editar-grab');
+                    } else if (origen === 'otro-prod') {
+                        _edificiosSnapForm = {
+                            dispositivoId: document.getElementById('sel-otro-prod-dispositivo').value || '',
+                            dispInput: document.getElementById('otro-prod-disp-input').value || '',
+                            descripcion: document.getElementById('otro-prod-descripcion').value || '',
+                            ip: document.getElementById('otro-prod-ip').value || '',
+                            puerto: document.getElementById('otro-prod-puerto').value || '',
+                            edificio: document.getElementById('otro-prod-edificio').value || '',
+                            piso: document.getElementById('otro-prod-piso').value || '',
+                            rack: document.getElementById('otro-prod-rack').value || '',
+                            comentarios: document.getElementById('otro-prod-comentarios').value || ''
+                        };
+                        MM.cerrar('modal-otro-prod');
                     } else {
                         MM.cerrar('modal-ajustes');
                     }
-                    
+
                     setTimeout(() => {
                         UI._renderEdificios();
                         document.getElementById('nuevo-edificio-nombre').value = '';
@@ -5231,7 +5441,7 @@
                     const origen = _edificiosOrigen;
                     const snap = _edificiosSnapForm;
                     MM.cerrar('modal-edificios');
-                    
+
                     if (origen === 'canal' && snap) {
                         setTimeout(() => {
                             UI.abrirAsignarCanal(_editandoCanalGrabId, _editandoCanalN, _canalDesdeDispId);
@@ -5265,16 +5475,23 @@
                             }, 220);
                         }, 150);
                     } else if (origen === 'editar-grab' && snap) {
+                    } else if (origen === 'otro-prod' && snap) {
                         setTimeout(() => {
-                            UI.abrirEditarGrabador(_editandoGrabId);
+                            if (_editandoOtroProdId) UI.abrirEditarOtroProd(_editandoOtroProdId);
+                            else UI.abrirNuevoOtroProd();
+                            
                             setTimeout(() => {
-                                document.getElementById('editar-grab-nombre').value = snap.nombre;
-                                document.getElementById('editar-grab-dispositivo-id').value = snap.dispositivoId;
-                                document.getElementById('editar-grab-ip').value = snap.ip;
-                                document.getElementById('editar-grab-puerto').value = snap.puerto;
-                                document.getElementById('editar-grab-piso').value = snap.piso;
-                                document.getElementById('editar-grab-rack').value = snap.rack;
-                                _poblarSelectEdificio('editar-grab-edificio', snap.edificio);
+                                document.getElementById('sel-otro-prod-dispositivo').value = snap.dispositivoId;
+                                document.getElementById('otro-prod-disp-input').value = snap.dispInput;
+                                document.getElementById('otro-prod-descripcion').value = snap.descripcion;
+                                document.getElementById('otro-prod-ip').value = snap.ip;
+                                document.getElementById('otro-prod-puerto').value = snap.puerto;
+                                document.getElementById('otro-prod-piso').value = snap.piso;
+                                document.getElementById('otro-prod-rack').value = snap.rack;
+                                document.getElementById('otro-prod-comentarios').value = snap.comentarios;
+                                _poblarSelectEdificio('otro-prod-edificio', snap.edificio);
+                                const btnVerActivo = document.getElementById('btn-ver-activo-otro-prod');
+                                if (btnVerActivo) btnVerActivo.style.display = snap.dispositivoId ? '' : 'none';
                                 _edificiosSnapForm = null;
                             }, 220);
                         }, 150);
@@ -5722,7 +5939,9 @@
                     const canalN = _editandoCanalN;
                     _editandoDispId = null;
                     _volverDesdeCanal = false;
-                    if (volver && grabId != null && canalN != null) {
+                    if (volver && grabId === 'OTRO_PROD') {
+                        setTimeout(() => canalN ? UI.abrirEditarOtroProd(canalN) : UI.abrirNuevoOtroProd(), 180);
+                    } else if (volver && grabId != null && canalN != null) {
                         setTimeout(() => UI.abrirAsignarCanal(grabId, canalN), 180);
                     }
                 },
@@ -6337,6 +6556,223 @@
                     _editandoCanalGrabId = null; _editandoCanalN = null; _snapshotCanal = null;
                 },
 
+                // ---- Otros Dispositivos en Producción ----
+                abrirNuevoOtroProd() {
+                    _editandoOtroProdId = null;
+                    document.getElementById('otro-prod-descripcion').value = '';
+                    document.getElementById('otro-prod-ip').value = '';
+                    document.getElementById('otro-prod-puerto').value = '';
+                    _poblarSelectEdificio('otro-prod-edificio', '');
+                    document.getElementById('otro-prod-piso').value = '';
+                    document.getElementById('otro-prod-rack').value = '';
+                    document.getElementById('otro-prod-comentarios').value = '';
+                    
+                    document.getElementById('sel-otro-prod-dispositivo').value = '';
+                    document.getElementById('otro-prod-disp-input').value = '';
+                    document.getElementById('otro-prod-disp-input').classList.remove('error');
+                    document.getElementById('otro-prod-disp-dropdown').style.display = 'none';
+                    document.getElementById('btn-ver-activo-otro-prod').style.display = 'none';
+                    document.getElementById('btn-eliminar-otro-prod').style.display = 'none';
+
+                    // Calculamos los que ya están en uso global
+                    const grabs = _data.grabadores;
+                    const idsOcupados = [
+                        ...grabs.flatMap(g => g.canales_data.filter(c => c.dispositivoId).map(c => c.dispositivoId)),
+                        ...grabs.filter(g => g.dispositivoId).map(g => g.dispositivoId),
+                        ...(_data.otros_prod || []).filter(o => o.dispositivoId).map(o => o.dispositivoId)
+                    ];
+                    _canalDispOcupados = new Set(idsOcupados); // Reciclamos el Set para bloquearlos en el buscador
+                    
+                    document.getElementById('modal-otro-prod-titulo').textContent = 'Agregar a Producción';
+                    MM.abrir('modal-otro-prod');
+                },
+
+                abrirEditarOtroProd(id) {
+                    const o = (_data.otros_prod || []).find(x => x.id === id); if (!o) return;
+                    _editandoOtroProdId = id;
+                    
+                    document.getElementById('modal-otro-prod-titulo').textContent = 'Editar Dispositivo';
+                    document.getElementById('otro-prod-descripcion').value = o.descripcion || '';
+                    document.getElementById('otro-prod-ip').value = o.ip || '';
+                    document.getElementById('otro-prod-puerto').value = o.puerto || '';
+                    _poblarSelectEdificio('otro-prod-edificio', o.edificio || '');
+                    document.getElementById('otro-prod-piso').value = o.piso || '';
+                    document.getElementById('otro-prod-rack').value = o.rack || '';
+                    document.getElementById('otro-prod-comentarios').value = o.comentarios || '';
+
+                    const hiddenSel = document.getElementById('sel-otro-prod-dispositivo');
+                    const input = document.getElementById('otro-prod-disp-input');
+                    input.classList.remove('error');
+                    
+                    hiddenSel.value = o.dispositivoId || '';
+                    if (o.dispositivoId) {
+                        const d = _data.dispositivos.find(x => x.id === o.dispositivoId);
+                        input.value = d ? (d.mac || d.serial || d.id) : '';
+                    } else {
+                        input.value = '';
+                    }
+                    document.getElementById('otro-prod-disp-dropdown').style.display = 'none';
+                    document.getElementById('btn-ver-activo-otro-prod').style.display = o.dispositivoId ? '' : 'none';
+                    document.getElementById('btn-eliminar-otro-prod').style.display = '';
+
+                    const grabs = _data.grabadores;
+                    const idsOcupados = [
+                        ...grabs.flatMap(g => g.canales_data.filter(c => c.dispositivoId).map(c => c.dispositivoId)),
+                        ...grabs.filter(g => g.dispositivoId).map(g => g.dispositivoId),
+                        ...(_data.otros_prod || []).filter(op => op.dispositivoId && op.id !== id).map(op => op.dispositivoId)
+                    ];
+                    _canalDispOcupados = new Set(idsOcupados);
+
+                    MM.abrir('modal-otro-prod');
+                },
+
+                cerrarOtroProd() {
+                    MM.cerrar('modal-otro-prod');
+                    _editandoOtroProdId = null;
+                },
+
+                guardarOtroProd() {
+                    const dispId = document.getElementById('sel-otro-prod-dispositivo').value;
+                    const dispInput = document.getElementById('otro-prod-disp-input');
+                    
+                    if (!dispId) {
+                        dispInput.classList.add('error');
+                        toast('Seleccioná un dispositivo de la lista', 'error');
+                        return;
+                    }
+                    dispInput.classList.remove('error');
+                    if (!validarCampoIP('otro-prod-ip')) return;
+
+                    const datos = {
+                        id: _editandoOtroProdId || S.genId(),
+                        dispositivoId: dispId,
+                        descripcion: document.getElementById('otro-prod-descripcion').value.trim(),
+                        ip: document.getElementById('otro-prod-ip').value.trim(),
+                        puerto: document.getElementById('otro-prod-puerto').value.trim(),
+                        edificio: document.getElementById('otro-prod-edificio').value.trim(),
+                        piso: document.getElementById('otro-prod-piso').value.trim(),
+                        rack: document.getElementById('otro-prod-rack').value.trim(),
+                        comentarios: document.getElementById('otro-prod-comentarios').value.trim(),
+                    };
+
+                    historial.empujar(_editandoOtroProdId ? 'Editar dispositivo en producción' : 'Agregar dispositivo a producción');
+
+                    if (!_data.otros_prod) _data.otros_prod = [];
+                    
+                    if (_editandoOtroProdId) {
+                        const idx = _data.otros_prod.findIndex(x => x.id === _editandoOtroProdId);
+                        if (idx !== -1) _data.otros_prod[idx] = S.sanitizarOtroProd(datos);
+                        toast('Actualizado', 'success');
+                    } else {
+                        _data.otros_prod.push(S.sanitizarOtroProd(datos));
+                        toast('Agregado a producción', 'success');
+                    }
+
+                    guardar(); render(); MM.cerrar('modal-otro-prod');
+                },
+
+                async eliminarOtroProd() {
+                    if (!_editandoOtroProdId) return;
+                    const ok = await confirmarModal('¿Quitar este dispositivo de producción? No se eliminará del inventario, solo se desasignará.', 'Quitar');
+                    if (!ok) return;
+
+                    historial.empujar('Quitar dispositivo de producción');
+                    _data.otros_prod = _data.otros_prod.filter(x => x.id !== _editandoOtroProdId);
+                    
+                    guardar(); render(); MM.cerrar('modal-otro-prod');
+                    toast('Quitado de producción', 'success');
+                },
+
+                _otroProdDispFiltrar() {
+                    // Usamos la misma lógica genial que hicimos para buscar canales
+                    const input = document.getElementById('otro-prod-disp-input');
+                    const hidden = document.getElementById('sel-otro-prod-dispositivo');
+                    const dd = document.getElementById('otro-prod-disp-dropdown');
+                    input.classList.remove('error');
+                    
+                    const query = input.value.trim().toLowerCase();
+                    if (!query) hidden.value = '';
+
+                    const candidatos = _data.dispositivos.sort((a, b) => (a.mac || a.serial || '').localeCompare(b.mac || b.serial || ''));
+                    const filtrados = query ? candidatos.filter(d => {
+                        return [d.mac, d.serial, d.marca, d.modelo, d.patrimonio].filter(Boolean).join(' ').toLowerCase().includes(query);
+                    }) : candidatos;
+
+                    if (!filtrados.length && query) {
+                        dd.innerHTML = `<div class="canal-disp-item canal-disp-item-vaciobtn">Sin resultados</div>`;
+                        dd.style.display = ''; return;
+                    }
+
+                    const ESTADO_LABELS_DISP = { averiado: 'averiado', revisar: 'a revisar', desafectado: 'desafectado' };
+                    const items = filtrados.map(d => {
+                        const ocupado = _canalDispOcupados.has(d.id); // Reciclamos _canalDispOcupados
+                        const estadoInactivo = ESTADO_LABELS_DISP[d.estado] || '';
+                        const deshabilitado = ocupado || !!estadoInactivo;
+                        const etiqueta = ocupado ? ' <span style="font-size:0.75rem">(en uso)</span>' : estadoInactivo ? ` <span style="font-size:0.75rem">(${estadoInactivo})</span>` : '';
+                        const sub = [d.forma ? d.forma.replace(/-/g, ' ') : '', d.modelo].filter(Boolean).join(' · ');
+                        
+                        return `<div class="canal-disp-item${deshabilitado ? ' ocupado' : ''}" data-id="${esc(d.id)}" data-mac="${esc(d.mac || d.serial || '')}">
+                            <div class="canal-disp-item-mac">${S.TIPOS[d.tipo]?.emoji || ''} ${esc(d.mac || d.serial || d.id)}${etiqueta}</div>
+                            ${sub ? `<div class="canal-disp-item-sub">${esc(sub)}</div>` : ''}
+                        </div>`;
+                    });
+
+                    dd.innerHTML = items.join('');
+                    dd.style.display = '';
+
+                    dd.querySelectorAll('.canal-disp-item:not(.ocupado)').forEach(el => {
+                        el.addEventListener('mousedown', e => {
+                            e.preventDefault();
+                            hidden.value = el.dataset.id;
+                            input.value = el.dataset.mac || el.dataset.id;
+                            dd.style.display = 'none';
+                            document.getElementById('btn-ver-activo-otro-prod').style.display = '';
+                        });
+                    });
+                },
+
+                _otroProdDispKeydown(e) {
+                    const dd = document.getElementById('otro-prod-disp-dropdown');
+                    if (dd.style.display === 'none') return;
+                    const items = [...dd.querySelectorAll('.canal-disp-item:not(.ocupado)')];
+                    if (!items.length) return;
+
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        _canalDispHighlight = Math.min(_canalDispHighlight + 1, items.length - 1);
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        _canalDispHighlight = Math.max(_canalDispHighlight - 1, 0);
+                    } else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (_canalDispHighlight >= 0) {
+                            const el = items[_canalDispHighlight];
+                            document.getElementById('sel-otro-prod-dispositivo').value = el.dataset.id;
+                            document.getElementById('otro-prod-disp-input').value = el.dataset.mac || el.dataset.id;
+                            dd.style.display = 'none';
+                            document.getElementById('btn-ver-activo-otro-prod').style.display = '';
+                        }
+                        return;
+                    } else if (e.key === 'Escape') {
+                        dd.style.display = 'none';
+                        _canalDispHighlight = -1;
+                        return;
+                    } else { return; }
+
+                    items.forEach((el, i) => el.classList.toggle('highlighted', i === _canalDispHighlight));
+                    if (_canalDispHighlight >= 0) items[_canalDispHighlight].scrollIntoView({ block: 'nearest' });
+                },
+                
+                verActivoDesdeOtroProd() {
+                    const dispId = document.getElementById('sel-otro-prod-dispositivo').value;
+                    if (!dispId) return;
+                    _volverDesdeCanal = true; // Usamos el mismo flag para engañar al sistema y que vuelva a abrir esto
+                    _editandoCanalGrabId = 'OTRO_PROD'; // Truco para que sepa dónde volver
+                    _editandoCanalN = _editandoOtroProdId; // Guardamos el ID del que estábamos editando
+                    MM.cerrar('modal-otro-prod');
+                    setTimeout(() => UI.abrirEditarDispositivo(dispId), 180);
+                },
+
                 // ---- Importar / Exportar ----
                 abrirImportar() {
                     document.getElementById('file-import').value = '';
@@ -6421,6 +6857,7 @@
 
                     const newDisps = data._disps;
                     const newGrabs = data._grabs;
+                    const newOtros = (data.otros_prod || []).map(S.sanitizarOtroProd).filter(Boolean);
 
                     if (data.tiposCustom && typeof data.tiposCustom === 'object' && !Array.isArray(data.tiposCustom)) {
                         Object.entries(data.tiposCustom).forEach(([k, v]) => {
@@ -6455,11 +6892,14 @@
                     if (modo === 'replace') {
                         _data.dispositivos = newDisps;
                         _data.grabadores = newGrabs;
+                        _data.otros_prod = newOtros;
                         toast('Datos reemplazados correctamente', 'success');
                     } else {
                         const mapD = new Map(_data.dispositivos.map(d => [d.id, d]));
                         const mapG = new Map(_data.grabadores.map(g => [g.id, g]));
-                        let dAdd = 0, dUpd = 0, gAdd = 0, gUpd = 0;
+                        const mapO = new Map((_data.otros_prod || []).map(o => [o.id, o]));
+                        
+                        let dAdd = 0, dUpd = 0, gAdd = 0, gUpd = 0, oAdd = 0, oUpd = 0;
 
                         newDisps.forEach(san => {
                             if (!mapD.has(san.id)) {
@@ -6495,11 +6935,27 @@
                             }
                         });
 
+                        newOtros.forEach(san => {
+                            if (!mapO.has(san.id)) {
+                                if (!_data.otros_prod) _data.otros_prod = [];
+                                _data.otros_prod.push(san); mapO.set(san.id, san); oAdd++;
+                            } else {
+                                const loc = mapO.get(san.id);
+                                let updated = false;
+                                ['dispositivoId', 'descripcion', 'ip', 'edificio', 'piso', 'rack', 'puerto', 'comentarios'].forEach(k => {
+                                    if (!loc[k] && san[k]) { loc[k] = san[k]; updated = true; }
+                                });
+                                if (updated) oUpd++;
+                            }
+                        });
+
                         const msgs = [];
                         if (dAdd) msgs.push(`+${dAdd} disp`);
                         if (dUpd) msgs.push(`~${dUpd} disp`);
                         if (gAdd) msgs.push(`+${gAdd} grab`);
                         if (gUpd) msgs.push(`~${gUpd} grab`);
+                        if (oAdd) msgs.push(`+${oAdd} otros`);
+                        if (oUpd) msgs.push(`~${oUpd} otros`);
 
                         toast(msgs.length ? `Datos combinados (${msgs.join(', ')})` : 'Sin datos nuevos para combinar', msgs.length ? 'success' : 'info');
                     }
@@ -6510,7 +6966,8 @@
                 async exportarJSON() {
                     try {
                         const disps = _data.dispositivos.map(_sanDisp).filter(Boolean);
-                        const grabs = _data.grabadores.map(_sanGrab).filter(Boolean);
+                        const grabs = _data.grabadores.map(_sanGrab).filter(Boolean);                        
+                        const otros = (_data.otros_prod || []).map(S.sanitizarOtroProd).filter(Boolean);                        
                         const tiposCustom = {};
                         Object.entries(S.TIPOS).forEach(([k, v]) => {
                             if (!v.builtin) tiposCustom[k] = { label: v.label, emoji: v.emoji };
@@ -6518,6 +6975,7 @@
                         const payload = {
                             dispositivos: disps,
                             grabadores: grabs,
+                            otros_prod: otros,
                             tiposCustom,
                             edificios: S.edificios.slice(),
                             version: S.SCHEMA_V,
@@ -6603,6 +7061,7 @@
                         let origen = 'canal';
                         if (selectId.startsWith('nuevo-grab')) origen = 'nuevo-grab';
                         else if (selectId.startsWith('editar-grab')) origen = 'editar-grab';
+                        else if (selectId.startsWith('otro-prod')) origen = 'otro-prod'; 
                         UI.abrirEdificios(origen);
                     } else {
                         seleccionado = sel.value;
@@ -6667,9 +7126,18 @@
             document.addEventListener('input', e => { if (e.target.tagName === 'INPUT') e.target.classList.remove('error'); });
 
             document.addEventListener('mousedown', e => {
-                const cb = document.getElementById('canal-disp-combobox');
-                if (cb && !cb.contains(e.target)) {
+                // 1. Cierra el combobox de Canales
+                const cbCanal = document.getElementById('canal-disp-combobox');
+                if (cbCanal && !cbCanal.contains(e.target)) {
                     document.getElementById('canal-disp-dropdown').style.display = 'none';
+                    _canalDispHighlight = -1;
+                }
+
+                // 2. Cierra el combobox de Otros Dispositivos
+                const cbOtro = document.getElementById('otro-prod-disp-combobox');
+                if (cbOtro && !cbOtro.contains(e.target)) {
+                    const ddOtro = document.getElementById('otro-prod-disp-dropdown');
+                    if (ddOtro) ddOtro.style.display = 'none';
                     _canalDispHighlight = -1;
                 }
             });
@@ -6941,7 +7409,7 @@
 </html>
 
 <!--// ====================================================================
-    //                 NOTAS SISTEMA LUSHIBOSCA VERSION 240
+    //                 NOTAS SISTEMA LUSHIBOSCA VERSION 241
     // ====================================================================
     
      - CAMBIOS 
