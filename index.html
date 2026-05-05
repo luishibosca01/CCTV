@@ -71,6 +71,7 @@
             --bg-toast: #2d3748;
             --shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
             --hover: brightness(1.2);
+            --border-canales: #ff5e00;
         }
 
         body.modal-open {
@@ -348,15 +349,6 @@
             transform-origin: center;
         }
 
-        @keyframes spin {
-            from {
-                transform: rotate(0deg);
-            }
-
-            to {
-                transform: rotate(360deg);
-            }
-        }
 
         /* ============================================================
            MINI TABS (Para tarjetas internas, ej: Cámaras)
@@ -542,19 +534,6 @@
             pointer-events: auto;
         }
 
-        .toast.success {
-            background: var(--c-green);
-        }
-
-        .toast.error,
-        .toast.warning {
-            background: var(--c-red);
-        }
-
-        .toast.info {
-            background: var(--c-blue);
-        }
-
         /* ============================================================
            MODAL 
         ============================================================ */
@@ -620,7 +599,7 @@
             cursor: pointer;
             background: var(--input-bg);
             gap: 0.5rem;
-        }        
+        }
 
         .dispositivo-info {
             flex: 1;
@@ -720,23 +699,30 @@
             color: var(--c-white);
         }
 
-        .badge-nvr-filled {
-            background: var(--c-green);
-        }
-
         .badge-dvr-filled {
             background: var(--c-orange);
         }
 
-        .badge-estado-produccion {
+        .badge-estado-produccion,
+        .toast.info,
+        .toggle-switch.on,
+        .filtro-toggle input:checked+.filtro-toggle-track,
+        .canal-slot.ocupado .canal-numero,
+        .canal-slot-lista.ocupado .canal-numero {
             background: var(--c-blue);
         }
 
-        .badge-estado-disponible {
+        .badge-estado-disponible,
+        .badge-nvr-filled,
+        .canal-slot-lista.vacio .canal-numero,
+        .toast.success,
+        .canal-slot.vacio .canal-numero {
             background: var(--c-green);
         }
 
-        .badge-estado-averiado {
+        .badge-estado-averiado,
+        .toast.error,
+        .toast.warning {
             background: var(--c-red);
         }
 
@@ -758,7 +744,8 @@
             border: 1px solid var(--border);
             border-radius: var(--radius);
             margin-bottom: 0.75rem;
-            background: var(--bg-card); /* Fondo unificado */
+            background: var(--bg-card);
+            /* Fondo unificado */
         }
 
         .nvr-card-header {
@@ -772,8 +759,7 @@
             position: sticky;
             top: 56px;
             z-index: 10;
-            border-top-left-radius: calc(var(--radius) - 1px);
-            border-top-right-radius: calc(var(--radius) - 1px);
+            border-radius: var(--radius);
             transition: border-radius 0.2s ease;
         }
 
@@ -835,19 +821,11 @@
             transform: rotate(-90deg);
         }
 
-        /* Badge Azul/Verde extendido para la nueva clase */
-        .canal-slot-lista.ocupado .canal-numero {
-            background: var(--c-blue);
-        }
-
-        .canal-slot-lista.vacio .canal-numero {
-            background: var(--c-green);
-        }
-
         /* ── MODIFICADOR VISTA LISTA ── */
         .nvr-canales-grid.vista-lista {
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            /* Divide el espacio en 2 columnas exactas */
         }
 
         .canal-slot-lista {
@@ -856,22 +834,23 @@
             padding: 0.5rem 0.65rem;
             background: var(--bg-card);
             display: grid;
-            /* Le damos 56px en vez de 48px para que respiren los 3 dígitos */
-            grid-template-columns: 56px 1fr 110px; 
+            grid-template-columns: 56px 1fr 110px;
             gap: 0.75rem;
             align-items: center;
             cursor: pointer;
             transition: filter 0.15s;
         }
 
-        .canal-slot-lista.vacio { border-style: dashed; }
+        .canal-slot-lista.vacio {
+            border-style: dashed;
+        }
 
         .canal-slot-lista .canal-numero {
             width: 100%;
             text-align: center;
             box-sizing: border-box;
             margin: 0;
-            white-space: nowrap; 
+            white-space: nowrap;
         }
 
         .canal-slot-lista .canal-dispositivo-nombre {
@@ -899,24 +878,11 @@
             font-style: italic;
         }
 
-        @media (max-width: 500px) {
-            .canal-slot-lista {
-                grid-template-columns: 56px 1fr 85px; 
-            }
-        }
-
-        @media (hover: hover) and (pointer: fine) {
-            .canal-slot-lista:hover {
-                filter: var(--hover);
-            }
-        }
-
         .canal-slot {
             border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
+            border-radius: var(--radius);
             padding: 0.55rem 0.65rem;
             background: var(--bg-card);
-            /* Cambiamos height fijo por min-height para que se adapte a las 3 líneas */
             min-height: 78px;
             display: flex;
             flex-direction: column;
@@ -928,7 +894,6 @@
 
         .canal-slot.vacio {
             border-style: dashed;
-            /* Eliminamos la opacidad para que el verde resalte bien brillante */
         }
 
         .canal-numero {
@@ -938,16 +903,6 @@
             border-radius: var(--radius);
             width: fit-content;
             letter-spacing: 0.03em;
-        }
-
-        /* Badge Azul para canales en uso */
-        .canal-slot.ocupado .canal-numero {
-            background: var(--c-blue);
-        }
-
-        /* Badge Verde para canales libres */
-        .canal-slot.vacio .canal-numero {
-            background: var(--c-green);
         }
 
         .canal-dispositivo-nombre {
@@ -1059,12 +1014,6 @@
             display: flex;
             flex-direction: column;
             gap: 1rem;
-        }
-
-        @media (max-width: 700px) {
-            .dash-2col {
-                grid-template-columns: 1fr;
-            }
         }
 
         .dash-2col .card {
@@ -1317,21 +1266,6 @@
             background: var(--text-muted);
         }
 
-        /* ============================================================
-           ANIMACIONES 
-        ============================================================ */
-        @keyframes slideDownFade {
-            from {
-                opacity: 0;
-                transform: translateY(-12px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
         .anim-in {
             animation: slideDownFade 0.22s ease;
         }
@@ -1354,12 +1288,6 @@
             align-items: start;
         }
 
-        @media (max-width: 640px) {
-            .lista-2col {
-                grid-template-columns: 1fr;
-            }
-        }
-
         /* ── Transición entre pestañas ── */
         .tab-panel {
             animation: none;
@@ -1372,30 +1300,6 @@
 
         .tab-panel.tab-entrando {
             animation: tabFadeIn 0.22s ease forwards;
-        }
-
-        @keyframes tabFadeOut {
-            from {
-                opacity: 1;
-                transform: translateY(0);
-            }
-
-            to {
-                opacity: 0;
-                transform: translateY(6px);
-            }
-        }
-
-        @keyframes tabFadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-6px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
         }
 
         /* ── Expand/collapse grabadores animado ── */
@@ -1448,10 +1352,6 @@
             border-radius: var(--radius-pill);
             background: var(--border);
             transition: background 0.2s;
-        }
-
-        .filtro-toggle input:checked+.filtro-toggle-track {
-            background: var(--c-blue);
         }
 
         .filtro-toggle-track::after {
@@ -1616,10 +1516,6 @@
             transition: background 0.2s;
         }
 
-        .toggle-switch.on {
-            background: var(--c-blue);
-        }
-
         .toggle-thumb {
             position: absolute;
             top: 3px;
@@ -1684,9 +1580,71 @@
             font-size: 1rem;
         }
 
-        /* ============================================================
-           HOVERS (todos agrupados — solo pointer: fine)
-        ============================================================ */
+        /* ANIMACIONES */
+        @keyframes slideDownFade {
+            from {
+                opacity: 0;
+                transform: translateY(-12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes tabFadeOut {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            to {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+        }
+
+        @keyframes tabFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 700px) {
+            .nvr-canales-grid.vista-lista {
+                grid-template-columns: 1fr;
+            }
+
+            .canal-slot-lista {
+                grid-template-columns: 56px 1fr 85px;
+            }
+
+            .lista-2col {
+                grid-template-columns: 1fr;
+            }
+
+            .dash-2col {
+                grid-template-columns: 1fr;
+            }
+        }
+
         @media (hover: hover) and (pointer: fine) {
 
             :is(.btn-edit, .btn-delete, .btn-backup, .btn-cancel, .icon-btn):hover:not(:disabled),
@@ -1707,25 +1665,11 @@
             .gist-autosync-row:hover {
                 filter: var(--hover);
             }
+
+            .canal-slot-lista:hover {
+                filter: var(--hover);
+            }
         }
-
-        /* ============================================================
-           ESCUDO ANTI-FLICKER TABS (Primer Renderizado)
-        ============================================================ */
-        body[data-tab-inicial="activos"] #panel-dashboard,
-        body[data-tab-inicial="produccion"] #panel-dashboard { display: none !important; }
-        
-        body[data-tab-inicial="activos"] #panel-activos,
-        body[data-tab-inicial="produccion"] #panel-produccion { display: block !important; }
-
-        body[data-tab-inicial="activos"] #tab-dashboard,
-        body[data-tab-inicial="produccion"] #tab-dashboard { color: var(--text-muted) !important; }
-        
-        body[data-tab-inicial="activos"] #tab-activos,
-        body[data-tab-inicial="produccion"] #tab-produccion { color: var(--text-main) !important; }
-
-        body[data-tab-inicial="activos"] .tabs::before { transform: translateX(100%) !important; transition: none !important; }
-        body[data-tab-inicial="produccion"] .tabs::before { transform: translateX(200%) !important; transition: none !important; }
     </style>
 </head>
 
@@ -2215,30 +2159,39 @@
     ============================================================ -->
     <div class="modal" id="modal-tipos-dispositivo">
         <div class="modal-content modal-content--flex">
-            <h3 style="padding:1.5rem 0.75rem 1rem;margin:0;position:sticky;top:0;background:var(--bg-card);z-index:2;border-bottom:1px solid var(--border)">
-                <svg class="icon icon-line"><use href="#icon-grid" /></svg>
+            <h3
+                style="padding:1.5rem 0.75rem 1rem;margin:0;position:sticky;top:0;background:var(--bg-card);z-index:2;border-bottom:1px solid var(--border)">
+                <svg class="icon icon-line">
+                    <use href="#icon-grid" />
+                </svg>
                 Dispositivos
             </h3>
-            
+
             <div style="flex:1;overflow-y:auto;padding:1rem 0.75rem">
                 <!-- Acá solo dejamos la lista, le sacamos el margin-bottom para que no deje espacio hueco -->
                 <div id="lista-tipos-custom"></div>
             </div>
-            
+
             <!-- ── CONTENEDOR STICKY INFERIOR ── -->
-            <div style="padding:0.75rem;border-top:1px solid var(--border);position:sticky;bottom:0;background:var(--bg-card);z-index:2">
-                
+            <div
+                style="padding:0.75rem;border-top:1px solid var(--border);position:sticky;bottom:0;background:var(--bg-card);z-index:2">
+
                 <!-- Input movido acá, con un margin-bottom para separarlo del botón volver -->
                 <div style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.75rem">
-                    <input type="text" id="nuevo-tipo-label" placeholder="Ej: Router, PC, Joystick…" maxlength="100" style="flex:1">
+                    <input type="text" id="nuevo-tipo-label" placeholder="Ej: Router, PC, Joystick…" maxlength="100"
+                        style="flex:1">
                     <button onclick="UI.agregarTipoCustom()" class="icon-btn btn-edit" title="Agregar tipo">
-                        <svg class="icon icon-line"><use href="#icon-plus" /></svg>
+                        <svg class="icon icon-line">
+                            <use href="#icon-plus" />
+                        </svg>
                     </button>
                 </div>
-                
+
                 <div class="btn-group" style="margin-top:0">
                     <button class="btn-cancel" onclick="UI.cerrarTiposDispositivo()">
-                        <svg class="icon icon-line"><use href="#icon-undo" /></svg> Volver
+                        <svg class="icon icon-line">
+                            <use href="#icon-undo" />
+                        </svg> Volver
                     </button>
                 </div>
             </div>
@@ -2250,30 +2203,39 @@
     ============================================================ -->
     <div class="modal" id="modal-edificios">
         <div class="modal-content modal-content--flex">
-            <h3 style="padding:1.5rem 0.75rem 1rem;margin:0;position:sticky;top:0;background:var(--bg-card);z-index:2;border-bottom:1px solid var(--border)">
-                <svg class="icon icon-line"><use href="#icon-building" /></svg>
+            <h3
+                style="padding:1.5rem 0.75rem 1rem;margin:0;position:sticky;top:0;background:var(--bg-card);z-index:2;border-bottom:1px solid var(--border)">
+                <svg class="icon icon-line">
+                    <use href="#icon-building" />
+                </svg>
                 Edificios
             </h3>
-            
+
             <div style="flex:1;overflow-y:auto;padding:1rem 0.75rem">
                 <!-- Acá solo dejamos la lista -->
                 <div id="lista-edificios"></div>
             </div>
-            
+
             <!-- ── CONTENEDOR STICKY INFERIOR ── -->
-            <div style="padding:0.75rem;border-top:1px solid var(--border);position:sticky;bottom:0;background:var(--bg-card);z-index:2">
-                
+            <div
+                style="padding:0.75rem;border-top:1px solid var(--border);position:sticky;bottom:0;background:var(--bg-card);z-index:2">
+
                 <!-- Input movido acá -->
                 <div style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.75rem">
-                    <input type="text" id="nuevo-edificio-nombre" placeholder="Ej: Torre A, Edificio Central…" maxlength="100" style="flex:1">
+                    <input type="text" id="nuevo-edificio-nombre" placeholder="Ej: Torre A, Edificio Central…"
+                        maxlength="100" style="flex:1">
                     <button onclick="UI.agregarEdificio()" class="icon-btn btn-edit" title="Agregar edificio">
-                        <svg class="icon icon-line"><use href="#icon-plus" /></svg>
+                        <svg class="icon icon-line">
+                            <use href="#icon-plus" />
+                        </svg>
                     </button>
                 </div>
-                
+
                 <div class="btn-group" style="margin-top:0">
                     <button class="btn-cancel" onclick="UI.cerrarEdificios()">
-                        <svg class="icon icon-line"><use href="#icon-undo" /></svg> Volver
+                        <svg class="icon icon-line">
+                            <use href="#icon-undo" />
+                        </svg> Volver
                     </button>
                 </div>
             </div>
@@ -2640,16 +2602,31 @@
                     <option value="">Seleccionar…</option>
                 </select>
             </div>
+            <div class="form-row">                
+                <div class="form-group">
+                <label>Rack</label>
+                <input type="text" id="nuevo-grab-rack" placeholder="Ej: Rack Principal" maxlength="40">
+            </div>
+                <div class="form-group">
+                    <label>Puerto</label>
+                    <input type="text" id="nuevo-grab-puerto" placeholder="Ej: 8000" maxlength="10">
+                </div>
+            </div>
             <div class="form-row">
                 <div class="form-group">
+                    <label>Edificio</label>
+                    <select id="nuevo-grab-edificio"></select>
+                </div>
+                <div class="form-group">
+                    <label>Piso</label>
+                    <input type="text" id="nuevo-grab-piso" placeholder="Ej: PB, 1, EP" maxlength="4"
+                        oninput="UI._pisoFiltrar(this)">
+                </div>
+            </div>
+            <div class="form-group">
                     <label>IP</label>
                     <input type="text" id="nuevo-grab-ip" placeholder="Ej: 192.168.1.10" maxlength="45">
                 </div>
-                <div class="form-group">
-                    <label>Lugar</label>
-                    <input type="text" id="nuevo-grab-lugar" placeholder="Ej: Sala de servidores" maxlength="80">
-                </div>
-            </div>
             <div class="btn-group">
                 <button class="btn-edit" onclick="UI.guardarNuevoGrabador()">
                     <svg class="icon icon-line">
@@ -2669,12 +2646,10 @@
             <h3><svg class="icon icon-line">
                     <use href="#icon-edit" />
                 </svg> Editar grabador</h3>
-
             <div class="form-group">
                 <label>Descripción *</label>
                 <input type="text" id="editar-grab-nombre" placeholder="Ej: NVR-Planta Baja" maxlength="80">
             </div>
-
             <div class="form-group" style="display:flex;align-items:flex-end;gap:0.4rem">
                 <div style="flex:1;min-width:0">
                     <label>Dispositivo (NVR / DVR) *</label>
@@ -2689,29 +2664,31 @@
                     </svg>
                 </button>
             </div>
-
+            <div class="form-row">                
+                <div class="form-group">
+                <label>Rack</label>
+                <input type="text" id="editar-grab-rack" placeholder="Ej: Rack Principal" maxlength="40">
+            </div>
+                <div class="form-group">
+                    <label>Puerto</label>
+                    <input type="text" id="editar-grab-puerto" placeholder="Ej: 8000" maxlength="10">
+                </div>
+            </div>
             <div class="form-row">
                 <div class="form-group">
+                    <label>Edificio</label>
+                    <select id="editar-grab-edificio"></select>
+                </div>
+                <div class="form-group">
+                    <label>Piso</label>
+                    <input type="text" id="editar-grab-piso" placeholder="Ej: PB, 1, EP" maxlength="4"
+                        oninput="UI._pisoFiltrar(this)">
+                </div>
+            </div>
+            <div class="form-group">
                     <label>IP</label>
                     <input type="text" id="editar-grab-ip" placeholder="Ej: 192.168.1.10" maxlength="45">
                 </div>
-                <div class="form-group">
-                    <label>Lugar</label>
-                    <input type="text" id="editar-grab-lugar" placeholder="Ej: Sala de servidores" maxlength="80">
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Rack</label>
-                    <input type="text" id="editar-grab-rack" placeholder="Ej: Rack-02" maxlength="40">
-                </div>
-                <div class="form-group">
-                    <label>Puerto</label>
-                    <input type="text" id="editar-grab-puerto" placeholder="Ej: 554" maxlength="10">
-                </div>
-            </div>
-
             <div class="btn-group">
                 <button class="btn-edit" onclick="UI.guardarEdicionGrabador()">
                     <svg class="icon icon-line">
@@ -3255,7 +3232,8 @@
                         marca: sanitize(g.marca || '', 50),
                         modelo: sanitize(g.modelo || '', 60),
                         ip: validarIPv4(g.ip) ? sanitize(g.ip || '', 45) : '',
-                        lugar: sanitize(g.lugar || '', 80),
+                        edificio: sanitize(g.edificio || '', 60),
+                        piso: sanitize(g.piso || '', 4),
                         rack: sanitize(g.rack || '', 40),
                         puerto: sanitize(g.puerto || '', 10),
                         mac: sanitize(g.mac || '', 500),
@@ -3532,31 +3510,35 @@
             })();
 
             // ==============================================================
-            // ESC
+            // ESC Y ATAJOS GLOBALES
             // ==============================================================
             document.addEventListener('keydown', e => {
-                const tag = document.activeElement?.tagName;
-                const enInput = tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA';
-
                 // ── Ctrl+Z / Ctrl+Y (Historial) ──
                 if (e.ctrlKey && !e.altKey && !e.shiftKey) {
                     if (e.key === 'z' || e.key === 'Z') { e.preventDefault(); historial.undo(); return; }
                     if (e.key === 'y' || e.key === 'Y') { e.preventDefault(); historial.redo(); return; }
                 }
 
-                if (e.key !== 'Escape') return;
-                const input = document.getElementById('input-busqueda');
-                const enBusqueda = document.activeElement === input;
-                if (enBusqueda) {
-                    if (input.value) {
-                        UI.limpiarBusqueda();
-                    } else {
-                        input.blur();
+                // ── JERARQUÍA DE ESCAPE ──
+                if (e.key === 'Escape') {
+                    // 1. Prioridad Máxima: Cerrar Modal
+                    if (document.querySelector('.modal.show')) {
+                        MM.cerrarTop();
+                        return;
                     }
-                    return;
-                }
-                if (document.querySelector('.modal.show')) {
-                    MM.cerrarTop();
+
+                    // 2. Prioridad Media: Limpiar texto de búsqueda
+                    const input = document.getElementById('input-busqueda');
+                    if (input && input.value) {
+                        UI.limpiarBusqueda(); // Esto borra el texto y devuelve el foco al input
+                        return;
+                    }
+
+                    // 3. Prioridad Baja: Quitar foco de la búsqueda (si está vacía y focuseada)
+                    if (input && document.activeElement === input) {
+                        input.blur();
+                        return;
+                    }
                 }
             });
 
@@ -3892,7 +3874,7 @@
                         } else {
                             const loc = mapG.get(san.id);
                             let updated = false;
-                            ['marca', 'modelo', 'ip', 'lugar', 'rack', 'puerto', 'mac', 'dispositivoId'].forEach(k => {
+                            ['marca', 'modelo', 'ip', 'edificio', 'piso', 'rack', 'puerto', 'mac', 'dispositivoId'].forEach(k => {
                                 if (!loc[k] && san[k]) { loc[k] = san[k]; updated = true; }
                             });
                             // Enriquecemos los canales
@@ -4342,12 +4324,12 @@
                     // 1. Calcular totales globales
                     let totalCanales = 0;
                     let totalOcupados = 0;
-                    
+
                     grabs.forEach(g => {
                         totalCanales += g.canales_n;
                         totalOcupados += g.canales_data.filter(c => c.dispositivoId).length;
                     });
-                    
+
                     const totalLibres = totalCanales - totalOcupados;
                     const pctOcupado = totalCanales > 0 ? Math.round((totalOcupados / totalCanales) * 100) : 0;
                     const pctLibre = totalCanales > 0 ? (100 - pctOcupado) : 0;
@@ -4379,12 +4361,12 @@
                         const ocup = g.canales_data.filter(c => c.dispositivoId).length;
                         const libre = g.canales_n - ocup;
                         const pct = Math.round((ocup / g.canales_n) * 100);
-                        
+
                         let colorBarra = 'var(--c-red)';
-                        if (pct < 35) colorBarra = 'var(--c-green)';
-                        else if (pct < 65) colorBarra = 'var(--c-blue)';
-                        else if (pct < 85) colorBarra = 'var(--c-orange)';
-                        
+                        if (pct <= 35) colorBarra = 'var(--c-green)';
+                        else if (pct <= 65) colorBarra = 'var(--c-blue)';
+                        else if (pct <= 85) colorBarra = 'var(--c-orange)';
+
                         return `<div style="padding:0.6rem 0;border-bottom:1px solid var(--border)">
                         <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.3rem">
                             <span style="font-weight:700;font-size:0.92rem">${esc(g.descripcion)}</span>
@@ -4771,10 +4753,10 @@
                 lista.innerHTML = grabs.map(g => {
                     const canalesHtml = g.canales_data.map(c => {
                         const disp = c.dispositivoId ? _data.dispositivos.find(d => d.id === c.dispositivoId) : null;
-                        
+
                         if (disp) {
                             const tituloCanal = c.descripcion || disp.mac || disp.serial || '—';
-                            
+
                             // Si es vista Lista (Filas)
                             if (_produccionVista === 'lista') {
                                 return `<div class="canal-slot-lista ocupado" data-canal="${c.canal}">
@@ -4782,7 +4764,7 @@
                                     <div class="canal-dispositivo-nombre" title="${esc(tituloCanal)}">${esc(tituloCanal)}</div>
                                     <div class="canal-dispositivo-ip" title="${c.ip ? esc(c.ip) : ''}">${c.ip ? esc(c.ip) : ''}</div>
                                 </div>`;
-                            } 
+                            }
                             // Si es vista Mosaico (Tarjetas)
                             else {
                                 return `<div class="canal-slot ocupado" data-canal="${c.canal}">
@@ -4815,7 +4797,7 @@
                     const libres = g.canales_n - ocupados;
                     const collapsed = !_grabExpanded.has(g.id);
                     const gridClass = _produccionVista === 'lista' ? 'nvr-canales-grid vista-lista' : 'nvr-canales-grid';
-                    
+
                     return `<div class="nvr-card anim-in${collapsed ? ' collapsed' : ''}" data-grab-id="${esc(g.id)}">
                     <div class="nvr-card-header nvr-header-toggle">
                         <div class="nvr-card-header-info">
@@ -5078,7 +5060,7 @@
                 setProduccionVista(vista) {
                     if (_produccionVista === vista) return;
                     _produccionVista = vista;
-                    try { localStorage.setItem('cctv_prod_vista', vista); } catch (_) {}
+                    try { localStorage.setItem('cctv_prod_vista', vista); } catch (_) { }
                     renderProduccion();
                 },
 
@@ -5189,9 +5171,9 @@
                     toast('Tipo eliminado', 'success');
                 },
 
-                // ---- Edificios ----
                 abrirEdificios(origen = 'ajustes') {
                     _edificiosOrigen = origen;
+                    
                     if (origen === 'canal') {
                         _edificiosSnapForm = {
                             dispositivoId: document.getElementById('sel-canal-dispositivo').value || '',
@@ -5205,17 +5187,40 @@
                             comentarios: document.getElementById('canal-comentarios').value || '',
                         };
                         MM.cerrar('modal-canal');
+                    } else if (origen === 'nuevo-grab') {
+                        _edificiosSnapForm = {
+                            nombre: document.getElementById('nuevo-grab-nombre').value || '',
+                            dispositivoId: document.getElementById('nuevo-grab-dispositivo-id').value || '',
+                            ip: document.getElementById('nuevo-grab-ip').value || '',
+                            puerto: document.getElementById('nuevo-grab-puerto').value || '',
+                            edificio: document.getElementById('nuevo-grab-edificio').value || '',
+                            piso: document.getElementById('nuevo-grab-piso').value || '',
+                            rack: document.getElementById('nuevo-grab-rack').value || ''
+                        };
+                        MM.cerrar('modal-nuevo-grab');
+                    } else if (origen === 'editar-grab') {
+                        _edificiosSnapForm = {
+                            nombre: document.getElementById('editar-grab-nombre').value || '',
+                            dispositivoId: document.getElementById('editar-grab-dispositivo-id').value || '',
+                            ip: document.getElementById('editar-grab-ip').value || '',
+                            puerto: document.getElementById('editar-grab-puerto').value || '',
+                            edificio: document.getElementById('editar-grab-edificio').value || '',
+                            piso: document.getElementById('editar-grab-piso').value || '',
+                            rack: document.getElementById('editar-grab-rack').value || ''
+                        };
+                        MM.cerrar('modal-editar-grab');
                     } else {
                         MM.cerrar('modal-ajustes');
                     }
+                    
                     setTimeout(() => {
                         UI._renderEdificios();
                         document.getElementById('nuevo-edificio-nombre').value = '';
                         const btnVolver = document.querySelector('#modal-edificios .btn-cancel');
                         if (btnVolver) {
-                            btnVolver.innerHTML = origen === 'canal'
-                                ? `<svg class="icon icon-line"><use href="#icon-undo"/></svg> Volver al canal`
-                                : `<svg class="icon icon-line"><use href="#icon-undo"/></svg> Volver`;
+                            if (origen === 'canal') btnVolver.innerHTML = `<svg class="icon icon-line"><use href="#icon-undo"/></svg> Volver al canal`;
+                            else if (origen === 'nuevo-grab' || origen === 'editar-grab') btnVolver.innerHTML = `<svg class="icon icon-line"><use href="#icon-undo"/></svg> Volver al grabador`;
+                            else btnVolver.innerHTML = `<svg class="icon icon-line"><use href="#icon-undo"/></svg> Volver`;
                         }
                         MM.abrir('modal-edificios', { onEscape: () => UI.cerrarEdificios() });
                         setTimeout(() => document.getElementById('nuevo-edificio-nombre').focus(), 50);
@@ -5226,6 +5231,7 @@
                     const origen = _edificiosOrigen;
                     const snap = _edificiosSnapForm;
                     MM.cerrar('modal-edificios');
+                    
                     if (origen === 'canal' && snap) {
                         setTimeout(() => {
                             UI.abrirAsignarCanal(_editandoCanalGrabId, _editandoCanalN, _canalDesdeDispId);
@@ -5241,6 +5247,34 @@
                                 _poblarSelectEdificio('canal-edificio', snap.edificio);
                                 const btnVerActivo = document.getElementById('btn-ver-activo-canal');
                                 if (btnVerActivo) btnVerActivo.style.display = snap.dispositivoId ? '' : 'none';
+                                _edificiosSnapForm = null;
+                            }, 220);
+                        }, 150);
+                    } else if (origen === 'nuevo-grab' && snap) {
+                        setTimeout(() => {
+                            UI.abrirNuevoGrabador();
+                            setTimeout(() => {
+                                document.getElementById('nuevo-grab-nombre').value = snap.nombre;
+                                document.getElementById('nuevo-grab-dispositivo-id').value = snap.dispositivoId;
+                                document.getElementById('nuevo-grab-ip').value = snap.ip;
+                                document.getElementById('nuevo-grab-puerto').value = snap.puerto;
+                                document.getElementById('nuevo-grab-piso').value = snap.piso;
+                                document.getElementById('nuevo-grab-rack').value = snap.rack;
+                                _poblarSelectEdificio('nuevo-grab-edificio', snap.edificio);
+                                _edificiosSnapForm = null;
+                            }, 220);
+                        }, 150);
+                    } else if (origen === 'editar-grab' && snap) {
+                        setTimeout(() => {
+                            UI.abrirEditarGrabador(_editandoGrabId);
+                            setTimeout(() => {
+                                document.getElementById('editar-grab-nombre').value = snap.nombre;
+                                document.getElementById('editar-grab-dispositivo-id').value = snap.dispositivoId;
+                                document.getElementById('editar-grab-ip').value = snap.ip;
+                                document.getElementById('editar-grab-puerto').value = snap.puerto;
+                                document.getElementById('editar-grab-piso').value = snap.piso;
+                                document.getElementById('editar-grab-rack').value = snap.rack;
+                                _poblarSelectEdificio('editar-grab-edificio', snap.edificio);
                                 _edificiosSnapForm = null;
                             }, 220);
                         }, 150);
@@ -5310,7 +5344,6 @@
                     toast('Edificio eliminado', 'success');
                 },
 
-                // ---- Tabs ----
                 cambiarTab(tab) {
                     // Si el usuario toca la pestaña en la que ya está parado...
                     if (_tabActual === tab) {
@@ -5320,6 +5353,7 @@
                         const inputBusq = document.getElementById('input-busqueda');
                         if (inputBusq && inputBusq.value) {
                             UI.limpiarBusqueda();
+                            inputBusq.blur();
                             limpioAlgo = true;
                         }
 
@@ -5337,14 +5371,18 @@
                     // Limpieza general al cambiar de pestaña
                     if (_dashTipoAbierto) {
                         _dashTipoAbierto = null;
-                        setTimeout(() => renderDashboard(), 200); // 🕒 Esperamos que termine la animación
+                        setTimeout(() => renderDashboard(), 200);
                     }
+
                     const inputBusq = document.getElementById('input-busqueda');
-                    if (inputBusq && inputBusq.value) {
-                        inputBusq.value = '';
-                        const btnX = document.getElementById('btn-limpiar-busqueda');
-                        if (btnX) btnX.style.display = 'none';
-                        setTimeout(() => renderActivos(), 200); // 🕒 Esperamos que termine la animación
+                    if (inputBusq) {
+                        if (inputBusq.value) {
+                            inputBusq.value = '';
+                            const btnX = document.getElementById('btn-limpiar-busqueda');
+                            if (btnX) btnX.style.display = 'none';
+                            setTimeout(() => renderActivos(), 200);
+                        }
+                        inputBusq.blur();
                     }
 
                     ['dashboard', 'activos', 'produccion'].forEach(t => {
@@ -5860,6 +5898,7 @@
                     _editandoGrabId = null;
                     _limpiarFormGrab('nuevo-grab');
                     _poblarSelectorGrabador('nuevo-grab', null);
+                    _poblarSelectEdificio('nuevo-grab-edificio', '');
                     MM.abrir('modal-nuevo-grab');
                 },
 
@@ -5887,7 +5926,10 @@
                         marca: disp.marca,
                         modelo: disp.modelo,
                         ip: document.getElementById(`${prefijo}-ip`).value.trim(),
-                        lugar: document.getElementById(`${prefijo}-lugar`).value.trim(),
+                        puerto: document.getElementById(`${prefijo}-puerto`).value.trim(),
+                        edificio: document.getElementById(`${prefijo}-edificio`).value.trim(),
+                        piso: document.getElementById(`${prefijo}-piso`).value.trim(),
+                        rack: document.getElementById(`${prefijo}-rack`).value.trim(),
                         mac: disp.mac || '',
                         canales: disp.canales || 16,
                         dispositivoId: disp.id,
@@ -5904,10 +5946,10 @@
                     const prefijo = 'editar-grab';
                     document.getElementById(`${prefijo}-nombre`).value = g.descripcion;
                     document.getElementById(`${prefijo}-ip`).value = g.ip || '';
-                    document.getElementById(`${prefijo}-lugar`).value = g.lugar || '';
-                    document.getElementById(`${prefijo}-rack`).value = g.rack || '';
                     document.getElementById(`${prefijo}-puerto`).value = g.puerto || '';
-                    // canales mínimos = mayor número de canal ocupado (para preservar la configuración)
+                    _poblarSelectEdificio(`${prefijo}-edificio`, g.edificio || '');
+                    document.getElementById(`${prefijo}-piso`).value = g.piso || '';
+                    document.getElementById(`${prefijo}-rack`).value = g.rack || '';
                     const _maxCanalOcupado = g.canales_data
                         .filter(c => c.dispositivoId)
                         .reduce((max, c) => Math.max(max, c.canal), 0);
@@ -5917,9 +5959,10 @@
                     _snapshotGrab = {
                         descripcion: g.descripcion,
                         ip: g.ip || '',
-                        lugar: g.lugar || '',
-                        rack: g.rack || '',
                         puerto: g.puerto || '',
+                        edificio: g.edificio || '',
+                        piso: g.piso || '',
+                        rack: g.rack || '',
                         dispositivoId: g.dispositivoId || '',
                     };
 
@@ -5985,9 +6028,10 @@
                         marca: disp.marca,
                         modelo: disp.modelo,
                         ip: document.getElementById(`${prefijo}-ip`).value.trim(),
-                        lugar: document.getElementById(`${prefijo}-lugar`).value.trim(),
-                        rack: document.getElementById(`${prefijo}-rack`).value.trim(),
                         puerto: document.getElementById(`${prefijo}-puerto`).value.trim(),
+                        edificio: document.getElementById(`${prefijo}-edificio`).value.trim(),
+                        piso: document.getElementById(`${prefijo}-piso`).value.trim(),
+                        rack: document.getElementById(`${prefijo}-rack`).value.trim(),
                         mac: disp.mac || '',
                         canales: disp.canales || 16,
                         dispositivoId: disp.id,
@@ -5998,11 +6042,13 @@
                     const nuevoSnapGrab = {
                         descripcion: datos.descripcion,
                         ip: datos.ip || '',
-                        lugar: datos.lugar || '',
-                        rack: datos.rack || '',
                         puerto: datos.puerto || '',
+                        edificio: datos.edificio || '',
+                        piso: datos.piso || '',
+                        rack: datos.rack || '',
                         dispositivoId: datos.dispositivoId || '',
                     };
+
                     const huboCambiosGrab = JSON.stringify(nuevoSnapGrab) !== JSON.stringify(_snapshotGrab);
                     if (!huboCambiosGrab) { toast('Sin cambios', 'info'); MM.cerrar('modal-editar-grab'); _editandoGrabId = null; _snapshotGrab = null; return; }
 
@@ -6434,7 +6480,7 @@
                             } else {
                                 const loc = mapG.get(san.id);
                                 let updated = false;
-                                ['marca', 'modelo', 'ip', 'lugar', 'rack', 'puerto', 'mac', 'dispositivoId'].forEach(k => {
+                                ['marca', 'modelo', 'ip', 'edificio', 'piso', 'rack', 'puerto', 'mac', 'dispositivoId'].forEach(k => {
                                     if (!loc[k] && san[k]) { loc[k] = san[k]; updated = true; }
                                 });
                                 san.canales_data.forEach(cRem => {
@@ -6554,7 +6600,10 @@
                 sel.onchange = function () {
                     if (sel.value === '__agregar__') {
                         sel.value = seleccionado || '';
-                        UI.abrirEdificios('canal');
+                        let origen = 'canal';
+                        if (selectId.startsWith('nuevo-grab')) origen = 'nuevo-grab';
+                        else if (selectId.startsWith('editar-grab')) origen = 'editar-grab';
+                        UI.abrirEdificios(origen);
                     } else {
                         seleccionado = sel.value;
                     }
@@ -6609,7 +6658,7 @@
             }
 
             function _limpiarFormGrab(prefijo) {
-                [`${prefijo}-nombre`, `${prefijo}-ip`, `${prefijo}-lugar`].forEach(id => {
+                [`${prefijo}-nombre`, `${prefijo}-ip`, `${prefijo}-puerto`, `${prefijo}-piso`, `${prefijo}-rack`].forEach(id => {
                     const el = document.getElementById(id); if (el) { el.value = ''; el.classList.remove('error'); }
                 });
                 document.getElementById(`${prefijo}-dispositivo-id`).value = '';
@@ -6691,14 +6740,7 @@
                 }
 
                 if (modalAbierto) return;
-
-                if (e.key === 'Escape' && !enInput) {
-                    const input = document.getElementById('input-busqueda');
-                    if (input && input.value) { UI.limpiarBusqueda(); input.blur(); return; }
-                }
-
                 if (enInput) return;
-
                 if (e.key === '+' || e.key === '=') { UI.abrirNuevoDispositivo(); return; }
 
                 const esCaracterValido = e.key.length === 1 && /^[a-zA-Z0-9:]$/.test(e.key);
@@ -6899,7 +6941,7 @@
 </html>
 
 <!--// ====================================================================
-    //                 NOTAS SISTEMA LUSHIBOSCA VERSION 238
+    //                 NOTAS SISTEMA LUSHIBOSCA VERSION 240
     // ====================================================================
     
      - CAMBIOS 
