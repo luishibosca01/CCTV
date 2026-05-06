@@ -44,10 +44,6 @@
             --c-purple: rgba(129, 76, 172, 0.8);
             --c-gold: rgba(172, 155, 76, 0.8);
             --c-orange: rgba(210, 120, 50, 0.8);
-            --c-blue-solid: rgb(76, 114, 172);
-            --c-green-solid: rgb(76, 172, 140);
-            --c-orange-solid: rgb(210, 120, 50);
-            --c-gold-solid: rgb(172, 155, 76);
             --c-gray-btn: #dde3ea;
             --c-white: #ffffff;
             --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -823,7 +819,7 @@
             border: 1px solid var(--border);
             border-radius: var(--radius);
             padding: 0.5rem 0.65rem;
-            background: var(--bg-card);
+            background: var(--input-bg);
             display: grid;
             grid-template-columns: 56px 1fr 110px;
             gap: 0.75rem;
@@ -873,7 +869,7 @@
             border: 1px solid var(--border);
             border-radius: var(--radius);
             padding: 0.55rem 0.65rem;
-            background: var(--bg-card);
+            background: var(--input-bg);
             min-height: 78px;
             display: flex;
             flex-direction: column;
@@ -1361,11 +1357,6 @@
             transform: translateX(12px);
         }
 
-        /* badge indicador activo en botón filtros */
-        #btn-filtros-busqueda.tiene-desactivados svg {
-            stroke: var(--c-blue);
-        }
-
         /* modal confirmar */
         #modal-confirmar .modal-content {
             max-width: 360px;
@@ -1662,6 +1653,128 @@
             }
         }
 
+        /* ── Textarea estándar de modales ── */
+        /* Reemplaza: style="resize:vertical;width:100%;box-sizing:border-box;padding:0.5rem;
+           border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-card);
+           color:var(--text-main);font-family:inherit;font-size:0.9rem" */
+        textarea.textarea-modal {
+            resize: vertical;
+            width: 100%;
+            box-sizing: border-box;
+            padding: 0.5rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 0.9rem;
+        }
+
+        /* ── Dropdown flotante de combobox ── */
+        /* Reemplaza: style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;
+           background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);
+           box-shadow:0 4px 16px rgba(0,0,0,0.15);max-height:220px;overflow-y:auto;z-index:200;" */
+        .combobox-dropdown {
+            display: none;
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+            max-height: 220px;
+            overflow-y: auto;
+            z-index: 200;
+        }
+
+        /* ── Contenedor combobox (position:relative) ── */
+        .combobox-wrap {
+            position: relative;
+        }
+
+        /* ── form-group con input + btn ver-activo (flex row) ── */
+        /* Reemplaza: style="flex:1;min-width:0;display:flex;align-items:flex-end;gap:0.4rem"
+           en el form-group que envuelve el combobox + btn-ver-activo */
+        .form-group--flex-row {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            align-items: flex-end;
+            gap: 0.4rem;
+        }
+
+        /* ── Wrapper interno del label+input dentro de form-group--flex-row ── */
+        /* Reemplaza: style="flex:1;min-width:0" en el div que contiene label + input */
+        .form-group--flex-inner {
+            flex: 1;
+            min-width: 0;
+        }
+
+        /* ── Botón "ver activo" junto a input (btn-backup pequeño) ── */
+        /* Reemplaza: style="display:none;flex-shrink:0;margin-bottom:1px" */
+        .btn-ver-activo {
+            flex-shrink: 0;
+            margin-bottom: 1px;
+        }
+
+        /* ── Botones de estado en footer de editar-disp (flex:1 para distribuir) ── */
+        /* Reemplaza: style="flex:1" en btn-estado-* */
+        .btn-estado-disp {
+            flex: 1;
+        }
+
+        /* ── Sección acciones de importar (flex column + gap) ── */
+        /* Reemplaza: style="display:flex;flex-direction:column;gap:0.75rem;margin-top:1.5rem" */
+        .importar-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+
+        /* ── Botón flex:1 dentro de importar ── */
+        /* Reemplaza: style="flex:1" en btn-reemplazar y btn-combinar */
+        .btn-flex {
+            flex: 1;
+        }
+
+        /* ── Botón scroll-top (flotante) ── */
+        #btn-scroll-top {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.25rem;
+            z-index: 80;
+            width: 44px;
+            height: 44px;
+            min-width: unset;
+            padding: 0;
+            border-radius: 50%;
+            background: var(--c-blue);
+            color: var(--c-white);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+            opacity: 0;
+            transition: opacity 0.25s, transform 0.25s;
+            transform: translateY(8px);
+        }
+
+        .icon--scroll-top {
+            width: 1.1rem;
+            height: 1.1rem;
+            stroke: var(--c-white);
+        }
+
+        /* ── Título autosync con tamaño reducido (modal-vista-activos) ── */
+        #modal-vista-activos .gist-autosync-title {
+            font-size: 0.88rem;
+        }
+
+        /* ── Margen superior del contenedor principal ── */
+        .container--main {
+            margin-top: 0.5rem;
+        }
+
         /* ============================================================
            CLASES UTILITARIAS — REFACTOR v242
            Declaradas aquí para ser usadas en etapas posteriores.
@@ -1757,8 +1870,8 @@
             width: auto !important;
         }
 
-        .btn-inline + .btn-inline,
-        .btn-inline ~ .btn-inline {
+        .btn-inline+.btn-inline,
+        .btn-inline~.btn-inline {
             margin-left: 0;
         }
 
@@ -2081,11 +2194,16 @@
             font-size: 0.85rem;
         }
 
+        .dash-empty-text--center {
+            text-align: center;
+            padding: 1.5rem 0;
+        }
+
         /* ── Alerta de importación con color (en onImportarFileChange) ── */
         /* Reemplaza: style="color:var(--c-orange);font-size:0.75rem;
            display:block;margin-top:0.3rem" */
         .import-warn {
-            color: var(--c-orange-solid);
+            color: var(--c-orange);
             font-size: 0.75rem;
             display: block;
             margin-top: 0.3rem;
@@ -2093,11 +2211,25 @@
 
         /* ── Chip de estado clicable en dashboard (colores semánticos) ── */
         /* Reemplaza: style="color:${e.color}" en stat-chip-valor de chips de estado */
-        .stat-chip-val--produccion { color: var(--c-blue); }
-        .stat-chip-val--disponible { color: var(--c-green); }
-        .stat-chip-val--averiado   { color: var(--c-red); }
-        .stat-chip-val--revisar    { color: var(--c-purple); }
-        .stat-chip-val--desafectado { color: var(--text-muted); }
+        .stat-chip-val--produccion {
+            color: var(--c-blue);
+        }
+
+        .stat-chip-val--disponible {
+            color: var(--c-green);
+        }
+
+        .stat-chip-val--averiado {
+            color: var(--c-red);
+        }
+
+        .stat-chip-val--revisar {
+            color: var(--c-purple);
+        }
+
+        .stat-chip-val--desafectado {
+            color: var(--text-muted);
+        }
 
         /* ── Contenedor sin grabadores en panel producción (display:none dinámico ok) ── */
         /* El display:none se mantiene via JS; esta clase es solo semántica */
@@ -2181,6 +2313,244 @@
             padding-right: 4.5rem;
         }
 
+        /* ============================================================
+           CLASES UTILITARIAS — REFACTOR v247 (Auditoría final)
+        ============================================================ */
+
+        /* ── btn-group sin margin-top (14 ocurrencias) ── */
+        .btn-group--no-mt {
+            margin-top: 0;
+        }
+
+        /* ── btn-group con margin-top grande ── */
+        .btn-group--mt-lg {
+            margin-top: 1.5rem;
+        }
+
+        /* ── flex:1 utilitario ── */
+        .flex-1 {
+            flex: 1;
+        }
+
+        /* ── flex-column utilitario ── */
+        .flex-col {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── Texto truncado ── */
+        .text-truncate {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* ── SVG mediano (1.2rem) en modal-gist ── */
+        .icon--md {
+            width: 1.2rem;
+            height: 1.2rem;
+        }
+
+        /* ── SVG grande con muted stroke en empty states ── */
+        .icon--lg-muted {
+            width: 2rem;
+            height: 2rem;
+            stroke: var(--text-muted);
+        }
+
+        /* ── modal-content tamaño pequeño ── */
+        .modal-content--sm {
+            max-width: var(--modal-max-w-sm);
+        }
+
+        /* ── section-label con separación superior ── */
+        .section-label--mt {
+            margin-top: 1.25rem;
+        }
+
+        /* ── gist-autosync-row override puntual ── */
+        .gist-autosync-row--inline {
+            margin-bottom: 0;
+            padding: 0.6rem 0.75rem;
+            background: transparent;
+            border: none;
+            border-top: 1px solid var(--border);
+            border-radius: 0;
+        }
+
+        /* ── Grupos de activos — card y header sticky ── */
+        .grupo-activos-card {
+            margin-bottom: 0.85rem;
+        }
+
+        .grupo-activos-header {
+            position: sticky;
+            top: 56px;
+            z-index: 10;
+            background: var(--bg-card);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--c-orange);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 0.6rem 0.25rem;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 0.6rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .grupo-activos-header-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .badge--grupo-count {
+            color: var(--c-orange);
+            border-color: var(--c-orange);
+            font-size: 0.7rem;
+        }
+
+        /* ── Columna derecha de activos (estado + asignación) ── */
+        .activo-info-derecha {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            text-align: right;
+            flex-shrink: 0;
+            max-width: 40%;
+            line-height: 1.35;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.2rem;
+        }
+
+        /* ── Dashboard cámaras — filas de vista forma/edificio ── */
+        /* color dinámico (${color}) se mantiene inline: valor calculado en JS */
+        .dash-cam-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.45rem 0;
+        }
+
+        .dash-cam-row--border {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .dash-cam-row-label {
+            flex: 1;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .dash-cam-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.45rem 0;
+        }
+
+        .dash-cam-header--border {
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 0.1rem;
+        }
+
+        .dash-cam-val {
+            font-size: 0.95rem;
+            font-weight: 700;
+            width: 2.8rem;
+            text-align: right;
+        }
+
+        .dash-cam-label-small {
+            font-size: 0.72rem;
+            font-weight: 600;
+            width: 2.8rem;
+            text-align: right;
+        }
+
+        /* ── dash-cam-row spread (justify-content:space-between) ── */
+        .dash-cam-row--spread {
+            justify-content: space-between;
+        }
+
+        /* ── Separador muted en título de tipo activo ── */
+        .sep-muted {
+            color: var(--text-muted);
+            font-weight: normal;
+            margin: 0 0.2rem;
+        }
+
+        /* ── gist novedades chip count variante purple ── */
+        .gist-novedades-chip-count--purple {
+            color: var(--c-purple);
+        }
+
+        /* ── Alerta datos alterados en gist novedades ── */
+        .gist-warn-altered {
+            color: var(--c-orange);
+            margin-top: 0.4rem;
+            display: block;
+        }
+
+        /* ── NVR card: nombre flex row ── */
+        .nvr-card-nombre {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+        }
+
+        /* ── NVR card: IP en monoespacio ── */
+        .nvr-card-ip {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            font-family: monospace;
+            margin-left: 0.2rem;
+        }
+
+        /* ── NVR card: meta valores numéricos ── */
+        .nvr-card-meta-ocupados {
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        .nvr-card-meta-libres {
+            font-weight: 600;
+        }
+
+        /* ── NVR btn-editar sin flex-shrink inline ── */
+        .nvr-btn-editar {
+            flex-shrink: 0;
+        }
+
+        /* ── Canal slot footer (fila inferior de tarjeta de canal) ── */
+        .canal-slot-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            width: 100%;
+            margin-top: auto;
+            gap: 0.5rem;
+        }
+
+        /* Variante solo flex-end (canal vacío) */
+        .canal-slot-footer--end {
+            justify-content: flex-end;
+        }
+
+        /* ── dash-empty-text con padding pequeño (listas tipos/edificios) ── */
+        .dash-empty-text--sm-pad {
+            padding: 0.25rem 0.25rem 0.5rem;
+        }
     </style>
 </head>
 
@@ -2396,24 +2766,24 @@
     </header>
 
     <!-- ====== CONTENIDO ====== -->
-    <div class="container" style="margin-top:0.5rem">
+    <div class="container container--main">
 
         <!-- TABS -->
         <div class="tabs">
             <button class="tab-btn activa" id="tab-dashboard" onclick="UI.cambiarTab('dashboard')">
-                <svg class="icon icon-line" style="width:.95em;height:.95em">
+                <svg class="icon icon-line tab-icon">
                     <use href="#icon-grid" />
                 </svg>
                 Dashboard
             </button>
             <button class="tab-btn" id="tab-activos" onclick="UI.cambiarTab('activos')">
-                <svg class="icon icon-line" style="width:.95em;height:.95em">
+                <svg class="icon icon-line tab-icon">
                     <use href="#icon-camera" />
                 </svg>
                 Activos
             </button>
             <button class="tab-btn" id="tab-produccion" onclick="UI.cambiarTab('produccion')">
-                <svg class="icon icon-line" style="width:.95em;height:.95em">
+                <svg class="icon icon-line tab-icon">
                     <use href="#icon-server" />
                 </svg>
                 Producción
@@ -2422,24 +2792,19 @@
 
         <!-- ===== BARRA DE BÚSQUEDA ===== -->
         <div class="search-actions-bar">
-            <div id="barra-busqueda" style="position:relative">
-                <input type="text" id="input-busqueda" placeholder="Buscar por tipo, MAC, descripcion de canal…"
-                    oninput="UI.filtrarActivos()" style="padding-left:2.5rem;padding-right:4.5rem">
-                <!-- Le agregamos la clase icon-search-lupa -->
-                <svg class="icon icon-line icon-search-lupa"
-                    style="position:absolute;left:0.75rem;top:50%;transform:translateY(-50%);width:1.1rem;height:1.1rem;stroke:var(--text-muted);pointer-events:none;transition: stroke 0.2s;">
+            <div id="barra-busqueda" class="search-inner">
+                <input type="text" id="input-busqueda" placeholder="Buscar por tipo, MAC, edificio, piso…"
+                    oninput="UI.filtrarActivos()">
+                <svg class="icon icon-line icon-search-lupa">
                     <use href="#icon-search" />
                 </svg>
-                <button id="btn-limpiar-busqueda" onclick="UI.limpiarBusqueda()"
-                    style="display:none;position:absolute;right:2.25rem;top:50%;transform:translateY(-50%);width:28px;height:28px;min-width:unset;padding:0;background:transparent;border:none">
-                    <!-- ⬇️ ACÁ LE SACAMOS EL STROKE INLINE -->
+                <button id="btn-limpiar-busqueda" onclick="UI.limpiarBusqueda()" style="display:none">
                     <svg class="icon icon-line">
                         <use href="#icon-cancelar" />
                     </svg>
                 </button>
-                <button id="btn-filtros-busqueda" onclick="UI.abrirFiltrosBusqueda()" title="Personalizar búsqueda"
-                    style="position:absolute;right:0.35rem;top:50%;transform:translateY(-50%);width:28px;height:28px;min-width:unset;padding:0;background:transparent;border:none">
-                    <svg class="icon icon-line" style="width:1rem;height:1rem;stroke:var(--text-muted)">
+                <button id="btn-filtros-busqueda" onclick="UI.abrirFiltrosBusqueda()" title="Personalizar búsqueda">
+                    <svg class="icon icon-line">
                         <use href="#icon-filter" />
                     </svg>
                 </button>
@@ -2483,7 +2848,7 @@
                             </button>
                         </div>
 
-                        <div id="dash-camaras" style="min-height:28rem"></div>
+                        <div id="dash-camaras" class="dash-camaras-container"></div>
                     </div>
                 </div>
             </div>
@@ -2497,16 +2862,14 @@
                         <use href="#icon-camera" />
                     </svg>
                     Dispositivos
-                    <span id="contador-dispositivos"
-                        style="font-size:0.78rem;font-weight:600;color:var(--text-muted);background:var(--input-bg);border-radius:var(--radius-pill);padding:0.1rem 0.6rem;margin-left:0.25rem"></span>
-                    <button class="icon-btn" onclick="UI.abrirVistaActivos()" title="Opciones de vista"
-                        style="margin-left:auto;width:auto">
+                    <span id="contador-dispositivos" class="contador-badge"></span>
+                    <button class="icon-btn btn-inline" onclick="UI.abrirVistaActivos()" title="Opciones de vista">
                         <svg class="icon icon-line">
                             <use href="#icon-sliders" />
                         </svg>
                     </button>
-                    <button class="icon-btn btn-edit" onclick="UI.abrirNuevoDispositivo()" title="Agregar dispositivo"
-                        style="width:auto">
+                    <button class="icon-btn btn-edit btn-inline" onclick="UI.abrirNuevoDispositivo()"
+                        title="Agregar dispositivo">
                         <svg class="icon icon-line">
                             <use href="#icon-plus" />
                         </svg>
@@ -2524,17 +2887,13 @@
                         <use href="#icon-server" />
                     </svg>
                     Grabadores (NVR / DVR)
-
-                    <!-- BOTÓN VISTA -->
-                    <button class="icon-btn" onclick="UI.abrirVistaProduccion()" title="Opciones de vista"
-                        style="margin-left:auto;width:auto">
+                    <button class="icon-btn btn-inline" onclick="UI.abrirVistaProduccion()" title="Opciones de vista">
                         <svg class="icon icon-line">
                             <use href="#icon-sliders" />
                         </svg>
                     </button>
-                    <!-- BOTÓN AGREGAR -->
-                    <button class="icon-btn btn-edit" onclick="UI.abrirNuevoGrabador()" title="Agregar grabador"
-                        style="width:auto">
+                    <button class="icon-btn btn-edit btn-inline" onclick="UI.abrirNuevoGrabador()"
+                        title="Agregar grabador">
                         <svg class="icon icon-line">
                             <use href="#icon-plus" />
                         </svg>
@@ -2543,13 +2902,13 @@
                 <div id="lista-grabadores"></div>
             </div>
 
-            <div class="card" style="margin-top: 1rem;">
+            <div class="card panel-produccion--card-mt">
                 <h2>
                     <svg class="icon icon-line">
                         <use href="#icon-grid" />
                     </svg> Otros dispositivos
-                    <button class="icon-btn btn-edit" onclick="UI.abrirNuevoOtroProd()" title="Agregar dispositivo"
-                        style="margin-left:auto;width:auto">
+                    <button class="icon-btn btn-edit btn-inline" onclick="UI.abrirNuevoOtroProd()"
+                        title="Agregar dispositivo">
                         <svg class="icon icon-line">
                             <use href="#icon-plus" />
                         </svg>
@@ -2566,116 +2925,109 @@
          MODAL Ajustes
     ============================================================ -->
     <div class="modal" id="modal-ajustes">
-        <div class="modal-content">
-            <div class="modal-header">
+        <div class="modal-content modal-content--flex">
+            <div class="modal-header modal-sticky-header">
                 <h3>
                     <svg class="icon icon-line">
                         <use href="#icon-settings" />
                     </svg>
                     Ajustes
                 </h3>
-                <span class="modal-header-version">v242</span>
+                <span class="modal-header-version">v248</span>
             </div>
-            <!-- Tipos de dispositivo -->
-            <div style="margin-bottom:1.25rem">
-                <div
-                    style="font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:0.5rem;padding:0 0.25rem">
-                    Tipos de dispositivos</div>
-                <div class="btn-group" style="margin-top:0">
-                    <button onclick="UI.abrirTiposDispositivo()"
-                        style="justify-content:center;gap:0.75rem;background:var(--input-bg);border:1px solid var(--border)">
-                        <svg class="icon icon-line">
-                            <use href="#icon-grid" />
-                        </svg>
-                        Dispositivos
-                    </button>
+
+            <div class="modal-scroll-body">
+                <!-- Tipos de dispositivo -->
+                <div class="ajustes-section">
+                    <div class="section-label">Tipos de dispositivos</div>
+                    <div class="btn-group btn-group--no-mt">
+                        <button onclick="UI.abrirTiposDispositivo()" class="btn-ajustes">
+                            <svg class="icon icon-line">
+                                <use href="#icon-grid" />
+                            </svg>
+                            Dispositivos
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Edificios -->
+                <div class="ajustes-section">
+                    <div class="section-label">Ubicaciones</div>
+                    <div class="btn-group btn-group--no-mt">
+                        <button onclick="UI.abrirEdificios()" class="btn-ajustes">
+                            <svg class="icon icon-line">
+                                <use href="#icon-building" />
+                            </svg>
+                            Edificios
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Sincronización (Gist) -->
+                <div class="ajustes-section">
+                    <div class="section-label">Sincronización</div>
+                    <div class="gist-sync-row">
+                        <button onclick="UI.abrirGist()" class="btn-ajustes flex-1">
+                            <svg class="icon icon-line">
+                                <use href="#icon-gist" />
+                            </svg>
+                            GitHub Gist
+                        </button>
+                        <button id="btn-ajustes-gist-subir" class="icon-btn btn-gist-action" onclick="GistSync.subir()"
+                            title="Subir a Gist" style="display:none">
+                            <svg class="icon icon-line">
+                                <use href="#icon-cloud-up" />
+                            </svg>
+                        </button>
+                        <button id="btn-ajustes-gist-bajar" class="icon-btn btn-gist-action" onclick="GistSync.bajar()"
+                            title="Bajar de Gist" style="display:none">
+                            <svg class="icon icon-line">
+                                <use href="#icon-cloud-down" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Datos -->
+                <div class="ajustes-section">
+                    <div class="section-label">Datos Locales</div>
+                    <div class="btn-group btn-group--no-mt">
+                        <button onclick="UI.abrirImportarDesdeAjustes()" class="btn-ajustes">
+                            <svg class="icon icon-line">
+                                <use href="#icon-upload" />
+                            </svg>
+                            Importar
+                        </button>
+                        <button onclick="UI.exportarJSON()" class="btn-ajustes">
+                            <svg class="icon icon-line">
+                                <use href="#icon-download" />
+                            </svg>
+                            Exportar
+                        </button>
+                    </div>
+                    <div class="btn-group">
+                        <button onclick="UI.borrarTodosLosDatos()" class="btn-ajustes">
+                            <svg class="icon icon-line">
+                                <use href="#icon-trash" />
+                            </svg>
+                            Restablecer
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <!-- Edificios -->
-            <div style="margin-bottom:1.25rem">
-                <div
-                    style="font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:0.5rem;padding:0 0.25rem">
-                    Ubicaciones</div>
-                <div class="btn-group" style="margin-top:0">
-                    <button onclick="UI.abrirEdificios()"
-                        style="justify-content:center;gap:0.75rem;background:var(--input-bg);border:1px solid var(--border)">
+            <div class="modal-sticky-footer">
+                <div class="btn-group btn-group--no-mt">
+                    <button class="btn-cancel" onclick="UI.cerrarAjustes()">
                         <svg class="icon icon-line">
-                            <use href="#icon-building" />
-                        </svg>
-                        Edificios
-                    </button>
-                </div>
-            </div>
-
-            <!-- Sincronización (Gist) -->
-            <div style="margin-bottom:1.25rem">
-                <div
-                    style="font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:0.5rem;padding:0 0.25rem">
-                    Sincronización</div>
-                <div style="display:flex;gap:0.5rem;align-items:stretch;margin-bottom:0.5rem">
-                    <button onclick="UI.abrirGist()"
-                        style="justify-content:center;gap:0.75rem;background:var(--input-bg);border:1px solid var(--border);flex:1">
-                        <svg class="icon icon-line">
-                            <use href="#icon-gist" />
-                        </svg>
-                        GitHub Gist
-                    </button>
-                    <button id="btn-ajustes-gist-subir" class="icon-btn" onclick="GistSync.subir()" title="Subir a Gist"
-                        style="display:none;background:var(--input-bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--text-muted)">
-                        <svg class="icon icon-line">
-                            <use href="#icon-cloud-up" />
-                        </svg>
-                    </button>
-                    <button id="btn-ajustes-gist-bajar" class="icon-btn" onclick="GistSync.bajar()"
-                        title="Bajar de Gist"
-                        style="display:none;background:var(--input-bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--text-muted)">
-                        <svg class="icon icon-line">
-                            <use href="#icon-cloud-down" />
+                            <use href="#icon-cancelar" />
+                        </svg>Cerrar</button>
+                    <button class="icon-btn" id="btn-alternar-tema" onclick="UI.alternarTema()" title="Alternar tema">
+                        <svg class="icon icon-line" id="icono-tema">
+                            <use href="#icon-moon" />
                         </svg>
                     </button>
                 </div>
-            </div>
-            <!-- Datos -->
-            <div style="margin-bottom:1.25rem">
-                <div
-                    style="font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:0.5rem;padding:0 0.25rem">
-                    Datos Locales</div>
-                <div class="btn-group" style="margin-top:0">
-                    <button onclick="UI.abrirImportarDesdeAjustes()"
-                        style="justify-content:center;gap:0.75rem;background:var(--input-bg);border:1px solid var(--border)">
-                        <svg class="icon icon-line">
-                            <use href="#icon-upload" />
-                        </svg>
-                        Importar
-                    </button>
-                    <button onclick="UI.exportarJSON()"
-                        style="justify-content:center;gap:0.75rem;background:var(--input-bg);border:1px solid var(--border)">
-                        <svg class="icon icon-line">
-                            <use href="#icon-download" />
-                        </svg>
-                        Exportar
-                    </button>
-                </div>
-                <div class="btn-group">
-                    <button onclick="UI.borrarTodosLosDatos()" style="justify-content:center;gap:0.75rem">
-                        <svg class="icon icon-line">
-                            <use href="#icon-trash" />
-                        </svg>
-                        Restablecer
-                    </button>
-                </div>
-            </div>
-            <div class="btn-group">
-                <button class="btn-cancel" onclick="UI.cerrarAjustes()">
-                    <svg class="icon icon-line">
-                        <use href="#icon-cancelar" />
-                    </svg>Cerrar</button>
-                <button class="icon-btn" onclick="UI.alternarTema()" title="Alternar tema" style="flex-shrink:0">
-                    <svg class="icon icon-line" id="icono-tema">
-                        <use href="#icon-moon" />
-                    </svg>
-                </button>
             </div>
         </div>
     </div>
@@ -2685,35 +3037,28 @@
     ============================================================ -->
     <div class="modal" id="modal-tipos-dispositivo">
         <div class="modal-content modal-content--flex">
-            <h3
-                style="padding:1.5rem 0.75rem 1rem;margin:0;position:sticky;top:0;background:var(--bg-card);z-index:2;border-bottom:1px solid var(--border)">
+            <h3 class="modal-sticky-header">
                 <svg class="icon icon-line">
                     <use href="#icon-grid" />
                 </svg>
                 Dispositivos
             </h3>
 
-            <div style="flex:1;overflow-y:auto;padding:1rem 0.75rem">
-                <!-- Acá solo dejamos la lista, le sacamos el margin-bottom para que no deje espacio hueco -->
+            <div class="modal-scroll-body">
                 <div id="lista-tipos-custom"></div>
             </div>
 
-            <!-- ── CONTENEDOR STICKY INFERIOR ── -->
-            <div
-                style="padding:0.75rem;border-top:1px solid var(--border);position:sticky;bottom:0;background:var(--bg-card);z-index:2">
-
-                <!-- Input movido acá, con un margin-bottom para separarlo del botón volver -->
-                <div style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.75rem">
+            <div class="modal-sticky-footer">
+                <div class="input-flex-row">
                     <input type="text" id="nuevo-tipo-label" placeholder="Ej: Router, PC, Joystick…" maxlength="100"
-                        style="flex:1">
+                        class="flex-1">
                     <button onclick="UI.agregarTipoCustom()" class="icon-btn btn-edit" title="Agregar tipo">
                         <svg class="icon icon-line">
                             <use href="#icon-plus" />
                         </svg>
                     </button>
                 </div>
-
-                <div class="btn-group" style="margin-top:0">
+                <div class="btn-group btn-group--no-mt">
                     <button class="btn-cancel" onclick="UI.cerrarTiposDispositivo()">
                         <svg class="icon icon-line">
                             <use href="#icon-undo" />
@@ -2729,35 +3074,28 @@
     ============================================================ -->
     <div class="modal" id="modal-edificios">
         <div class="modal-content modal-content--flex">
-            <h3
-                style="padding:1.5rem 0.75rem 1rem;margin:0;position:sticky;top:0;background:var(--bg-card);z-index:2;border-bottom:1px solid var(--border)">
+            <h3 class="modal-sticky-header">
                 <svg class="icon icon-line">
                     <use href="#icon-building" />
                 </svg>
                 Edificios
             </h3>
 
-            <div style="flex:1;overflow-y:auto;padding:1rem 0.75rem">
-                <!-- Acá solo dejamos la lista -->
+            <div class="modal-scroll-body">
                 <div id="lista-edificios"></div>
             </div>
 
-            <!-- ── CONTENEDOR STICKY INFERIOR ── -->
-            <div
-                style="padding:0.75rem;border-top:1px solid var(--border);position:sticky;bottom:0;background:var(--bg-card);z-index:2">
-
-                <!-- Input movido acá -->
-                <div style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.75rem">
+            <div class="modal-sticky-footer">
+                <div class="input-flex-row">
                     <input type="text" id="nuevo-edificio-nombre" placeholder="Ej: Torre A, Edificio Central…"
-                        maxlength="100" style="flex:1">
+                        maxlength="100" class="flex-1">
                     <button onclick="UI.agregarEdificio()" class="icon-btn btn-edit" title="Agregar edificio">
                         <svg class="icon icon-line">
                             <use href="#icon-plus" />
                         </svg>
                     </button>
                 </div>
-
-                <div class="btn-group" style="margin-top:0">
+                <div class="btn-group btn-group--no-mt">
                     <button class="btn-cancel" onclick="UI.cerrarEdificios()">
                         <svg class="icon icon-line">
                             <use href="#icon-undo" />
@@ -2772,102 +3110,102 @@
          MODAL — Gist Sync
     ============================================================ -->
     <div class="modal" id="modal-gist">
-        <div class="modal-content">
-            <h3>
+        <div class="modal-content modal-content--flex">
+            <h3 class="modal-sticky-header">
                 <svg class="icon icon-line">
                     <use href="#icon-gist" />
                 </svg>
                 GitHub Gist
             </h3>
 
-            <!-- Token -->
-            <div class="form-group">
-                <label>Personal Access Token</label>
-                <div class="gist-input-row">
-                    <input type="password" id="gist-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off"
-                        spellcheck="false">
-                    <button class="icon-btn gist-eye-btn" id="gist-token-eye" onclick="GistSync.toggleToken()"
-                        title="Mostrar/ocultar">
-                        <svg class="icon icon-line" style="width:1.2rem;height:1.2rem">
-                            <use href="#icon-eye" id="gist-eye-icon" />
-                        </svg>
+            <div class="modal-scroll-body">
+                <!-- Token -->
+                <div class="form-group">
+                    <label>Personal Access Token</label>
+                    <div class="gist-input-row">
+                        <input type="password" id="gist-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off"
+                            spellcheck="false">
+                        <button class="icon-btn gist-eye-btn" id="gist-token-eye" onclick="GistSync.toggleToken()"
+                            title="Mostrar/ocultar">
+                            <svg class="icon icon-line icon--md">
+                                <use href="#icon-eye" id="gist-eye-icon" />
+                            </svg>
+                        </button>
+                        <a class="icon-btn gist-eye-btn icon-link"
+                            href="https://github.com/settings/tokens/new?description=CCTV+Sync&scopes=gist"
+                            target="_blank" title="Crear token en GitHub">
+                            <svg class="icon icon-line icon--md">
+                                <use href="#icon-plus" />
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Gist ID -->
+                <div class="form-group">
+                    <label>Gist ID</label>
+                    <div class="gist-input-row">
+                        <input type="text" id="gist-id" placeholder="Dejar vacío para crear uno nuevo"
+                            autocomplete="off" spellcheck="false">
+                        <a id="gist-link-btn" class="icon-btn gist-eye-btn icon-link" target="_blank"
+                            title="Abrir en GitHub" style="display:none;">
+                            <svg class="icon icon-line icon--md">
+                                <use href="#icon-external-link" />
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Acciones -->
+                <div class="section-label section-label--mt">Acciones</div>
+                <div class="btn-group btn-group--no-mt" style="margin-bottom: 0.75rem;">
+                    <button class="btn-cancel" id="btn-gist-subir" onclick="GistSync.subir()">
+                        <svg class="icon icon-line">
+                            <use href="#icon-cloud-up" />
+                        </svg> Subir
                     </button>
-                    <a class="icon-btn gist-eye-btn icon-link"
-                        href="https://github.com/settings/tokens/new?description=CCTV+Sync&scopes=gist" target="_blank"
-                        title="Crear token en GitHub">
-                        <svg class="icon icon-line" style="width:1.2rem;height:1.2rem">
-                            <use href="#icon-plus" />
-                        </svg>
-                    </a>
+                    <button class="btn-cancel" id="btn-gist-bajar" onclick="GistSync.bajar()">
+                        <svg class="icon icon-line">
+                            <use href="#icon-cloud-down" />
+                        </svg> Bajar
+                    </button>
                 </div>
-            </div>
 
-            <!-- Gist ID -->
-            <div class="form-group">
-                <label>Gist ID</label>
-                <div class="gist-input-row">
-                    <input type="text" id="gist-id" placeholder="Dejar vacío para crear uno nuevo" autocomplete="off"
-                        spellcheck="false">
-                    <a id="gist-link-btn" class="icon-btn gist-eye-btn icon-link" target="_blank"
-                        title="Abrir en GitHub" style="display:none;">
-                        <svg class="icon icon-line" style="width:1.2rem;height:1.2rem">
-                            <use href="#icon-external-link" />
-                        </svg>
-                    </a>
+                <!-- Auto-sync toggle -->
+                <label class="gist-autosync-row" id="gist-autosync-label">
+                    <span class="gist-autosync-text">
+                        <span class="gist-autosync-title">Sincronización automática</span>
+                        <span class="dash-empty-text">Sube y comprueba cambios al iniciar</span>
+                    </span>
+                    <div class="toggle-switch" id="gist-autosync-toggle" onclick="GistSync.toggleAuto()">
+                        <div class="toggle-thumb"></div>
+                    </div>
+                </label>
+
+                <!-- Aviso de confidencialidad -->
+                <div class="gist-privacy-note">
+                    🔒 <strong>Datos sensibles:</strong> El Gist contiene IPs, MACs y ubicaciones de tu infraestructura.
+                    Asegurate de que esté configurado como <strong>secreto</strong> en GitHub y de no compartir el link.
+                    El scope del token tiene que tener habilitado solamente el apartado <strong>gist.</strong>
                 </div>
+
+                <!-- Estado sync -->
+                <p id="gist-sync-status" class="gist-sync-status"></p>
             </div>
 
-            <!-- Acciones -->
-            <div
-                style="font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-top:1.25rem;margin-bottom:0.5rem;padding:0 0.25rem">
-                Acciones</div>
-            <div class="btn-group" style="margin-top:0; margin-bottom: 0.75rem;">
-                <button class="btn-cancel" id="btn-gist-subir" onclick="GistSync.subir()">
-                    <svg class="icon icon-line">
-                        <use href="#icon-cloud-up" />
-                    </svg> Subir
-                </button>
-                <button class="btn-cancel" id="btn-gist-bajar" onclick="GistSync.bajar()">
-                    <svg class="icon icon-line">
-                        <use href="#icon-cloud-down" />
-                    </svg> Bajar
-                </button>
-            </div>
-
-            <!-- Auto-sync toggle -->
-            <label class="gist-autosync-row" id="gist-autosync-label">
-                <span class="gist-autosync-text">
-                    <span class="gist-autosync-title">Sincronización automática</span>
-                    <span style="font-size: 0.78rem; color: var(--text-muted);">Sube y comprueba cambios al
-                        iniciar</span>
-                </span>
-                <div class="toggle-switch" id="gist-autosync-toggle" onclick="GistSync.toggleAuto()">
-                    <div class="toggle-thumb"></div>
+            <div class="modal-sticky-footer modal-sticky-footer--col">
+                <div class="btn-group btn-group--no-mt">
+                    <button class="btn-edit" onclick="GistSync.guardarConfig()">
+                        <svg class="icon icon-line">
+                            <use href="#icon-save" />
+                        </svg> Guardar
+                    </button>
+                    <button class="btn-cancel" onclick="UI.cerrarGist()">
+                        <svg class="icon icon-line">
+                            <use href="#icon-undo" />
+                        </svg> Volver
+                    </button>
                 </div>
-            </label>
-
-            <!-- Aviso de confidencialidad -->
-            <div
-                style="font-size:0.74rem;color:var(--text-muted);background:var(--input-bg);border-radius:var(--radius-sm);padding:0.6rem 0.75rem;margin-top:0.75rem;line-height:1.55">
-                🔒 <strong>Datos sensibles:</strong> El Gist contiene IPs, MACs y ubicaciones de tu infraestructura.
-                Asegurate de que esté configurado como <strong>secreto</strong> en GitHub y de no compartir el link.
-                El scope del token tiene que tener habilitado solamente el apartado <strong>gist.</strong>
-            </div>
-
-            <!-- Estado sync -->
-            <p id="gist-sync-status" class="gist-sync-status"></p>
-
-            <div class="btn-group" style="margin-top:1.5rem">
-                <button class="btn-edit" onclick="GistSync.guardarConfig()">
-                    <svg class="icon icon-line">
-                        <use href="#icon-save" />
-                    </svg> Guardar
-                </button>
-                <button class="btn-cancel" onclick="UI.cerrarGist()">
-                    <svg class="icon icon-line">
-                        <use href="#icon-undo" />
-                    </svg> Volver
-                </button>
             </div>
         </div>
     </div>
@@ -2876,7 +3214,7 @@
          MODAL — Gist Novedades
     ============================================================ -->
     <div class="modal" id="modal-gist-novedades">
-        <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-content modal-content--sm">
             <h3>
                 <svg class="icon icon-line">
                     <use href="#icon-cloud-down" />
@@ -2887,7 +3225,7 @@
             <div id="gist-novedades-detalle" class="gist-novedades-detalle"></div>
             <p class="gist-novedades-pregunta">¿Querés agregarlos a tus datos locales?</p>
 
-            <div class="btn-group" style="margin-top:1.5rem">
+            <div class="btn-group btn-group--mt-lg">
                 <button class="btn-edit" id="gist-novedades-ok">
                     <svg class="icon icon-line">
                         <use href="#icon-plus" />
@@ -2900,8 +3238,8 @@
 
     <!-- ====== BOTÓN SCROLL TOP ====== -->
     <button id="btn-scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Ir arriba"
-        style="display:none;position:fixed;bottom:1.5rem;right:1.25rem;z-index:80;width:44px;height:44px;min-width:unset;padding:0;border-radius:50%;background:var(--c-blue);color:var(--c-white);box-shadow:0 2px 8px rgba(0,0,0,0.25);opacity:0;transition:opacity 0.25s,transform 0.25s;transform:translateY(8px)">
-        <svg class="icon icon-line" style="width:1.1rem;height:1.1rem;stroke:var(--c-white)">
+        style="display:none">
+        <svg class="icon icon-line icon--scroll-top">
             <use href="#icon-chevron-up" />
         </svg>
     </button>
@@ -2913,15 +3251,15 @@
     ============================================================ -->
     <div class="modal" id="modal-otro-prod">
         <div class="modal-content modal-content--flex">
-            
-            <h3 style="padding:1.5rem 0.75rem 1rem;margin:0;position:sticky;top:0;background:var(--bg-card);z-index:2;border-bottom:1px solid var(--border)">
+
+            <h3 class="modal-sticky-header">
                 <svg class="icon icon-line">
                     <use href="#icon-link" />
                 </svg>
                 <span id="modal-otro-prod-titulo">Agregar a Producción</span>
             </h3>
 
-            <div style="flex:1;overflow-y:auto;padding:1rem 0.75rem">
+            <div class="modal-scroll-body">
                 <div class="form-group">
                     <label>Descripción</label>
                     <input type="text" id="otro-prod-descripcion" placeholder="Ej: Monitor Sala de Guardia"
@@ -2929,23 +3267,20 @@
                 </div>
 
                 <div class="form-row">
-                    <div class="form-group" style="flex:1;min-width:0;display:flex;align-items:flex-end;gap:0.4rem">
-                        <div style="flex:1;min-width:0">
+                    <div class="form-group form-group--flex-row">
+                        <div class="form-group--flex-inner">
                             <label>Dispositivo asignado *</label>
-                            <div id="otro-prod-disp-combobox" style="position:relative">
+                            <div id="otro-prod-disp-combobox" class="combobox-wrap">
                                 <input type="text" id="otro-prod-disp-input" placeholder="Buscar por MAC, modelo…"
                                     maxlength="100" autocomplete="off" spellcheck="false"
                                     oninput="UI._otroProdDispFiltrar()" onfocus="UI._otroProdDispFiltrar()"
                                     onkeydown="UI._otroProdDispKeydown(event)">
                                 <input type="hidden" id="sel-otro-prod-dispositivo">
-                                <div id="otro-prod-disp-dropdown"
-                                    style="display:none; position:absolute; top:calc(100% + 4px); left:0; right:0; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-sm); box-shadow:0 4px 16px rgba(0,0,0,0.15); max-height:220px; overflow-y:auto; z-index:200;">
-                                </div>
+                                <div id="otro-prod-disp-dropdown" class="combobox-dropdown"></div>
                             </div>
                         </div>
-                        <button id="btn-ver-activo-otro-prod" class="icon-btn btn-backup"
-                            onclick="UI.verActivoDesdeOtroProd()" style="display:none;flex-shrink:0;margin-bottom:1px"
-                            title="Ver activo">
+                        <button id="btn-ver-activo-otro-prod" class="icon-btn btn-backup btn-ver-activo"
+                            onclick="UI.verActivoDesdeOtroProd()" style="display:none" title="Ver activo">
                             <svg class="icon icon-line">
                                 <use href="#icon-external-link" />
                             </svg>
@@ -2982,13 +3317,13 @@
 
                 <div class="form-group">
                     <label>Comentarios</label>
-                    <textarea id="otro-prod-comentarios" placeholder="Notas adicionales…" rows="2" maxlength="300"
-                        style="resize:vertical;width:100%;box-sizing:border-box;padding:0.5rem;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-card);color:var(--text-main);font-family:inherit;font-size:0.9rem"></textarea>
+                    <textarea id="otro-prod-comentarios" class="textarea-modal" placeholder="Notas adicionales…"
+                        rows="2" maxlength="300"></textarea>
                 </div>
             </div>
 
-            <div style="padding:0.75rem;border-top:1px solid var(--border);position:sticky;bottom:0;background:var(--bg-card);z-index:2;display:flex;flex-direction:column;gap:0.5rem">
-                <div class="btn-group" style="margin-top:0">
+            <div class="modal-sticky-footer modal-sticky-footer--col">
+                <div class="btn-group btn-group--no-mt">
                     <button class="btn-edit" onclick="UI.guardarOtroProd()">
                         <svg class="icon icon-line">
                             <use href="#icon-save" />
@@ -3000,7 +3335,7 @@
                         </svg> Eliminar
                     </button>
                 </div>
-                <div class="btn-group" style="margin-top:0">
+                <div class="btn-group btn-group--no-mt">
                     <button class="btn-cancel" onclick="UI.cerrarOtroProd()">Cancelar</button>
                 </div>
             </div>
@@ -3012,75 +3347,79 @@
          MODAL — Nuevo Dispositivo
     ============================================================ -->
     <div class="modal" id="modal-nuevo-disp">
-        <div class="modal-content">
-            <h3><svg class="icon icon-line">
+        <div class="modal-content modal-content--flex">
+            <h3 class="modal-sticky-header"><svg class="icon icon-line">
                     <use href="#icon-camera" />
                 </svg> Nuevo dispositivo</h3>
 
-            <div class="form-row">
+            <div class="modal-scroll-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tipo *</label>
+                        <select id="nuevo-disp-tipo" onchange="UI.onDispTipoChange('nuevo-disp')">
+                            <option value="">Seleccionar…</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="nuevo-disp-forma-group" style="display:none">
+                        <label>Forma</label>
+                        <select id="nuevo-disp-forma">
+                            <option value="">Seleccionar…</option>
+                            <option value="domo">Domo</option>
+                            <option value="bullet">Bullet</option>
+                            <option value="turret">Turret</option>
+                            <option value="minidomo">Mini domo</option>
+                            <option value="minibullet">Mini bullet</option>
+                            <option value="domo-ptz">Domo PTZ</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="nuevo-disp-canales-group" style="display:none">
+                        <label>Cantidad de canales *</label>
+                        <input type="number" id="nuevo-disp-canales" placeholder="Ej: 16" min="1" max="256" value="16">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Modelo</label>
+                        <input type="text" id="nuevo-disp-modelo" placeholder="Ej: DS-2CD2143G2" maxlength="60">
+                    </div>
+                    <div class="form-group">
+                        <label>Marca</label>
+                        <input type="text" id="nuevo-disp-marca" placeholder="Ej: Hikvision" maxlength="50">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>MAC</label>
+                        <input type="text" id="nuevo-disp-mac" placeholder="Ej: AA:BB:CC:DD:EE:FF, 11:22:33:44:55:66"
+                            maxlength="500">
+                    </div>
+                    <div class="form-group">
+                        <label>Serial</label>
+                        <input type="text" id="nuevo-disp-serial" placeholder="Ej: DS2CD2143-20241001" maxlength="80">
+                    </div>
+                </div>
+
                 <div class="form-group">
-                    <label>Tipo *</label>
-                    <select id="nuevo-disp-tipo" onchange="UI.onDispTipoChange('nuevo-disp')">
-                        <option value="">Seleccionar…</option>
-                    </select>
-                </div>
-                <div class="form-group" id="nuevo-disp-forma-group" style="display:none">
-                    <label>Forma</label>
-                    <select id="nuevo-disp-forma">
-                        <option value="">Seleccionar…</option>
-                        <option value="domo">Domo</option>
-                        <option value="bullet">Bullet</option>
-                        <option value="turret">Turret</option>
-                        <option value="minidomo">Mini domo</option>
-                        <option value="minibullet">Mini bullet</option>
-                        <option value="domo-ptz">Domo PTZ</option>
-                    </select>
-                </div>
-                <div class="form-group" id="nuevo-disp-canales-group" style="display:none">
-                    <label>Cantidad de canales *</label>
-                    <input type="number" id="nuevo-disp-canales" placeholder="Ej: 16" min="1" max="256" value="16">
+                    <label>Patrimonio</label>
+                    <input type="text" id="nuevo-disp-patrimonio" placeholder="Ej: PAT-00123" maxlength="60">
                 </div>
             </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Modelo</label>
-                    <input type="text" id="nuevo-disp-modelo" placeholder="Ej: DS-2CD2143G2" maxlength="60">
+            <div class="modal-sticky-footer">
+                <div class="btn-group btn-group--no-mt">
+                    <button class="btn-edit" onclick="UI.guardarNuevoDispositivo()">
+                        <svg class="icon icon-line">
+                            <use href="#icon-save" />
+                        </svg> Guardar
+                    </button>
+                    <button class="btn-cancel" onclick="UI.cerrarModalNuevoDispositivo()">
+                        <svg class="icon icon-line">
+                            <use href="#icon-cancelar" />
+                        </svg>Cancelar
+                    </button>
                 </div>
-                <div class="form-group">
-                    <label>Marca</label>
-                    <input type="text" id="nuevo-disp-marca" placeholder="Ej: Hikvision" maxlength="50">
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label>MAC</label>
-                    <input type="text" id="nuevo-disp-mac" placeholder="Ej: AA:BB:CC:DD:EE:FF, 11:22:33:44:55:66"
-                        maxlength="500">
-                </div>
-                <div class="form-group">
-                    <label>Serial</label>
-                    <input type="text" id="nuevo-disp-serial" placeholder="Ej: DS2CD2143-20241001" maxlength="80">
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Patrimonio</label>
-                <input type="text" id="nuevo-disp-patrimonio" placeholder="Ej: PAT-00123" maxlength="60">
-            </div>
-
-            <div class="btn-group">
-                <button class="btn-edit" onclick="UI.guardarNuevoDispositivo()">
-                    <svg class="icon icon-line">
-                        <use href="#icon-save" />
-                    </svg> Guardar
-                </button>
-                <button class="btn-cancel" onclick="UI.cerrarModalNuevoDispositivo()">
-                    <svg class="icon icon-line">
-                        <use href="#icon-cancelar" />
-                    </svg>Cancelar
-                </button>
             </div>
         </div>
     </div>
@@ -3090,14 +3429,13 @@
     ============================================================ -->
     <div class="modal" id="modal-editar-disp">
         <div class="modal-content modal-content--flex">
-            <h3
-                style="padding:1.5rem 0.75rem 1rem;margin:0;position:sticky;top:0;background:var(--bg-card);z-index:2;border-bottom:1px solid var(--border)">
+            <h3 class="modal-sticky-header">
                 <svg class="icon icon-line">
                     <use href="#icon-edit" />
                 </svg> Editar dispositivo
             </h3>
 
-            <div style="flex:1;overflow-y:auto;padding:1rem 0.75rem">
+            <div class="modal-scroll-body">
                 <div class="form-row">
                     <div class="form-group">
                         <label>Tipo *</label>
@@ -3135,14 +3473,13 @@
                 </div>
 
                 <div class="form-row">
-                    <div class="form-group" style="display:flex;align-items:flex-end;gap:0.4rem">
-                        <div style="flex:1;min-width:0">
+                    <div class="form-group form-group--flex-row">
+                        <div class="form-group--flex-inner">
                             <label>MAC</label>
                             <input type="text" id="editar-disp-mac" placeholder="Ej: AA:BB:CC:DD:EE:FF" maxlength="17">
                         </div>
-                        <button id="btn-editar-asignacion" class="icon-btn btn-backup"
-                            onclick="UI.editarAsignacionCamara()" style="display:none;flex-shrink:0;margin-bottom:1px"
-                            title="Ver asignación">
+                        <button id="btn-editar-asignacion" class="icon-btn btn-backup btn-ver-activo"
+                            onclick="UI.editarAsignacionCamara()" style="display:none" title="Ver asignación">
                             <svg class="icon icon-line">
                                 <use href="#icon-external-link" />
                             </svg>
@@ -3160,32 +3497,31 @@
                 </div>
             </div>
 
-            <div
-                style="padding:0.75rem;border-top:1px solid var(--border);position:sticky;bottom:0;background:var(--bg-card);z-index:2;display:flex;flex-direction:column;gap:0.5rem">
-                <div class="btn-group" style="margin-top:0">
+            <div class="modal-sticky-footer modal-sticky-footer--col">
+                <div class="btn-group btn-group--no-mt">
                     <button id="btn-estado-averiado" class="icon-btn btn-estado-disp btn-estado-averiado"
-                        onclick="UI.toggleEstadoDisp('averiado')" title="Averiado" style="flex:1">
+                        onclick="UI.toggleEstadoDisp('averiado')" title="Averiado">
                         <svg class="icon icon-line">
                             <use href="#icon-alert" />
                         </svg>
                         Averiado
                     </button>
                     <button id="btn-estado-revisar" class="icon-btn btn-estado-disp btn-estado-revisar"
-                        onclick="UI.toggleEstadoDisp('revisar')" title="A revisar" style="flex:1">
+                        onclick="UI.toggleEstadoDisp('revisar')" title="A revisar">
                         <svg class="icon icon-line">
                             <use href="#icon-trash" />
                         </svg>
                         A revisar
                     </button>
                     <button id="btn-estado-desafectado" class="icon-btn btn-estado-disp btn-estado-desafectado"
-                        onclick="UI.toggleEstadoDisp('desafectado')" title="Desafectado" style="flex:1">
+                        onclick="UI.toggleEstadoDisp('desafectado')" title="Desafectado">
                         <svg class="icon icon-line">
                             <use href="#icon-cancelar" />
                         </svg>
                         Desafectado
                     </button>
                 </div>
-                <div class="btn-group" style="margin-top:0">
+                <div class="btn-group btn-group--no-mt">
                     <button class="btn-edit" onclick="UI.guardarEdicionDispositivo()">
                         <svg class="icon icon-line">
                             <use href="#icon-save" />
@@ -3197,7 +3533,7 @@
                         </svg> Eliminar
                     </button>
                 </div>
-                <div class="btn-group" style="margin-top:0">
+                <div class="btn-group btn-group--no-mt">
                     <button class="btn-cancel" onclick="UI.cerrarModalEditarDispositivo()">
                         <svg class="icon icon-line">
                             <use href="#icon-cancelar" />
@@ -3212,54 +3548,59 @@
          MODAL — Nuevo Grabador
     ============================================================ -->
     <div class="modal" id="modal-nuevo-grab">
-        <div class="modal-content">
-            <h3><svg class="icon icon-line">
+        <div class="modal-content modal-content--flex">
+            <h3 class="modal-sticky-header"><svg class="icon icon-line">
                     <use href="#icon-server" />
                 </svg> Nuevo grabador</h3>
 
-            <div class="form-group">
-                <label>Descripción *</label>
-                <input type="text" id="nuevo-grab-nombre" placeholder="Ej: NVR-Planta Baja" maxlength="80">
+            <div class="modal-scroll-body">
+                <div class="form-group">
+                    <label>Descripción *</label>
+                    <input type="text" id="nuevo-grab-nombre" placeholder="Ej: NVR-Planta Baja" maxlength="80">
+                </div>
+
+                <div class="form-group">
+                    <label>Dispositivo (NVR / DVR) *</label>
+                    <select id="nuevo-grab-dispositivo-id">
+                        <option value="">Seleccionar…</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Rack</label>
+                        <input type="text" id="nuevo-grab-rack" placeholder="Ej: Rack Principal" maxlength="40">
+                    </div>
+                    <div class="form-group">
+                        <label>Puerto</label>
+                        <input type="text" id="nuevo-grab-puerto" placeholder="Ej: 8000" maxlength="10">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Edificio</label>
+                        <select id="nuevo-grab-edificio"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Piso</label>
+                        <input type="text" id="nuevo-grab-piso" placeholder="Ej: PB, 1, EP" maxlength="4"
+                            oninput="UI._pisoFiltrar(this)">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>IP</label>
+                    <input type="text" id="nuevo-grab-ip" placeholder="Ej: 192.168.1.10" maxlength="45">
+                </div>
             </div>
 
-            <div class="form-group">
-                <label>Dispositivo (NVR / DVR) *</label>
-                <select id="nuevo-grab-dispositivo-id">
-                    <option value="">Seleccionar…</option>
-                </select>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Rack</label>
-                    <input type="text" id="nuevo-grab-rack" placeholder="Ej: Rack Principal" maxlength="40">
+            <div class="modal-sticky-footer">
+                <div class="btn-group btn-group--no-mt">
+                    <button class="btn-edit" onclick="UI.guardarNuevoGrabador()">
+                        <svg class="icon icon-line">
+                            <use href="#icon-save" />
+                        </svg> Guardar
+                    </button>
+                    <button class="btn-cancel" onclick="UI.cerrarModalNuevoGrabador()">Cancelar</button>
                 </div>
-                <div class="form-group">
-                    <label>Puerto</label>
-                    <input type="text" id="nuevo-grab-puerto" placeholder="Ej: 8000" maxlength="10">
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Edificio</label>
-                    <select id="nuevo-grab-edificio"></select>
-                </div>
-                <div class="form-group">
-                    <label>Piso</label>
-                    <input type="text" id="nuevo-grab-piso" placeholder="Ej: PB, 1, EP" maxlength="4"
-                        oninput="UI._pisoFiltrar(this)">
-                </div>
-            </div>
-            <div class="form-group">
-                <label>IP</label>
-                <input type="text" id="nuevo-grab-ip" placeholder="Ej: 192.168.1.10" maxlength="45">
-            </div>
-            <div class="btn-group">
-                <button class="btn-edit" onclick="UI.guardarNuevoGrabador()">
-                    <svg class="icon icon-line">
-                        <use href="#icon-save" />
-                    </svg> Guardar
-                </button>
-                <button class="btn-cancel" onclick="UI.cerrarModalNuevoGrabador()">Cancelar</button>
             </div>
         </div>
     </div>
@@ -3268,67 +3609,73 @@
          MODAL — Editar Grabador
     ============================================================ -->
     <div class="modal" id="modal-editar-grab">
-        <div class="modal-content">
-            <h3><svg class="icon icon-line">
+        <div class="modal-content modal-content--flex">
+            <h3 class="modal-sticky-header"><svg class="icon icon-line">
                     <use href="#icon-edit" />
                 </svg> Editar grabador</h3>
-            <div class="form-group">
-                <label>Descripción *</label>
-                <input type="text" id="editar-grab-nombre" placeholder="Ej: NVR-Planta Baja" maxlength="80">
-            </div>
-            <div class="form-group" style="display:flex;align-items:flex-end;gap:0.4rem">
-                <div style="flex:1;min-width:0">
-                    <label>Dispositivo (NVR / DVR) *</label>
-                    <select id="editar-grab-dispositivo-id" onchange="UI.onGrabDispositivoChange()">
-                        <option value="">Seleccionar…</option>
-                    </select>
-                </div>
-                <button id="btn-ver-activo-grab" class="icon-btn btn-backup" onclick="UI.verActivoDesdeGrabador()"
-                    style="display:none;flex-shrink:0;margin-bottom:1px" title="Ver activo">
-                    <svg class="icon icon-line">
-                        <use href="#icon-external-link" />
-                    </svg>
-                </button>
-            </div>
-            <div class="form-row">
+
+            <div class="modal-scroll-body">
                 <div class="form-group">
-                    <label>Rack</label>
-                    <input type="text" id="editar-grab-rack" placeholder="Ej: Rack Principal" maxlength="40">
+                    <label>Descripción *</label>
+                    <input type="text" id="editar-grab-nombre" placeholder="Ej: NVR-Planta Baja" maxlength="80">
+                </div>
+                <div class="form-group form-group--flex-row">
+                    <div class="form-group--flex-inner">
+                        <label>Dispositivo (NVR / DVR) *</label>
+                        <select id="editar-grab-dispositivo-id" onchange="UI.onGrabDispositivoChange()">
+                            <option value="">Seleccionar…</option>
+                        </select>
+                    </div>
+                    <button id="btn-ver-activo-grab" class="icon-btn btn-backup btn-ver-activo"
+                        onclick="UI.verActivoDesdeGrabador()" style="display:none" title="Ver activo">
+                        <svg class="icon icon-line">
+                            <use href="#icon-external-link" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Rack</label>
+                        <input type="text" id="editar-grab-rack" placeholder="Ej: Rack Principal" maxlength="40">
+                    </div>
+                    <div class="form-group">
+                        <label>Puerto</label>
+                        <input type="text" id="editar-grab-puerto" placeholder="Ej: 8000" maxlength="10">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Edificio</label>
+                        <select id="editar-grab-edificio"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Piso</label>
+                        <input type="text" id="editar-grab-piso" placeholder="Ej: PB, 1, EP" maxlength="4"
+                            oninput="UI._pisoFiltrar(this)">
+                    </div>
                 </div>
                 <div class="form-group">
-                    <label>Puerto</label>
-                    <input type="text" id="editar-grab-puerto" placeholder="Ej: 8000" maxlength="10">
+                    <label>IP</label>
+                    <input type="text" id="editar-grab-ip" placeholder="Ej: 192.168.1.10" maxlength="45">
                 </div>
             </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Edificio</label>
-                    <select id="editar-grab-edificio"></select>
+
+            <div class="modal-sticky-footer modal-sticky-footer--col">
+                <div class="btn-group btn-group--no-mt">
+                    <button class="btn-edit" onclick="UI.guardarEdicionGrabador()">
+                        <svg class="icon icon-line">
+                            <use href="#icon-save" />
+                        </svg> Guardar
+                    </button>
+                    <button class="btn-delete" onclick="UI.eliminarGrabador()">
+                        <svg class="icon icon-line">
+                            <use href="#icon-trash" />
+                        </svg> Eliminar
+                    </button>
                 </div>
-                <div class="form-group">
-                    <label>Piso</label>
-                    <input type="text" id="editar-grab-piso" placeholder="Ej: PB, 1, EP" maxlength="4"
-                        oninput="UI._pisoFiltrar(this)">
+                <div class="btn-group btn-group--no-mt">
+                    <button class="btn-cancel" onclick="UI.cerrarModalEditarGrabador()">Cancelar</button>
                 </div>
-            </div>
-            <div class="form-group">
-                <label>IP</label>
-                <input type="text" id="editar-grab-ip" placeholder="Ej: 192.168.1.10" maxlength="45">
-            </div>
-            <div class="btn-group">
-                <button class="btn-edit" onclick="UI.guardarEdicionGrabador()">
-                    <svg class="icon icon-line">
-                        <use href="#icon-save" />
-                    </svg> Guardar
-                </button>
-                <button class="btn-delete" onclick="UI.eliminarGrabador()">
-                    <svg class="icon icon-line">
-                        <use href="#icon-trash" />
-                    </svg> Eliminar
-                </button>
-            </div>
-            <div class="btn-group">
-                <button class="btn-cancel" onclick="UI.cerrarModalEditarGrabador()">Cancelar</button>
             </div>
         </div>
     </div>
@@ -3338,47 +3685,34 @@
     ============================================================ -->
     <div class="modal" id="modal-canal">
         <div class="modal-content modal-content--flex">
-            <h3
-                style="padding:1.5rem 0.75rem 1rem;margin:0;position:sticky;top:0;background:var(--bg-card);z-index:2;border-bottom:1px solid var(--border)">
+            <h3 class="modal-sticky-header">
                 <svg class="icon icon-line">
                     <use href="#icon-link" />
                 </svg>
                 <span id="modal-canal-titulo">Canal 1</span>
             </h3>
 
-            <div style="flex:1;overflow-y:auto;padding:1rem 0.75rem">
+            <div class="modal-scroll-body">
                 <div class="form-group">
                     <label>Descripción</label>
                     <input type="text" id="canal-descripcion" placeholder="Ej: Cámara entrada principal" maxlength="80">
                 </div>
 
                 <div class="form-row">
-                    <div class="form-group" style="flex:1;min-width:0;display:flex;align-items:flex-end;gap:0.4rem">
-                        <div style="flex:1;min-width:0">
+                    <div class="form-group form-group--flex-row">
+                        <div class="form-group--flex-inner">
                             <label>Dispositivo asignado</label>
-                            <div id="canal-disp-combobox" style="position:relative">
+                            <div id="canal-disp-combobox" class="combobox-wrap">
                                 <input type="text" id="canal-disp-input" placeholder="Buscar por MAC, modelo…"
                                     maxlength="100" autocomplete="off" spellcheck="false"
                                     oninput="UI._canalDispFiltrar()" onfocus="UI._canalDispFiltrar()"
                                     onkeydown="UI._canalDispKeydown(event)">
                                 <input type="hidden" id="sel-canal-dispositivo">
-                                <div id="canal-disp-dropdown" style="
-                                    display:none;
-                                    position:absolute;
-                                    top:calc(100% + 4px);
-                                    left:0; right:0;
-                                    background:var(--bg-card);
-                                    border:1px solid var(--border);
-                                    border-radius:var(--radius-sm);
-                                    box-shadow:0 4px 16px rgba(0,0,0,0.15);
-                                    max-height:220px;
-                                    overflow-y:auto;
-                                    z-index:200;
-                                "></div>
+                                <div id="canal-disp-dropdown" class="combobox-dropdown"></div>
                             </div>
                         </div>
-                        <button id="btn-ver-activo-canal" class="icon-btn btn-backup" onclick="UI.verActivoDesdeCanal()"
-                            style="display:none;flex-shrink:0;margin-bottom:1px" title="Ver activo">
+                        <button id="btn-ver-activo-canal" class="icon-btn btn-backup btn-ver-activo"
+                            onclick="UI.verActivoDesdeCanal()" style="display:none" title="Ver activo">
                             <svg class="icon icon-line">
                                 <use href="#icon-external-link" />
                             </svg>
@@ -3415,14 +3749,13 @@
 
                 <div class="form-group">
                     <label>Comentarios</label>
-                    <textarea id="canal-comentarios" placeholder="Notas adicionales…" rows="2" maxlength="300"
-                        style="resize:vertical;width:100%;box-sizing:border-box;padding:0.5rem;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-card);color:var(--text-main);font-family:inherit;font-size:0.9rem"></textarea>
+                    <textarea id="canal-comentarios" class="textarea-modal" placeholder="Notas adicionales…" rows="2"
+                        maxlength="300"></textarea>
                 </div>
             </div>
 
-            <div
-                style="padding:0.75rem;border-top:1px solid var(--border);position:sticky;bottom:0;background:var(--bg-card);z-index:2;display:flex;flex-direction:column;gap:0.5rem">
-                <div class="btn-group" style="margin-top:0">
+            <div class="modal-sticky-footer modal-sticky-footer--col">
+                <div class="btn-group btn-group--no-mt">
                     <button class="btn-edit" onclick="UI.guardarAsignacionCanal()">
                         <svg class="icon icon-line">
                             <use href="#icon-save" />
@@ -3434,7 +3767,7 @@
                         </svg> Limpiar
                     </button>
                 </div>
-                <div class="btn-group" style="margin-top:0">
+                <div class="btn-group btn-group--no-mt">
                     <button id="btn-canal-cancelar" class="btn-cancel" onclick="UI.cerrarModalCanal()">Cancelar</button>
                 </div>
             </div>
@@ -3461,16 +3794,15 @@
             <input type="file" id="file-import" accept=".json,application/json" style="display:none"
                 onchange="UI.onImportarFileChange(event)">
 
-            <div style="display:flex;flex-direction:column;gap:0.75rem;margin-top:1.5rem">
-                <div class="btn-group" style="margin-top:0">
-                    <button id="btn-reemplazar" class="btn-edit" onclick="UI.importarDatos('replace')" disabled
-                        style="flex:1">
+            <div class="importar-actions">
+                <div class="btn-group btn-group--no-mt">
+                    <button id="btn-reemplazar" class="btn-edit btn-flex" onclick="UI.importarDatos('replace')"
+                        disabled>
                         <svg class="icon icon-line">
                             <use href="#icon-alert" />
                         </svg> Reemplazar
                     </button>
-                    <button id="btn-combinar" class="btn-backup" onclick="UI.importarDatos('merge')" disabled
-                        style="flex:1">
+                    <button id="btn-combinar" class="btn-backup btn-flex" onclick="UI.importarDatos('merge')" disabled>
                         <svg class="icon icon-line">
                             <use href="#icon-link" />
                         </svg> Combinar
@@ -3489,7 +3821,7 @@
          MODAL — Vista de Producción
     ============================================================ -->
     <div class="modal" id="modal-vista-produccion">
-        <div class="modal-content" style="max-width:360px">
+        <div class="modal-content modal-content--sm">
             <h3>
                 <svg class="icon icon-line">
                     <use href="#icon-sliders" />
@@ -3503,7 +3835,7 @@
                     <option value="lista">Lista (Filas)</option>
                 </select>
             </div>
-            <div class="btn-group" style="margin-top:1.5rem">
+            <div class="btn-group btn-group--mt-lg">
                 <button class="btn-cancel" onclick="MM.cerrar('modal-vista-produccion')">
                     <svg class="icon icon-line">
                         <use href="#icon-cancelar" />
@@ -3517,7 +3849,7 @@
          MODAL — Vista de activos
     ============================================================ -->
     <div class="modal" id="modal-vista-activos">
-        <div class="modal-content" style="max-width:360px">
+        <div class="modal-content modal-content--sm">
             <h3>
                 <svg class="icon icon-line">
                     <use href="#icon-sliders" />
@@ -3540,11 +3872,10 @@
                 </select>
             </div>
 
-            <div class="form-group" style="margin-top: 1rem; margin-bottom: 1.5rem;">
-                <label class="gist-autosync-row"
-                    style="margin-bottom: 0; padding: 0.6rem 0.75rem; background: transparent; border: none; border-top: 1px solid var(--border); border-radius: 0;">
+            <div class="form-group ajustes-section">
+                <label class="gist-autosync-row gist-autosync-row--inline">
                     <span class="gist-autosync-text">
-                        <span class="gist-autosync-title" style="font-size: 0.88rem;">Recordar estado colapsado</span>
+                        <span class="gist-autosync-title">Recordar estado colapsado</span>
                     </span>
                     <div class="toggle-switch" id="toggle-recordar-grupos" onclick="UI.toggleRecordarGrupos()">
                         <div class="toggle-thumb"></div>
@@ -3552,7 +3883,7 @@
                 </label>
             </div>
 
-            <div class="btn-group" style="margin-top:0">
+            <div class="btn-group btn-group--no-mt">
                 <button class="btn-cancel" onclick="UI.cerrarVistaActivos()">
                     <svg class="icon icon-line">
                         <use href="#icon-cancelar" />
@@ -3567,24 +3898,20 @@
          MODAL — Filtros de búsqueda
     ============================================================ -->
     <div class="modal" id="modal-filtros-busqueda">
-        <div class="modal-content" style="max-width:360px">
+        <div class="modal-content modal-content--sm">
             <h3>
                 <svg class="icon icon-line">
                     <use href="#icon-search" />
                 </svg>
                 Campos de búsqueda
             </h3>
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
-                <p style="font-size:0.85rem;color:var(--text-muted);line-height:1.4;margin:0">
-                    Campos a filtrar
-                </p>
-                <button onclick="UI.toggleTodosFiltros()" id="btn-toggle-all-filtros"
-                    style="width:auto;padding:0.3rem 0.75rem;font-size:0.8rem;min-width:9rem;flex-shrink:0;margin-left:0.75rem">
+            <div class="modal-filtros-header">
+                <p class="modal-filtros-desc">Campos a filtrar</p>
+                <button onclick="UI.toggleTodosFiltros()" id="btn-toggle-all-filtros" class="btn-toggle-all">
                     Desactivar todo
                 </button>
             </div>
-            <div id="filtros-busqueda-lista"
-                style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.25rem"></div>
+            <div id="filtros-busqueda-lista" class="filtros-lista"></div>
             <button class="btn-cancel" onclick="UI.cerrarFiltrosBusqueda()">Cerrar</button>
         </div>
     </div>
@@ -3597,7 +3924,7 @@
             <h3><svg class="icon icon-line">
                     <use href="#icon-alert" />
                 </svg> Confirmar</h3>
-            <p id="modal-confirmar-texto" style="color:var(--text-muted);line-height:1.5;margin-bottom:1.25rem"></p>
+            <p id="modal-confirmar-texto" class="modal-confirmar-texto"></p>
             <div class="btn-group">
                 <button class="btn-delete" id="modal-confirmar-ok">
                     <svg class="icon icon-line">
@@ -4788,18 +5115,18 @@
                         if (desc) {
                             desc.innerHTML = esValida
                                 ? 'Se encontraron mejoras o registros en GitHub que no están en este dispositivo:'
-                                : 'Se encontraron registros en GitHub.<br><strong style="color:var(--c-orange); margin-top: 0.4rem; display: block;">⚠️ Atención: Los datos fueron alterados manualmente.</strong>';
+                                : 'Se encontraron registros en GitHub.<br><strong class="gist-warn-altered">⚠️ Atención: Los datos fueron alterados manualmente.</strong>';
                         }
 
                         const detalle = document.getElementById('gist-novedades-detalle');
                         if (detalle) {
                             const chips = [];
                             if (resMerge.cDispsAdd) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Dispositivos nuevos</span><span class="gist-novedades-chip-count">+${resMerge.cDispsAdd}</span></div>`);
-                            if (resMerge.cDispsUpd) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Dispositivos a enriquecer</span><span class="gist-novedades-chip-count" style="color:var(--c-purple)">~${resMerge.cDispsUpd}</span></div>`);
+                            if (resMerge.cDispsUpd) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Dispositivos a enriquecer</span><span class="gist-novedades-chip-count gist-novedades-chip-count--purple">~${resMerge.cDispsUpd}</span></div>`);
                             if (resMerge.cGrabsAdd) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Grabadores nuevos</span><span class="gist-novedades-chip-count">+${resMerge.cGrabsAdd}</span></div>`);
-                            if (resMerge.cGrabsUpd) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Grabadores a enriquecer</span><span class="gist-novedades-chip-count" style="color:var(--c-purple)">~${resMerge.cGrabsUpd}</span></div>`);
+                            if (resMerge.cGrabsUpd) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Grabadores a enriquecer</span><span class="gist-novedades-chip-count gist-novedades-chip-count--purple">~${resMerge.cGrabsUpd}</span></div>`);
                             if (resMerge.cOtrosAdd) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Otros disp. nuevos</span><span class="gist-novedades-chip-count">+${resMerge.cOtrosAdd}</span></div>`);
-                            if (resMerge.cOtrosUpd) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Otros a enriquecer</span><span class="gist-novedades-chip-count" style="color:var(--c-purple)">~${resMerge.cOtrosUpd}</span></div>`);
+                            if (resMerge.cOtrosUpd) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Otros a enriquecer</span><span class="gist-novedades-chip-count gist-novedades-chip-count--purple">~${resMerge.cOtrosUpd}</span></div>`);
                             if (resMerge.cOtrosAdd) msgs.push(`+${resMerge.cOtrosAdd} otros`);
                             if (resMerge.cOtrosUpd) msgs.push(`~${resMerge.cOtrosUpd} otros`);
                             if (resMerge.cTipos) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Tipos Custom</span><span class="gist-novedades-chip-count">+${resMerge.cTipos}</span></div>`);
@@ -4955,7 +5282,7 @@
                             const clickable = n > 0 ? `class="stat-chip stat-chip-tipo" style="cursor:pointer" onclick="UI.irAActivosConFiltro('${_dashTipoAbierto}','${e.key}')"` : `class="stat-chip"`;
                             return `
                         <div ${clickable}>
-                            <div class="stat-chip-valor" style="color:${e.color}">${n}</div>
+                            <div class="stat-chip-valor stat-chip-val--${e.key}">${n}</div>
                             <div class="stat-chip-label">${e.label}</div>
                         </div>`;
                         }).join('');
@@ -4988,7 +5315,7 @@
                 const dashGrabadores = document.getElementById('dash-grabadores');
 
                 if (grabs.length === 0) {
-                    dashGrabadores.innerHTML = `<div style="color:var(--text-disabled);font-size:0.85rem">Sin grabadores en producción</div>`;
+                    dashGrabadores.innerHTML = `<div class="dash-empty-text">Sin grabadores en producción</div>`;
                 } else {
                     // 1. Calcular totales globales
                     let totalCanales = 0;
@@ -5005,22 +5332,20 @@
 
                     // 2. Armar el panel de estadísticas globales
                     const htmlTotales = `
-                    <div style="margin-bottom: 1.25rem; background: var(--bg-card); padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border);">
-                        <div style="text-align:center; font-size:0.8rem; font-weight:700; color:var(--text-main); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.8rem;">
-                            Canales de grabación
-                        </div>
-                        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:0.5rem;">
-                            <div style="text-align:center;">
-                                <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; letter-spacing:0.05em; margin-bottom:0.2rem">Capacidad Instalada</div>
-                                <div style="font-size:1.3rem; font-weight:700; color:var(--text-main); font-family:monospace">${totalCanales}</div>
+                    <div class="dash-grab-totales">
+                        <div class="dash-grab-totales-title">Canales de grabación</div>
+                        <div class="dash-grab-grid">
+                            <div class="dash-grab-col">
+                                <div class="dash-grab-label">Capacidad Instalada</div>
+                                <div class="dash-grab-val">${totalCanales}</div>
                             </div>
-                            <div style="text-align:center; border-left: 1px solid var(--border); border-right: 1px solid var(--border);">
-                                <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; letter-spacing:0.05em; margin-bottom:0.2rem">Utilizados</div>
-                                <div style="font-size:1.3rem; font-weight:700; color:var(--c-blue); font-family:monospace">${totalOcupados} <span style="font-size:0.8rem; color:var(--text-muted)">(${pctOcupado}%)</span></div>
+                            <div class="dash-grab-col--mid">
+                                <div class="dash-grab-label">Utilizados</div>
+                                <div class="dash-grab-val dash-grab-val--blue">${totalOcupados} <span class="dash-grab-val-sub">(${pctOcupado}%)</span></div>
                             </div>
-                            <div style="text-align:center;">
-                                <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; letter-spacing:0.05em; margin-bottom:0.2rem">Disponibles</div>
-                                <div style="font-size:1.3rem; font-weight:700; color:var(--c-green); font-family:monospace">${totalLibres} <span style="font-size:0.8rem; color:var(--text-muted)">(${pctLibre}%)</span></div>
+                            <div class="dash-grab-col">
+                                <div class="dash-grab-label">Disponibles</div>
+                                <div class="dash-grab-val dash-grab-val--green">${totalLibres} <span class="dash-grab-val-sub">(${pctLibre}%)</span></div>
                             </div>
                         </div>
                     </div>`;
@@ -5036,18 +5361,18 @@
                         else if (pct <= 65) colorBarra = 'var(--c-blue)';
                         else if (pct <= 85) colorBarra = 'var(--c-orange)';
 
-                        return `<div style="padding:0.6rem 0;border-bottom:1px solid var(--border)">
-                        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.3rem">
-                            <span style="font-weight:700;font-size:0.92rem">${esc(g.descripcion)}</span>
+                        return `<div class="dash-grab-row">
+                        <div class="dash-grab-row-header">
+                            <span class="dash-grab-row-nombre">${esc(g.descripcion)}</span>
                             <span class="badge badge-${g.tipo}-filled">${g.tipo.toUpperCase()}</span>
-                            <span style="margin-left:auto;font-size:0.8rem;color:var(--text-muted);font-family:monospace">${g.ip ? esc(g.ip) : ''}</span>
+                            <span class="dash-grab-row-ip">${g.ip ? esc(g.ip) : ''}</span>
                         </div>
-                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.8rem;color:var(--text-muted)">
+                        <div class="dash-grab-row-stats">
                             <span>${ocup}/${g.canales_n} canales ocupados · ${libre} libres</span>
-                            <span style="font-weight:600; color:var(--text-main)">${pct}%</span>
+                            <span class="dash-grab-row-pct">${pct}%</span>
                         </div>
-                        <div style="height:4px;background:var(--border);border-radius:var(--radius-pill);margin-top:0.4rem;overflow:hidden">
-                            <div style="height:100%;width:${pct}%;background:${colorBarra};border-radius:var(--radius-pill);transition:width 0.4s, background-color 0.4s"></div>
+                        <div class="dash-grab-barra">
+                            <div class="dash-grab-barra-fill" style="width:${pct}%;background:${colorBarra}"></div>
                         </div>
                     </div>`;
                     }).join('');
@@ -5097,12 +5422,12 @@
                         filas.push({ label: 'Sin forma', ...conteoForma['__sin_forma__'] });
 
                     if (filas.length === 0) {
-                        vistaHtml = `<div style="color:var(--text-disabled);font-size:0.85rem">Sin cámaras registradas</div>`;
+                        vistaHtml = `<div class="dash-empty-text">Sin cámaras registradas</div>`;
                     } else {
                         const col = (txt, color) =>
-                            `<span style="font-size:0.72rem;font-weight:600;color:${color};width:2.8rem;text-align:right">${txt}</span>`;
+                            `<span class="dash-cam-label-small" style="color:${color}">${txt}</span>`;
                         const header = `
-                        <div style="display:flex;justify-content:flex-end;gap:0.5rem;padding:0 0 0.3rem;border-bottom:1px solid var(--border);margin-bottom:0.1rem">
+                        <div class="dash-cam-header dash-cam-header--border">
                             ${col('TOTAL', 'var(--text-disabled)')}
                             ${col('PROD.', 'var(--c-blue)')}
                             ${col('DISP.', 'var(--c-green)')}
@@ -5111,10 +5436,10 @@
                             ${col('DESAF.', 'var(--text-muted)')}
                         </div>`;
                         const val = (n, color) =>
-                            `<span style="font-size:0.95rem;font-weight:700;width:2.8rem;text-align:right;color:${color}">${n}</span>`;
+                            `<span class="dash-cam-val" style="color:${color}">${n}</span>`;
                         const rows = filas.map((f, i) => `
-                        <div style="display:flex;align-items:center;gap:0.5rem;padding:0.45rem 0;${i < filas.length - 1 ? 'border-bottom:1px solid var(--border)' : ''}">
-                            <span style="flex:1;font-size:0.85rem;color:var(--text-muted);font-weight:600">${f.label}</span>
+                        <div class="dash-cam-row${i < filas.length - 1 ? ' dash-cam-row--border' : ''}">
+                            <span class="dash-cam-row-label">${f.label}</span>
                             ${val(f.total, 'var(--text-main)')}
                             ${val(f.prod, 'var(--c-blue)')}
                             ${val(f.total - f.prod - f.averiado - f.revisar - f.desafectado, 'var(--c-green)')}
@@ -5145,19 +5470,19 @@
 
                     if (filas.length === 0) {
                         vistaHtml = enProd === 0
-                            ? `<div style="color:var(--text-disabled);font-size:0.85rem">Sin cámaras en producción</div>`
-                            : `<div style="color:var(--text-disabled);font-size:0.85rem">Ningún canal tiene edificio asignado</div>`;
+                            ? `<div class="dash-empty-text">Sin cámaras en producción</div>`
+                            : `<div class="dash-empty-text">Ningún canal tiene edificio asignado</div>`;
                     } else {
                         vistaHtml = filas.map((f, i) => `
-                        <div style="display:flex;align-items:center;justify-content:space-between;padding:0.45rem 0;${i < filas.length - 1 ? 'border-bottom:1px solid var(--border)' : ''}">
-                            <span style="font-size:0.85rem;color:var(--text-muted);font-weight:600">${esc(f.label)}</span>
-                            <span style="font-size:1rem;font-weight:700">${f.n}</span>
+                        <div class="dash-cam-row dash-cam-row--spread${i < filas.length - 1 ? ' dash-cam-row--border' : ''}">
+                            <span class="dash-cam-row-label">${esc(f.label)}</span>
+                            <span class="dash-cam-val" style="color:var(--text-main)">${f.n}</span>
                         </div>`).join('');
                     }
                 }
 
                 document.getElementById('dash-camaras').innerHTML =
-                    `<div style="display:flex;flex-direction:column">${vistaHtml}</div>`;
+                    `<div class="flex-col">${vistaHtml}</div>`;
             }
 
             /* ---------- ACTIVOS ---------- */
@@ -5169,7 +5494,7 @@
 
                 if (disps.length === 0) {
                     lista.innerHTML = `<div class="empty-state">
-                    <svg class="icon icon-line" style="width:2rem;height:2rem;stroke:var(--text-muted)"><use href="#icon-camera"/></svg>
+                    <svg class="icon icon-line icon--lg-muted"><use href="#icon-camera"/></svg>
                     Sin dispositivos registrados.<br>Usá el botón <strong>+</strong> para agregar uno.
                 </div>`;
                     const contador = document.getElementById('contador-dispositivos');
@@ -5243,7 +5568,8 @@
 
                 // --- 3. Búsqueda ---
                 if (query) {
-                    const tokens = query.split(/\s+/).filter(Boolean);
+                    // 1. Mejoramos la extracción para permitir frases entre comillas (Ej: "templo b" 5)
+                    const tokens = (query.match(/"[^"]+"|\S+/g) || []).map(t => t.replace(/"/g, ''));
                     const tokenRegexes = tokens.map(t => new RegExp('(?<![a-z0-9])' + t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![a-z0-9])', 'i'));
 
                     function scoreDispositivo(d) {
@@ -5254,6 +5580,26 @@
                         const camposMap = { mac: d.mac, serial: d.serial, marca: d.marca, modelo: d.modelo, patrimonio: d.patrimonio, forma: d.forma };
                         const campos = Object.entries(camposMap).filter(([k, v]) => v && _busqActivos.has(k)).map(([, v]) => v.toLowerCase());
 
+                        if (_busqActivos.has('ubicacion')) {
+                            // Ubicación propia del dispositivo
+                            const edifDisp = (d.edificio || '').trim();
+                            const pisoDisp = (d.piso || '').trim();
+                            if (edifDisp || pisoDisp) campos.push([edifDisp, pisoDisp].filter(Boolean).join(' ').toLowerCase());
+
+                            // Ubicación del canal asignado
+                            if (asigD?.tipo === 'canal' && asigD.slot) {
+                                const edifCanal = (asigD.slot.edificio || '').trim();
+                                const pisoCanal = (asigD.slot.piso || '').trim();
+                                if (edifCanal || pisoCanal) campos.push([edifCanal, pisoCanal].filter(Boolean).join(' ').toLowerCase());
+                            }
+                            // Ubicación de otros dispositivos en producción
+                            if (asigD?.tipo === 'otro_prod' && asigD.item) {
+                                const edifOtro = (asigD.item.edificio || '').trim();
+                                const pisoOtro = (asigD.item.piso || '').trim();
+                                if (edifOtro || pisoOtro) campos.push([edifOtro, pisoOtro].filter(Boolean).join(' ').toLowerCase());
+                            }
+                        }
+
                         let estadoTextos = [];
                         if (_busqActivos.has('estado')) {
                             const estadoEfectivo = getEstadoEfectivo(d);
@@ -5261,20 +5607,33 @@
                             estadoTextos = ESTADO_ALIAS[estadoEfectivo] || [estadoEfectivo];
                         }
 
+                        // ── FAST-PASS: Si la búsqueda completa matchea un campo, gana inmediatamente ──
+                        if (campos.some(c => c.includes(query)) || (hayCanal && hayCanal.includes(query))) {
+                            return 0;
+                        }
+
                         let total = 0;
                         for (let ti = 0; ti < tokens.length; ti++) {
                             const t = tokens[ti];
                             const re = tokenRegexes[ti];
+
                             if (tipoKey === t) { total += 0; continue; }
                             if (tipoLabel === t) { total += 1; continue; }
+
+                            // Regex para coincidencia de palabra exacta
                             if (re.test(tipoKey) || re.test(tipoLabel)) { total += 2; continue; }
                             if (campos.some(c => re.test(c))) { total += 3; continue; }
-                            if (campos.some(c => c.includes(t))) { total += 4; continue; }
+
+                            // Includes parcial SOLO si la palabra tiene más de 1 letra
+                            if (t.length > 1 && campos.some(c => c.includes(t))) { total += 4; continue; }
+
                             if (hayCanal && re.test(hayCanal)) { total += 5; continue; }
-                            if (hayCanal && hayCanal.includes(t)) { total += 6; continue; }
+                            if (t.length > 1 && hayCanal && hayCanal.includes(t)) { total += 6; continue; }
+
                             if (estadoTextos.some(s => s === t)) { total += 1; continue; }
-                            if (estadoTextos.some(s => s.includes(t))) { total += 2; continue; }
-                            return Infinity;
+                            if (t.length > 1 && estadoTextos.some(s => s.includes(t))) { total += 2; continue; }
+
+                            return Infinity; // Falló en todo
                         }
                         return total;
                     }
@@ -5286,7 +5645,7 @@
                 }
 
                 if (sorted.length === 0) {
-                    lista.innerHTML = `<div class="empty-state"><svg class="icon icon-line" style="width:2rem;height:2rem;stroke:var(--text-muted)"><use href="#icon-search"/></svg>Sin resultados para "<strong>${esc(query)}</strong>".</div>`;
+                    lista.innerHTML = `<div class="empty-state"><svg class="icon icon-line icon--lg-muted"><use href="#icon-search"/></svg>Sin resultados para "<strong>${esc(query)}</strong>".</div>`;
                     document.getElementById('contador-dispositivos').textContent = '0';
                     return;
                 }
@@ -5307,29 +5666,27 @@
                     if (asig) {
                         if (asig.tipo === 'canal') {
                             const linea2 = [esc(asig.grab.descripcion), `CANAL ${asig.slot.canal}`].join(' · ');
-                            const linea3 = asig.slot.ip ? `<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(asig.slot.ip)}</div>` : '';
-                            const desc = asig.slot.descripcion ? `<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span class="badge badge-estado-produccion">${esc(asig.slot.descripcion)}</span></div>` : '';
-                            asignInfo = `${desc}<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${linea2}</div>${linea3}`;
+                            const linea3 = asig.slot.ip ? `<div class="text-truncate">${esc(asig.slot.ip)}</div>` : '';
+                            const desc = asig.slot.descripcion ? `<div class="text-truncate"><span class="badge badge-estado-produccion">${esc(asig.slot.descripcion)}</span></div>` : '';
+                            asignInfo = `${desc}<div class="text-truncate">${linea2}</div>${linea3}`;
                         } else if (asig.tipo === 'otro_prod') {
-                            // ⬅️ ACÁ ESTÁ LO NUEVO QUE TE FALTABA
-                            const ipHtml = asig.item.ip ? `<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(asig.item.ip)}</div>` : '';
-                            asignInfo = `<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span class="badge badge-estado-produccion">En Producción</span></div><div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(asig.item.descripcion || 'Sin descripción')}</div>${ipHtml}`;
+                            const ipHtml = asig.item.ip ? `<div class="text-truncate">${esc(asig.item.ip)}</div>` : '';
+                            asignInfo = `<div class="text-truncate"><span class="badge badge-estado-produccion">En Producción</span></div><div class="text-truncate">${esc(asig.item.descripcion || 'Sin descripción')}</div>${ipHtml}`;
                         } else {
-                            // Esto es para los Grabadores
-                            const ipHtml = asig.grab.ip ? `<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(asig.grab.ip)}</div>` : '';
-                            asignInfo = `<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span class="badge badge-estado-produccion">${esc(asig.grab.descripcion)}</span></div>${ipHtml}`;
+                            const ipHtml = asig.grab.ip ? `<div class="text-truncate">${esc(asig.grab.ip)}</div>` : '';
+                            asignInfo = `<div class="text-truncate"><span class="badge badge-estado-produccion">${esc(asig.grab.descripcion)}</span></div>${ipHtml}`;
                         }
                     }
 
                     const ESTADO_BADGE_INFO = { averiado: { label: 'Averiado', clase: 'badge-estado-averiado' }, revisar: { label: 'A revisar', clase: 'badge-estado-revisar' }, desafectado: { label: 'Desafectado', clase: 'badge-estado-desafectado' }, disponible: { label: 'Disponible', clase: 'badge-estado-disponible' } };
                     const estadoBadgeInfo = ESTADO_BADGE_INFO[estadoEfectivo];
-                    const estadoBadgeHtml = estadoBadgeInfo ? `<span class="badge ${estadoBadgeInfo.clase}" style="white-space:nowrap">${estadoBadgeInfo.label}</span>` : '';
-                    const derechaHtml = estadoBadgeHtml || asignInfo ? `<div style="font-size:0.78rem;color:var(--text-muted);text-align:right;flex-shrink:0;max-width:40%;line-height:1.35;overflow:hidden;display:flex;flex-direction:column;align-items:flex-end;gap:0.2rem">${estadoBadgeHtml}${asignInfo}</div>` : '';
+                    const estadoBadgeHtml = estadoBadgeInfo ? `<span class="badge ${estadoBadgeInfo.clase} text-truncate">${estadoBadgeInfo.label}</span>` : '';
+                    const derechaHtml = estadoBadgeHtml || asignInfo ? `<div class="activo-info-derecha">${estadoBadgeHtml}${asignInfo}</div>` : '';
 
                     return `<div class="dispositivo-item tipo-${esc(d.tipo)} ${estadoClase} anim-in" data-disp-id="${esc(d.id)}">
                     <div class="dispositivo-info">
                         <div class="dispositivo-nombre">
-                            ${tc.emoji} ${esc(titulo)} <span style="color:var(--text-muted); font-weight:normal; margin:0 0.2rem">-</span> ${tipoBadgeLabel} 
+                            ${tc.emoji} ${esc(titulo)} <span class="sep-muted">-</span> ${tipoBadgeLabel} 
                         </div>
                         <div class="dispositivo-meta">${subtitulo ? `<span>${subtitulo}</span>` : ''}</div>
                         ${(d.serial && d.mac) || d.patrimonio ? `<div class="disp-linea3">${[d.serial && d.mac ? `S/N: ${esc(d.serial)}` : '', d.patrimonio ? `PAT: ${esc(d.patrimonio)}` : ''].filter(Boolean).join(' · ')}</div>` : ''}
@@ -5390,9 +5747,9 @@
                     const chevStyle = isCollapsed ? 'transform: rotate(-90deg)' : '';
 
                     html += `
-                    <div class="grupo-activos-card" data-grupo="${esc(gLabel)}" style="margin-bottom: 0.85rem;">
-                        <div class="grupo-activos-header" data-toggle-grupo="${esc(gLabel)}" style="position: sticky; top: 56px; z-index: 10; background: var(--bg-card); display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; font-weight: 700; color: var(--c-orange); text-transform: uppercase; letter-spacing: 0.05em; padding: 0.6rem 0.25rem; border-bottom: 1px solid var(--border); margin-bottom: 0.6rem; cursor: pointer; transition: color 0.2s;">
-                            <span style="display:flex; align-items:center; gap:0.5rem;">${esc(gLabel)} <span class="badge badge-otro" style="color:var(--c-orange); border-color:var(--c-orange); font-size:0.7rem;">${items.length}</span></span>
+                    <div class="grupo-activos-card" data-grupo="${esc(gLabel)}">
+                        <div class="grupo-activos-header" data-toggle-grupo="${esc(gLabel)}">
+                            <span class="grupo-activos-header-label">${esc(gLabel)} <span class="badge badge-otro badge--grupo-count">${items.length}</span></span>
                             <svg class="nvr-chevron" style="${chevStyle}; stroke: var(--c-orange);" viewBox="0 0 24 24"><use href="#icon-chevron-down"/></svg>
                         </div>
                         <div class="activos-grid-transition ${colClass}${colStyle}">
@@ -5422,7 +5779,7 @@
 
                 if (grabs.length === 0) {
                     lista.innerHTML = `<div class="empty-state">
-                    <svg class="icon icon-line" style="width:2rem;height:2rem;stroke:var(--text-muted)"><use href="#icon-server"/></svg>
+                    <svg class="icon icon-line icon--lg-muted"><use href="#icon-server"/></svg>
                     Sin grabadores registrados.<br>Usá el botón <strong>+</strong> para agregar uno.
                 </div>`;
                     return;
@@ -5446,10 +5803,10 @@
                             // Si es vista Mosaico (Tarjetas)
                             else {
                                 return `<div class="canal-slot ocupado" data-canal="${c.canal}">
-                                    <div class="canal-dispositivo-nombre" style="flex:1" title="${esc(tituloCanal)}">${esc(tituloCanal)}</div>
-                                    <div style="display:flex; justify-content:space-between; align-items:flex-end; width:100%; margin-top:auto; gap:0.5rem;">
-                                        <div class="canal-dispositivo-ip" style="flex:1; min-width:0;">${c.ip ? esc(c.ip) : ''}</div>
-                                        <div class="canal-numero" style="flex-shrink:0;">CH ${c.canal}</div>
+                                    <div class="canal-dispositivo-nombre" title="${esc(tituloCanal)}">${esc(tituloCanal)}</div>
+                                    <div class="canal-slot-footer">
+                                        <div class="canal-dispositivo-ip">${c.ip ? esc(c.ip) : ''}</div>
+                                        <div class="canal-numero">CH ${c.canal}</div>
                                     </div>
                                 </div>`;
                             }
@@ -5462,9 +5819,9 @@
                                 </div>`;
                             } else {
                                 return `<div class="canal-slot vacio" data-canal="${c.canal}">
-                                    <div class="canal-vacio-label" style="flex:1">— Vacío —</div>
-                                    <div style="display:flex; justify-content:flex-end; align-items:flex-end; width:100%; margin-top:auto;">
-                                        <div class="canal-numero" style="flex-shrink:0;">CH ${c.canal}</div>
+                                    <div class="canal-vacio-label">— Vacío —</div>
+                                    <div class="canal-slot-footer canal-slot-footer--end">
+                                        <div class="canal-numero">CH ${c.canal}</div>
                                     </div>
                                 </div>`;
                             }
@@ -5479,17 +5836,17 @@
                     return `<div class="nvr-card anim-in${collapsed ? ' collapsed' : ''}" data-grab-id="${esc(g.id)}">
                     <div class="nvr-card-header nvr-header-toggle">
                         <div class="nvr-card-header-info">
-                            <div class="nvr-card-nombre" style="display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap">
+                            <div class="nvr-card-nombre">
                                 <span>${g.tipo === 'nvr' ? '📟' : '📼'} ${esc(g.descripcion)}</span>
                                 <span class="badge badge-${g.tipo}-filled">${g.tipo.toUpperCase()}</span>
-                                ${g.ip ? `<span style="font-size:0.85rem; font-weight:500; color:var(--text-muted); font-family:monospace; margin-left:0.2rem">${esc(g.ip)}</span>` : ''}
+                                ${g.ip ? `<span class="nvr-card-ip">${esc(g.ip)}</span>` : ''}
                             </div>
                             <div class="nvr-card-meta">
-                                ${g.modelo ? `${esc(g.modelo)} · ` : ''}<span style="color:var(--text-main);font-weight:600">${ocupados}/${g.canales_n}</span> ocupados · <span style="font-weight:600">${libres}</span> libres
+                                ${g.modelo ? `${esc(g.modelo)} · ` : ''}<span class="nvr-card-meta-ocupados">${ocupados}/${g.canales_n}</span> ocupados · <span class="nvr-card-meta-libres">${libres}</span> libres
                             </div>
                         </div>
                         <svg class="nvr-chevron" viewBox="0 0 24 24"><use href="#icon-chevron-down"/></svg>
-                        <button class="icon-btn nvr-btn-editar" style="flex-shrink:0" title="Editar Grabador">
+                        <button class="icon-btn nvr-btn-editar" title="Editar Grabador">
                             <svg class="icon icon-line"><use href="#icon-edit"/></svg>
                         </button>
                     </div>
@@ -5526,7 +5883,7 @@
                 const listaOtros = document.getElementById('lista-otros-prod');
                 const otros = _data.otros_prod || [];
                 if (otros.length === 0) {
-                    listaOtros.innerHTML = `<div style="color:var(--text-disabled);font-size:0.85rem;text-align:center;padding:1.5rem 0;">Sin otros dispositivos en producción</div>`;
+                    listaOtros.innerHTML = `<div class="dash-empty-text dash-empty-text--center">Sin otros dispositivos en producción</div>`;
                 } else {
                     listaOtros.innerHTML = otros.map(o => {
                         const disp = o.dispositivoId ? _data.dispositivos.find(d => d.id === o.dispositivoId) : null;
@@ -5542,14 +5899,14 @@
                                     ${disp && disp.modelo ? `<span>${esc(disp.modelo)}</span>` : ''}
                                 </div>
                             </div>
-                            <div style="font-size:0.8rem;color:var(--text-muted);text-align:right">
-                                ${p ? `<div style="font-family:monospace; margin-bottom:0.2rem; color:var(--text-main)">${esc(p)}</div>` : ''}
-                                ${o.edificio ? `<div>${esc(o.edificio)}${o.piso ? ` (Píso ${esc(o.piso)})` : ''}</div>` : ''}
+                            <div class="activo-info-derecha">
+                                ${p ? `<div class="text-truncate nvr-card-ip">${esc(p)}</div>` : ''}
+                                ${o.edificio ? `<div class="text-truncate">${esc(o.edificio)}${o.piso ? ` (Píso ${esc(o.piso)})` : ''}</div>` : ''}
                             </div>
                         </div>`;
                     }).join('');
                 }
-            // Delegación permanente para Otros Dispositivos
+                // Delegación permanente para Otros Dispositivos
                 if (!listaOtros._delegRegistrada) {
                     listaOtros._delegRegistrada = true;
                     listaOtros.addEventListener('click', function (e) {
@@ -5557,7 +5914,7 @@
                         if (item) { UI.abrirEditarOtroProd(item.dataset.otroId); }
                     });
                 }
-            } 
+            }
 
             // ==============================================================
             // UI — CONTROLADOR PÚBLICO
@@ -5623,6 +5980,7 @@
                 { id: 'forma', label: 'Forma (cámara)' },
                 { id: 'canal', label: 'Descripción de canal' },
                 { id: 'estado', label: 'Estado' },
+                { id: 'ubicacion', label: 'Ubicación (Edificio / Piso)' },
             ];
             const KEY_BUSQ = 'cctv_busq_activos';
             const _busqActivos = (() => {
@@ -5630,11 +5988,12 @@
                     const saved = JSON.parse(localStorage.getItem(KEY_BUSQ) || 'null');
                     if (Array.isArray(saved)) {
                         const validos = saved.filter(id => BUSQ_CAMPOS.some(f => f.id === id));
-                        if (validos.length > 0) return new Set(validos);
+                        return new Set(validos);
                     }
                 } catch (_) { }
                 return new Set(BUSQ_CAMPOS.map(f => f.id));
             })();
+
             function _guardarBusqActivos() {
                 try { localStorage.setItem(KEY_BUSQ, JSON.stringify([..._busqActivos])); } catch (_) { }
             }
@@ -5718,8 +6077,8 @@
 
                 abrirFiltrosBusqueda() {
                     const lista = document.getElementById('filtros-busqueda-lista');
-                    lista.innerHTML = BUSQ_CAMPOS.map(f => `
-                        <!-- Usamos <label> nativo en lugar de <div> con onclick -->
+                    const camposOrdenados = [...BUSQ_CAMPOS].sort((a, b) => a.label.localeCompare(b.label));
+                    lista.innerHTML = camposOrdenados.map(f => `
                         <label class="filtro-row">
                             <span class="filtro-label">${f.label}</span>
                             <span class="filtro-toggle">
@@ -5729,6 +6088,11 @@
                                 <span class="filtro-toggle-track"></span>
                             </span>
                         </label>`).join('');
+
+                    // Actualizamos el texto al abrir el modal
+                    const btnAll = document.getElementById('btn-toggle-all-filtros');
+                    if (btnAll) btnAll.textContent = _busqActivos.size > 0 ? 'Desactivar todo' : 'Activar todo';
+
                     MM.abrir('modal-filtros-busqueda');
                 },
 
@@ -5740,29 +6104,52 @@
                     if (activo) _busqActivos.add(id);
                     else _busqActivos.delete(id);
                     _guardarBusqActivos();
-                    const btn = document.getElementById('btn-filtros-busqueda');
-                    btn.classList.toggle('tiene-desactivados', _busqActivos.size < BUSQ_CAMPOS.length);
+                    window.UI._filtrosPrevios = null;
+                    // Actualizamos el texto si tocás los checks individualmente
                     const btnAll = document.getElementById('btn-toggle-all-filtros');
-                    if (btnAll) btnAll.textContent = _busqActivos.size === BUSQ_CAMPOS.length ? 'Desactivar todo' : 'Activar todo';
+                    if (btnAll) btnAll.textContent = _busqActivos.size > 0 ? 'Desactivar todo' : 'Activar todo';
+
                     renderActivos();
                 },
 
                 toggleTodosFiltros() {
-                    const todosActivos = _busqActivos.size === BUSQ_CAMPOS.length;
-                    if (todosActivos) {
-                        _busqActivos.clear();
+                    // Ahora la lógica pregunta: "¿Hay AL MENOS UNO activado?"
+                    const hayActivos = _busqActivos.size > 0;
+
+                    if (hayActivos) {
+                        _busqActivos.clear(); // Si hay alguno, los borra todos
                     } else {
-                        BUSQ_CAMPOS.forEach(f => _busqActivos.add(f.id));
+                        BUSQ_CAMPOS.forEach(f => _busqActivos.add(f.id)); // Si no hay ninguno, los activa todos
                     }
+
                     document.querySelectorAll('[id^="filtro-cb-"]').forEach(cb => {
                         cb.checked = _busqActivos.has(cb.id.replace('filtro-cb-', ''));
                     });
-                    const btn = document.getElementById('btn-filtros-busqueda');
-                    btn.classList.toggle('tiene-desactivados', _busqActivos.size < BUSQ_CAMPOS.length);
+
+                    // Cambiamos el texto del botón al tocarlo
                     const btnAll = document.getElementById('btn-toggle-all-filtros');
-                    if (btnAll) btnAll.textContent = _busqActivos.size === BUSQ_CAMPOS.length ? 'Desactivar todo' : 'Activar todo';
+                    if (btnAll) btnAll.textContent = _busqActivos.size > 0 ? 'Desactivar todo' : 'Activar todo';
+
                     _guardarBusqActivos();
+                    window.UI._filtrosPrevios = null;
                     renderActivos();
+                },
+
+                _restaurarFiltrosPrevios() {
+                    if (window.UI._filtrosPrevios) {
+                        _busqActivos.clear();
+                        window.UI._filtrosPrevios.forEach(f => _busqActivos.add(f));
+                        window.UI._filtrosPrevios = null; // Borramos la foto
+                        _guardarBusqActivos();
+
+                        document.querySelectorAll('[id^="filtro-cb-"]').forEach(cb => {
+                            cb.checked = _busqActivos.has(cb.id.replace('filtro-cb-', ''));
+                        });
+                        const btnFiltros = document.getElementById('btn-filtros-busqueda');
+                        if (btnFiltros) btnFiltros.classList.toggle('tiene-desactivados', _busqActivos.size < BUSQ_CAMPOS.length);
+                        const btnAll = document.getElementById('btn-toggle-all-filtros');
+                        if (btnAll) btnAll.textContent = _busqActivos.size > 0 ? 'Desactivar todo' : 'Activar todo';
+                    }
                 },
 
                 abrirVistaProduccion() {
@@ -5828,15 +6215,15 @@
                     if (!cont) return;
                     const custom = Object.entries(S.TIPOS).filter(([, v]) => !v.builtin);
                     if (!custom.length) {
-                        cont.innerHTML = `<div style="font-size:0.85rem;color:var(--text-disabled);padding:0.25rem 0.25rem 0.5rem">Sin tipos personalizados</div>`;
+                        cont.innerHTML = `<div class="dash-empty-text dash-empty-text--sm-pad">Sin tipos personalizados</div>`;
                         return;
                     }
                     cont.innerHTML = custom.map(([k, v]) => `
-                        <div style="display:flex;align-items:center;gap:0.5rem;padding:0.35rem 0;border-bottom:1px solid var(--border)">
-                            <span style="font-size:1.1rem;width:28px;text-align:center">${v.emoji}</span>
-                            <span style="flex:1;font-size:0.9rem">${esc(v.label)}</span>
-                            <button onclick="UI.eliminarTipoCustom('${esc(k)}')" class="icon-btn btn-delete" style="width:32px;height:32px;min-width:unset;color:var(--c-white)" title="Eliminar tipo">
-                                <svg class="icon icon-line" style="width:14px;height:14px"><use href="#icon-trash"/></svg>
+                        <div class="tipo-custom-row">
+                            <span class="tipo-custom-emoji">${v.emoji}</span>
+                            <span class="tipo-custom-label">${esc(v.label)}</span>
+                            <button onclick="UI.eliminarTipoCustom('${esc(k)}')" class="icon-btn btn-delete btn-delete--sm" title="Eliminar tipo">
+                                <svg class="icon icon-line icon--sm"><use href="#icon-trash"/></svg>
                             </button>
                         </div>`).join('');
                 },
@@ -5990,7 +6377,7 @@
                         setTimeout(() => {
                             if (_editandoOtroProdId) UI.abrirEditarOtroProd(_editandoOtroProdId);
                             else UI.abrirNuevoOtroProd();
-                            
+
                             setTimeout(() => {
                                 document.getElementById('sel-otro-prod-dispositivo').value = snap.dispositivoId;
                                 document.getElementById('otro-prod-disp-input').value = snap.dispInput;
@@ -6017,15 +6404,15 @@
                     if (!cont) return;
                     const lista = S.edificios;
                     if (!lista.length) {
-                        cont.innerHTML = `<div style="font-size:0.85rem;color:var(--text-disabled);padding:0.25rem 0.25rem 0.5rem">Sin edificios declarados</div>`;
+                        cont.innerHTML = `<div class="dash-empty-text dash-empty-text--sm-pad">Sin edificios declarados</div>`;
                         return;
                     }
                     cont.innerHTML = lista.map((nombre, idx) => `
-                        <div style="display:flex;align-items:center;gap:0.5rem;padding:0.35rem 0;border-bottom:1px solid var(--border)">
-                            <span style="font-size:1.1rem;width:28px;text-align:center">🏢</span>
-                            <span style="flex:1;font-size:0.9rem">${esc(nombre)}</span>
-                            <button onclick="UI.eliminarEdificio(${idx})" class="icon-btn btn-delete" style="width:32px;height:32px;min-width:unset;color:var(--c-white)" title="Eliminar edificio">
-                                <svg class="icon icon-line" style="width:14px;height:14px"><use href="#icon-trash"/></svg>
+                        <div class="tipo-custom-row">
+                            <span class="tipo-custom-emoji">🏢</span>
+                            <span class="tipo-custom-label">${esc(nombre)}</span>
+                            <button onclick="UI.eliminarEdificio(${idx})" class="icon-btn btn-delete btn-delete--sm" title="Eliminar edificio">
+                                <svg class="icon icon-line icon--sm"><use href="#icon-trash"/></svg>
                             </button>
                         </div>`).join('');
                 },
@@ -6108,6 +6495,7 @@
                             inputBusq.value = '';
                             const btnX = document.getElementById('btn-limpiar-busqueda');
                             if (btnX) btnX.style.display = 'none';
+                            UI._restaurarFiltrosPrevios();
                             setTimeout(() => renderActivos(), 200);
                         }
                         inputBusq.blur();
@@ -6145,6 +6533,28 @@
                     const tipoLabel = S.TIPOS[tipo]?.label?.toLowerCase() || tipo;
                     const estadoQ = ESTADO_QUERY[estado] || estado;
                     const query = [tipoLabel, estadoQ].filter(Boolean).join(' ');
+
+                    // ── OVERRIDE TEMPORAL DE FILTROS ──
+                    if (!_busqActivos.has('tipo') || !_busqActivos.has('estado')) {
+                        // Sacamos una "foto" de cómo estaban los filtros originales
+                        if (!window.UI._filtrosPrevios) {
+                            window.UI._filtrosPrevios = new Set(_busqActivos);
+                        }
+                        // Forzamos los necesarios para esta búsqueda
+                        _busqActivos.add('tipo');
+                        _busqActivos.add('estado');
+                        _guardarBusqActivos();
+
+                        // Actualizamos checkboxes visuales
+                        const cbTipo = document.getElementById('filtro-cb-tipo');
+                        if (cbTipo) cbTipo.checked = true;
+                        const cbEstado = document.getElementById('filtro-cb-estado');
+                        if (cbEstado) cbEstado.checked = true;
+                        const btnFiltros = document.getElementById('btn-filtros-busqueda');
+                        if (btnFiltros) btnFiltros.classList.toggle('tiene-desactivados', _busqActivos.size < BUSQ_CAMPOS.length);
+                        const btnAll = document.getElementById('btn-toggle-all-filtros');
+                        if (btnAll) btnAll.textContent = _busqActivos.size > 0 ? 'Desactivar todo' : 'Activar todo';
+                    }
 
                     if (_dashTipoAbierto) { _dashTipoAbierto = null; setTimeout(() => renderDashboard(), 200); }
                     ['dashboard', 'activos', 'produccion'].forEach(t => {
@@ -6217,6 +6627,7 @@
                                 window.UI._activosCollapsed = new Set(window.UI._estadoColapsadoPrevio);
                                 window.UI._estadoColapsadoPrevio = null;
                             }
+                            UI._restaurarFiltrosPrevios();
                         }
 
                         renderActivos();
@@ -6238,8 +6649,7 @@
                         window.UI._activosCollapsed = new Set(window.UI._estadoColapsadoPrevio);
                         window.UI._estadoColapsadoPrevio = null;
                     }
-
-                    // Al limpiar, ejecutamos el render de inmediato
+                    UI._restaurarFiltrosPrevios();
                     renderActivos();
                 },
 
@@ -6377,20 +6787,20 @@
 
                     let avisoHtml = '';
                     if (enProduccionComoGrab && canalesOcupados > 0) {
-                        avisoHtml = `<div id="aviso-prod-disp" style="font-size:0.8rem;background:var(--input-bg);border-radius:var(--radius-sm);padding:0.6rem 0.75rem;margin-bottom:0.75rem;line-height:1.45">
+                        avisoHtml = `<div id="aviso-prod-disp" class="aviso-prod">
                             ⚠️ Este grabador está en producción con <strong>${canalesOcupados} canal${canalesOcupados === 1 ? '' : 'es'} ocupado${canalesOcupados === 1 ? '' : 's'}</strong>.<br>
                             No se puede cambiar el tipo, canales ni eliminar mientras tenga cámaras asignadas.
                         </div>`;
                     } else if (enProduccionComoGrab) {
-                        avisoHtml = `<div id="aviso-prod-disp" style="font-size:0.8rem;background:var(--input-bg);border-radius:var(--radius-sm);padding:0.6rem 0.75rem;margin-bottom:0.75rem;line-height:1.45">
+                        avisoHtml = `<div id="aviso-prod-disp" class="aviso-prod">
                             ℹ️ Este grabador está en producción. No se puede eliminar
                         </div>`;
                     } else if (enProduccionComoCanal) {
-                        avisoHtml = `<div id="aviso-prod-disp" style="font-size:0.8rem;background:var(--input-bg);border-radius:var(--radius-sm);padding:0.6rem 0.75rem;margin-bottom:0.75rem;line-height:1.45">
+                        avisoHtml = `<div id="aviso-prod-disp" class="aviso-prod">
                             ℹ️ Este dispositivo está asignado a un grabador en producción.
                         </div>`;
                     }
-                    const formBody = document.querySelector('#modal-editar-disp [style*="overflow-y:auto"]');
+                    const formBody = document.querySelector('#modal-editar-disp .modal-scroll-body');
                     const existente = document.getElementById('aviso-prod-disp');
                     if (existente) existente.remove();
                     if (avisoHtml && formBody) formBody.insertAdjacentHTML('afterbegin', avisoHtml);
@@ -6911,9 +7321,9 @@
                         const sub = [formaLabel, d.modelo].filter(Boolean).join(' · ');
                         const tipo = S.TIPOS[d.tipo];
                         const etiqueta = ocupado
-                            ? ' <span style=\'font-size:0.75rem\'>(ocupado)</span>'
+                            ? ' <span class="estado-tag">(ocupado)</span>'
                             : estadoInactivo
-                                ? ` <span style='font-size:0.75rem'>(${estadoInactivo})</span>`
+                                ? ` <span class="estado-tag">(${estadoInactivo})</span>`
                                 : '';
                         const titleAttr = ocupado
                             ? 'title="Ya asignado a otro canal"'
@@ -7077,7 +7487,7 @@
                     document.getElementById('otro-prod-piso').value = '';
                     document.getElementById('otro-prod-rack').value = '';
                     document.getElementById('otro-prod-comentarios').value = '';
-                    
+
                     document.getElementById('sel-otro-prod-dispositivo').value = '';
                     document.getElementById('otro-prod-disp-input').value = '';
                     document.getElementById('otro-prod-disp-input').classList.remove('error');
@@ -7093,7 +7503,7 @@
                         ...(_data.otros_prod || []).filter(o => o.dispositivoId).map(o => o.dispositivoId)
                     ];
                     _canalDispOcupados = new Set(idsOcupados); // Reciclamos el Set para bloquearlos en el buscador
-                    
+
                     document.getElementById('modal-otro-prod-titulo').textContent = 'Agregar a Producción';
                     MM.abrir('modal-otro-prod');
                 },
@@ -7101,7 +7511,7 @@
                 abrirEditarOtroProd(id) {
                     const o = (_data.otros_prod || []).find(x => x.id === id); if (!o) return;
                     _editandoOtroProdId = id;
-                    
+
                     document.getElementById('modal-otro-prod-titulo').textContent = 'Editar Dispositivo';
                     document.getElementById('otro-prod-descripcion').value = o.descripcion || '';
                     document.getElementById('otro-prod-ip').value = o.ip || '';
@@ -7114,7 +7524,7 @@
                     const hiddenSel = document.getElementById('sel-otro-prod-dispositivo');
                     const input = document.getElementById('otro-prod-disp-input');
                     input.classList.remove('error');
-                    
+
                     hiddenSel.value = o.dispositivoId || '';
                     if (o.dispositivoId) {
                         const d = _data.dispositivos.find(x => x.id === o.dispositivoId);
@@ -7145,7 +7555,7 @@
                 guardarOtroProd() {
                     const dispId = document.getElementById('sel-otro-prod-dispositivo').value;
                     const dispInput = document.getElementById('otro-prod-disp-input');
-                    
+
                     if (!dispId) {
                         dispInput.classList.add('error');
                         toast('Seleccioná un dispositivo de la lista', 'error');
@@ -7169,7 +7579,7 @@
                     historial.empujar(_editandoOtroProdId ? 'Editar dispositivo en producción' : 'Agregar dispositivo a producción');
 
                     if (!_data.otros_prod) _data.otros_prod = [];
-                    
+
                     if (_editandoOtroProdId) {
                         const idx = _data.otros_prod.findIndex(x => x.id === _editandoOtroProdId);
                         if (idx !== -1) _data.otros_prod[idx] = S.sanitizarOtroProd(datos);
@@ -7189,7 +7599,7 @@
 
                     historial.empujar('Quitar dispositivo de producción');
                     _data.otros_prod = _data.otros_prod.filter(x => x.id !== _editandoOtroProdId);
-                    
+
                     guardar(); render(); MM.cerrar('modal-otro-prod');
                     toast('Quitado de producción', 'success');
                 },
@@ -7200,7 +7610,7 @@
                     const hidden = document.getElementById('sel-otro-prod-dispositivo');
                     const dd = document.getElementById('otro-prod-disp-dropdown');
                     input.classList.remove('error');
-                    
+
                     const query = input.value.trim().toLowerCase();
                     if (!query) hidden.value = '';
 
@@ -7219,9 +7629,9 @@
                         const ocupado = _canalDispOcupados.has(d.id); // Reciclamos _canalDispOcupados
                         const estadoInactivo = ESTADO_LABELS_DISP[d.estado] || '';
                         const deshabilitado = ocupado || !!estadoInactivo;
-                        const etiqueta = ocupado ? ' <span style="font-size:0.75rem">(en uso)</span>' : estadoInactivo ? ` <span style="font-size:0.75rem">(${estadoInactivo})</span>` : '';
+                        const etiqueta = ocupado ? ' <span class="estado-tag">(en uso)</span>' : estadoInactivo ? ` <span class="estado-tag">(${estadoInactivo})</span>` : '';
                         const sub = [d.forma ? d.forma.replace(/-/g, ' ') : '', d.modelo].filter(Boolean).join(' · ');
-                        
+
                         return `<div class="canal-disp-item${deshabilitado ? ' ocupado' : ''}" data-id="${esc(d.id)}" data-mac="${esc(d.mac || d.serial || '')}">
                             <div class="canal-disp-item-mac">${S.TIPOS[d.tipo]?.emoji || ''} ${esc(d.mac || d.serial || d.id)}${etiqueta}</div>
                             ${sub ? `<div class="canal-disp-item-sub">${esc(sub)}</div>` : ''}
@@ -7273,7 +7683,7 @@
                     items.forEach((el, i) => el.classList.toggle('highlighted', i === _canalDispHighlight));
                     if (_canalDispHighlight >= 0) items[_canalDispHighlight].scrollIntoView({ block: 'nearest' });
                 },
-                
+
                 verActivoDesdeOtroProd() {
                     const dispId = document.getElementById('sel-otro-prod-dispositivo').value;
                     if (!dispId) return;
@@ -7340,7 +7750,7 @@
 
                             _importarParsed = { ...data, _disps: newDisps, _grabs: newGrabs, _valida: esValida };
 
-                            const textoAlerta = !esValida ? `<span style="color:var(--c-orange);font-size:0.75rem;display:block;margin-top:0.3rem">⚠️ Archivo alterado externamente</span>` : '';
+                            const textoAlerta = !esValida ? `<span class="import-warn">⚠️ Archivo alterado externamente</span>` : '';
                             label.innerHTML = `<span class="import-ok">✓ ${esc(file.name)}</span><span class="import-sub">${newDisps.length} dispositivos · ${newGrabs.length} grabadores</span>${textoAlerta}`;
                             zone.style.borderColor = !esValida ? 'var(--c-orange)' : 'var(--c-green)';
 
@@ -7409,7 +7819,7 @@
                         const mapD = new Map(_data.dispositivos.map(d => [d.id, d]));
                         const mapG = new Map(_data.grabadores.map(g => [g.id, g]));
                         const mapO = new Map((_data.otros_prod || []).map(o => [o.id, o]));
-                        
+
                         let dAdd = 0, dUpd = 0, gAdd = 0, gUpd = 0, oAdd = 0, oUpd = 0;
 
                         newDisps.forEach(san => {
@@ -7477,8 +7887,8 @@
                 async exportarJSON() {
                     try {
                         const disps = _data.dispositivos.map(_sanDisp).filter(Boolean);
-                        const grabs = _data.grabadores.map(_sanGrab).filter(Boolean);                        
-                        const otros = (_data.otros_prod || []).map(S.sanitizarOtroProd).filter(Boolean);                        
+                        const grabs = _data.grabadores.map(_sanGrab).filter(Boolean);
+                        const otros = (_data.otros_prod || []).map(S.sanitizarOtroProd).filter(Boolean);
                         const tiposCustom = {};
                         Object.entries(S.TIPOS).forEach(([k, v]) => {
                             if (!v.builtin) tiposCustom[k] = { label: v.label, emoji: v.emoji };
@@ -7572,7 +7982,7 @@
                         let origen = 'canal';
                         if (selectId.startsWith('nuevo-grab')) origen = 'nuevo-grab';
                         else if (selectId.startsWith('editar-grab')) origen = 'editar-grab';
-                        else if (selectId.startsWith('otro-prod')) origen = 'otro-prod'; 
+                        else if (selectId.startsWith('otro-prod')) origen = 'otro-prod';
                         UI.abrirEdificios(origen);
                     } else {
                         seleccionado = sel.value;
@@ -7759,12 +8169,13 @@
                                 const grupos = document.querySelectorAll('.grupo-activos-card');
                                 if (!grupos.length) return;
 
-                                // Calculamos cuántos están cerrados
-                                let colapsados = 0;
-                                grupos.forEach(g => { if (window.UI._activosCollapsed.has(g.dataset.grupo)) colapsados++; });
+                                // 1. Miramos el estado de la tarjeta EXACTA que el usuario presionó
+                                const groupId = headerActivos.dataset.toggleGrupo;
+                                const estabaCerrado = window.UI._activosCollapsed.has(groupId);
+                                
+                                // Si estaba cerrado, su intención al presionar era abrir. Por ende, abrimos todos.
+                                const abrirTodos = estabaCerrado; 
 
-                                // Si más de la mitad están cerrados, abrimos todos. Si no, cerramos todos.
-                                const abrirTodos = colapsados > (grupos.length / 2);
                                 grupos.forEach(g => {
                                     if (abrirTodos) window.UI._activosCollapsed.delete(g.dataset.grupo);
                                     else window.UI._activosCollapsed.add(g.dataset.grupo);
@@ -7781,10 +8192,14 @@
                                 const grabs = document.querySelectorAll('.nvr-card');
                                 if (!grabs.length) return;
 
-                                let colapsados = 0;
-                                grabs.forEach(g => { if (!_grabExpanded.has(g.dataset.grabId)) colapsados++; });
+                                // 1. Miramos el estado de la tarjeta EXACTA que el usuario presionó
+                                const card = headerNVR.closest('.nvr-card');
+                                const grabId = card.dataset.grabId;
+                                const estabaAbierto = _grabExpanded.has(grabId);
+                                
+                                // Si estaba abierto, su intención era cerrar. Por ende, cerramos todos.
+                                const abrirTodos = !estabaAbierto;
 
-                                const abrirTodos = colapsados > (grabs.length / 2);
                                 grabs.forEach(g => {
                                     if (abrirTodos) _grabExpanded.add(g.dataset.grabId);
                                     else _grabExpanded.delete(g.dataset.grabId);
@@ -7874,6 +8289,7 @@
 
             window.historial = historial;
             window.GistSync = GistSync;
+            window.MM = MM
             window._toggleTipoDetalle = _toggleTipoDetalle;
             window._setCamarasVista = function (vista) {
                 if (_dashCamarasVista === vista) return;
@@ -7897,9 +8313,6 @@
             cargar();
             render();
 
-            document.getElementById('btn-filtros-busqueda')
-                ?.classList.toggle('tiene-desactivados', _busqActivos.size < BUSQ_CAMPOS.length);
-
             GistSync.init();
             GistSync.verificarAlAbrir();
 
@@ -7920,36 +8333,13 @@
 </html>
 
 <!--// ====================================================================
-    //                 NOTAS SISTEMA LUSHIBOSCA VERSION 242
+    //                 NOTAS SISTEMA LUSHIBOSCA VERSION 250
     // ====================================================================
-    
-     - CAMBIOS v242 (Refactor Etapa 1)
-     1) Eliminado bloque .card h2 duplicado (se unificaron las dos definiciones
-        en una sola, conservando font-size:0.9rem y min-height:44px)
-     2) Corregido número de versión en modal Ajustes (era v238)
-     3) Agregado bloque "CLASES UTILITARIAS — REFACTOR v242" al final del <style>:
-        - Variables: --modal-max-w-sm
-        - Estructura modal: .modal-sticky-header, .modal-sticky-footer,
-          .modal-sticky-footer--col, .modal-scroll-body
-        - Layout: .input-flex-row, .input-flex-row--no-mb, .btn-inline,
-          .card-title-actions, .ajustes-section, .section-label
-        - Componentes: .contador-badge, .aviso-prod, .gist-privacy-note,
-          .gist-sync-row, .btn-gist-action, .btn-ajustes
-        - Búsqueda: .search-inner, .icon-search-lupa, #btn-limpiar-busqueda,
-          #btn-filtros-busqueda, #input-busqueda (padding)
-        - Dashboard: .dash-grab-totales, .dash-grab-grid, .dash-grab-col,
-          .dash-grab-col--mid, .dash-grab-label, .dash-grab-val,
-          .dash-grab-val--blue, .dash-grab-val--green, .dash-grab-val-sub,
-          .dash-grab-row y sub-clases, .dash-grab-barra, .dash-grab-barra-fill,
-          .dash-empty-text, .dash-camaras-container, .panel-produccion--card-mt
-        - Tipos custom: .tipo-custom-row, .tipo-custom-emoji, .tipo-custom-label,
-          .btn-delete--sm, .icon--sm
-        - Chips estado: .stat-chip-val--produccion/disponible/averiado/revisar/desafectado
-        - Utilitarias: .tab-icon, .filtros-lista, .modal-filtros-desc,
-          .modal-filtros-header, .btn-toggle-all, .estado-tag,
-          .modal-confirmar-texto, .import-warn, #btn-alternar-tema
-     
-     - BUGS CONOCIDOS:
-     1) 
 
-    -->
+     - CAMBIOS 
+       v249: Modales ajustes, gist, nuevo-disp, nuevo-grab y editar-grab
+             convertidos a modal-content--flex con modal-sticky-header
+             y modal-sticky-footer para header y botones siempre visibles.
+
+     
+     - BUGS
