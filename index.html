@@ -3884,12 +3884,12 @@
                 </select>
             </div>
             <div class="form-group">
-                <label>Ordenar por</label>
+                <label>Agrupar por</label>
                 <select id="sel-vista-orden" onchange="UI.setActivosOrden(this.value)">
-                    <option value="forma">Tipo / Forma</option>
+                    <option value="edificio-piso">Edificio / Piso</option>
                     <option value="estado">Estado</option>
                     <option value="marca">Marca / Modelo</option>
-                    <option value="edificio-piso">Edificio - Piso</option>
+                    <option value="forma">Tipo / Forma</option>
                 </select>
             </div>
 
@@ -6837,7 +6837,7 @@
                         // 1. Limpiamos la barra de búsqueda si tiene texto
                         const inputBusq = document.getElementById('input-busqueda');
                         if (inputBusq && inputBusq.value) {
-                            UI.limpiarBusqueda();
+                            UI.limpiarBusqueda(); // Esta función ya restaura los colapsos por nosotros
                             inputBusq.blur();
                             limpioAlgo = true;
                         }
@@ -6849,30 +6849,48 @@
                             limpioAlgo = true;
                         }
 
-                        // Si no limpió nada, no hace nada extra
                         return;
                     }
 
-                    // Limpieza general al cambiar de pestaña
+                    // Limpieza del dashboard al salir
                     if (_dashTipoAbierto) {
                         _dashTipoAbierto = null;
                         setTimeout(() => renderDashboard(), 200);
                     }
 
+                    // ── REPARACIÓN: Restaurar colapsos y limpiar búsqueda al cambiar de pestaña ──
                     const inputBusq = document.getElementById('input-busqueda');
-                    if (inputBusq) {
-                        if (inputBusq.value) {
-                            inputBusq.value = '';
-                            const btnX = document.getElementById('btn-limpiar-busqueda');
-                            if (btnX) btnX.style.display = 'none';
-                            UI._restaurarFiltrosPrevios();
-                            setTimeout(() => renderActivos(), 200);
+                    const tieneBusqueda = inputBusq && inputBusq.value.trim() !== '';
+                    const tieneSnapshot = window.UI._estadoColapsadoPrevio || window.UI._estadoPisosPrevio;
+
+                    if (tieneBusqueda || tieneSnapshot) {
+                        if (inputBusq) inputBusq.value = '';
+                        const btnX = document.getElementById('btn-limpiar-busqueda');
+                        if (btnX) btnX.style.display = 'none';
+
+                        // Restauramos la "foto" de los edificios
+                        if (window.UI._estadoColapsadoPrevio) {
+                            window.UI._activosCollapsed = new Set(window.UI._estadoColapsadoPrevio);
+                            window.UI._estadoColapsadoPrevio = null;
                         }
-                        inputBusq.blur();
+                        
+                        // Restauramos la "foto" de los pisos
+                        if (window.UI._estadoPisosPrevio) {
+                            window.UI._pisosCollapsed = new Set(window.UI._estadoPisosPrevio);
+                            window.UI._estadoPisosPrevio = null;
+                        }
+
+                        UI._restaurarFiltrosPrevios();
+                        // Renderizamos para que al volver la pestaña esté colapsada correctamente
+                        setTimeout(() => renderActivos(), 200);
                     }
+                    
+                    if (inputBusq) inputBusq.blur();
+                    // ────────────────────────────────────────────────────────────────────────────
 
                     ['dashboard', 'activos', 'produccion'].forEach(t => {
-                        document.getElementById('tab-' + t).classList.toggle('activa', t === tab);
+                        const tabBtn = document.getElementById('tab-' + t);
+                        if (tabBtn) tabBtn.classList.toggle('activa', t === tab);
                     });
 
                     localStorage.setItem('cctv_tab', JSON.stringify({ tab, ts: Date.now() }));
@@ -6894,7 +6912,7 @@
                             }, { once: true });
                         }, 180);
                     } else {
-                        panelEntrante.style.display = '';
+                        if (panelEntrante) panelEntrante.style.display = '';
                     }
                 },
 
