@@ -2991,7 +2991,7 @@
                     </svg>
                     Ajustes
                 </h3>
-                <span class="modal-header-version">v269</span>
+                <span class="modal-header-version">v270</span>
             </div>
 
             <div class="modal-scroll-body">
@@ -7130,6 +7130,14 @@
                         window.UI._estadoColapsadoPrevio = new Set(window.UI._activosCollapsed);
                     }
                     window.UI._activosCollapsed.clear();
+
+                    // ── MAGIA DE LA FOTO (PISOS): Hacemos lo mismo para los sub-grupos ──
+                    if (!window.UI._pisosCollapsed) window.UI._pisosCollapsed = new Set();
+                    if (!window.UI._estadoPisosPrevio) {
+                        window.UI._estadoPisosPrevio = new Set(window.UI._pisosCollapsed);
+                    }
+                    window.UI._pisosCollapsed.clear();
+                    // ────────────────────────────────────────────────────────────────────
                     // ────────────────────────────────────────────────────────────────────
 
                     renderActivos();
@@ -7704,14 +7712,6 @@
                         dispositivoId: g.dispositivoId || '',
                     };
 
-                    // deshabilitar botón eliminar si tiene canales ocupados
-                    const ocupados = g.canales_data.filter(c => c.dispositivoId).length;
-                    const btnElimGrab = document.querySelector('#modal-editar-grab .btn-delete');
-                    if (btnElimGrab) {
-                        btnElimGrab.disabled = ocupados > 0;
-                        btnElimGrab.title = ocupados > 0 ? `No se puede eliminar: ${ocupados} canal${ocupados === 1 ? '' : 'es'} ocupado${ocupados === 1 ? '' : 's'}` : '';
-                    }
-
                     MM.abrir('modal-editar-grab');
                     const btnVerActivo = document.getElementById('btn-ver-activo-grab');
                     if (btnVerActivo) btnVerActivo.style.display = g.dispositivoId ? '' : 'none';
@@ -7806,11 +7806,11 @@
                     if (!_editandoGrabId) return;
                     const g = _data.grabadores.find(x => x.id === _editandoGrabId);
                     const ocupados = g ? g.canales_data.filter(c => c.dispositivoId).length : 0;
-                    if (ocupados > 0) {
-                        toast(`No se puede eliminar: el grabador tiene ${ocupados} canal${ocupados === 1 ? '' : 'es'} ocupado${ocupados === 1 ? '' : 's'}. Desasigná las cámaras primero.`, 'error');
-                        return;
-                    }
-                    const ok = await confirmarModal(`¿Eliminar el grabador "${g?.descripcion}"?`);
+                    const avisoExtra = ocupados > 0 
+                        ? `\n¡Atención! Tiene ${ocupados} canal${ocupados === 1 ? '' : 'es'} ocupado${ocupados === 1 ? '' : 's'}. Las cámaras quedarán libres.` 
+                        : '';
+
+                    const ok = await confirmarModal(`¿Eliminar el grabador "${g?.descripcion}"?${avisoExtra}`);
                     if (!ok) return;
 
                     historial.empujar('Eliminar grabador');
@@ -9056,7 +9056,7 @@
 </html>
 
 <!--// ====================================================================
-    //                 NOTAS SISTEMA LUSHIBOSCA VERSION 269
+    //                 NOTAS SISTEMA LUSHIBOSCA VERSION 270
     // ====================================================================
 
      - CAMBIOS 
