@@ -46,7 +46,7 @@
             --c-orange: rgba(210, 120, 50, 0.8);
             --c-gray-btn: #dde3ea;
             --c-white: #ffffff;
-            --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            --shadow: 0 1px 4px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.04);
             --radius: 20px;
             --radius-sm: 12px;
             --radius-pill: 999px;
@@ -65,7 +65,7 @@
             --input-bg: #313333;
             --c-gray-btn: #313333;
             --bg-toast: #2d3748;
-            --shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
             --hover: brightness(1.2);
             --border-canales: #ff5e00;
         }
@@ -576,7 +576,7 @@
            LISTA DE DISPOSITIVOS  (mismo patrón que registro-item)
         ============================================================ */
         .dispositivo-item {
-            border: 1px solid var(--border);
+            border: 1px solid var(--bg-card);
             border-radius: var(--radius);
             padding: 0.75rem;
             margin-bottom: 0.5rem;
@@ -646,13 +646,23 @@
             flex-shrink: 0;
         }
 
-        .lista-2col .disp-linea3 {
+        /* Línea de serial/patrimonio: estilos base compartidos */
+        .disp-linea3 {
             font-size: 0.78rem;
             color: var(--text-muted);
+            margin-top: 0.15rem;
+        }
+
+        /* En 2 columnas: truncar con ellipsis */
+        .lista-2col .disp-linea3 {
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            margin-top: 0.15rem;
+        }
+
+        /* Patrimonio duplicado: resaltado informativo */
+        .pat-dup {
+            color: var(--c-orange);
         }
 
         .badge {
@@ -728,7 +738,6 @@
            PRODUCCIÓN — grilla de canales
         ============================================================ */
         .nvr-card {
-            border: 1px solid var(--border);
             border-radius: var(--radius);
             margin-bottom: 0.75rem;
             background: var(--bg-card);
@@ -742,7 +751,7 @@
             gap: 0.5rem;
             cursor: pointer;
             border-bottom: 1px solid var(--border);
-            background: var(--bg-card);
+            background: var(--input-bg);
             position: sticky;
             top: 56px;
             z-index: 10;
@@ -830,6 +839,7 @@
 
         .canal-slot-lista.vacio {
             border-style: dashed;
+            background: var(--bg-card);
         }
 
         .canal-slot-lista .canal-numero {
@@ -866,7 +876,7 @@
         }
 
         .canal-slot {
-            border: 1px solid var(--border);
+            border: 1px solid var(--input-bg);
             border-radius: var(--radius);
             padding: 0.55rem 0.65rem;
             background: var(--input-bg);
@@ -965,7 +975,7 @@
 
         .stat-chip {
             background: var(--input-bg);
-            border: 1px solid var(--border);
+            border: 1px solid var(--input-bg);
             border-radius: var(--radius);
             padding: 1rem;
             display: flex;
@@ -1654,9 +1664,6 @@
         }
 
         /* ── Textarea estándar de modales ── */
-        /* Reemplaza: style="resize:vertical;width:100%;box-sizing:border-box;padding:0.5rem;
-           border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-card);
-           color:var(--text-main);font-family:inherit;font-size:0.9rem" */
         textarea.textarea-modal {
             resize: vertical;
             width: 100%;
@@ -1670,12 +1677,7 @@
             font-size: 0.9rem;
         }
 
-        /* ── Dropdown flotante de combobox ── */
-        /* Reemplaza: style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;
-           background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);
-           box-shadow:0 4px 16px rgba(0,0,0,0.15);max-height:220px;overflow-y:auto;z-index:200;" */
         .combobox-dropdown {
-            display: none;
             position: absolute;
             top: calc(100% + 4px);
             left: 0;
@@ -1695,8 +1697,6 @@
         }
 
         /* ── form-group con input + btn ver-activo (flex row) ── */
-        /* Reemplaza: style="flex:1;min-width:0;display:flex;align-items:flex-end;gap:0.4rem"
-           en el form-group que envuelve el combobox + btn-ver-activo */
         .form-group--flex-row {
             flex: 1;
             min-width: 0;
@@ -1705,28 +1705,22 @@
             gap: 0.4rem;
         }
 
-        /* ── Wrapper interno del label+input dentro de form-group--flex-row ── */
-        /* Reemplaza: style="flex:1;min-width:0" en el div que contiene label + input */
         .form-group--flex-inner {
             flex: 1;
             min-width: 0;
         }
 
-        /* ── Botón "ver activo" junto a input (btn-backup pequeño) ── */
-        /* Reemplaza: style="display:none;flex-shrink:0;margin-bottom:1px" */
         .btn-ver-activo {
             flex-shrink: 0;
             margin-bottom: 1px;
         }
 
         /* ── Botones de estado en footer de editar-disp (flex:1 para distribuir) ── */
-        /* Reemplaza: style="flex:1" en btn-estado-* */
         .btn-estado-disp {
             flex: 1;
         }
 
         /* ── Sección acciones de importar (flex column + gap) ── */
-        /* Reemplaza: style="display:flex;flex-direction:column;gap:0.75rem;margin-top:1.5rem" */
         .importar-actions {
             display: flex;
             flex-direction: column;
@@ -1735,7 +1729,6 @@
         }
 
         /* ── Botón flex:1 dentro de importar ── */
-        /* Reemplaza: style="flex:1" en btn-reemplazar y btn-combinar */
         .btn-flex {
             flex: 1;
         }
@@ -1935,8 +1928,6 @@
         }
 
         /* Botón secundario de Gist (icono, con borde, en ajustes) */
-        /* Reemplaza: style="display:none;background:var(--input-bg);border:1px solid var(--border);
-           border-radius:var(--radius);color:var(--text-muted)" en btn-ajustes-gist-* */
         .btn-gist-action {
             background: var(--input-bg);
             border: 1px solid var(--border);
@@ -1945,8 +1936,6 @@
         }
 
         /* ── Botón de ajustes (input-bg + border, centered) ── */
-        /* Reemplaza: style="justify-content:center;gap:0.75rem;
-           background:var(--input-bg);border:1px solid var(--border)" */
         .btn-ajustes {
             justify-content: center;
             gap: 0.75rem;
@@ -1955,20 +1944,17 @@
         }
 
         /* ── Icono de tab (tamaño reducido en botones de tab) ── */
-        /* Reemplaza: style="width:.95em;height:.95em" en SVG de .tab-btn */
         .tab-icon {
             width: 0.95em;
             height: 0.95em;
         }
 
         /* ── Contenedor altura mínima del dashboard de cámaras ── */
-        /* Reemplaza: style="min-height:28rem" en #dash-camaras */
         .dash-camaras-container {
             min-height: 28rem;
         }
 
         /* ── Texto de párrafo en modal filtros ── */
-        /* Reemplaza: style="font-size:0.85rem;color:var(--text-muted);line-height:1.4;margin:0" */
         .modal-filtros-desc {
             font-size: 0.85rem;
             color: var(--text-muted);
@@ -1977,7 +1963,6 @@
         }
 
         /* ── Fila header del modal filtros (flex + space-between) ── */
-        /* Reemplaza: style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem" */
         .modal-filtros-header {
             display: flex;
             align-items: center;
@@ -1986,8 +1971,6 @@
         }
 
         /* ── Botón toggle "Activar/Desactivar todo" en filtros ── */
-        /* Reemplaza: style="width:auto;padding:0.3rem 0.75rem;font-size:0.8rem;
-           min-width:9rem;flex-shrink:0;margin-left:0.75rem" */
         .btn-toggle-all {
             width: auto;
             padding: 0.3rem 0.75rem;
@@ -1998,8 +1981,6 @@
         }
 
         /* ── Lista de filtros con gap ── */
-        /* Reemplaza: style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.25rem"
-           en #filtros-busqueda-lista */
         .filtros-lista {
             display: flex;
             flex-direction: column;
@@ -2008,7 +1989,6 @@
         }
 
         /* ── Dashboard: panel de canales de grabación ── */
-        /* Reemplaza los divs inline del htmlTotales en renderDashboard */
         .dash-grab-totales {
             margin-bottom: 1.25rem;
             background: var(--bg-card);
@@ -2428,6 +2408,31 @@
             flex-direction: column;
             align-items: flex-end;
             gap: 0.2rem;
+        }
+
+        /* ── Múltiples asignaciones de un dispositivo ── */
+        .asig-multi {
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            justify-content: flex-end;
+            gap: 0.4rem;
+        }
+
+        .asig-bloque {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.1rem;
+            min-width: 0;
+        }
+
+        .asig-sep {
+            width: 1px;
+            align-self: stretch;
+            background: var(--border);
+            flex-shrink: 0;
+            margin: 0.1rem 0;
         }
 
         /* ── Dashboard cámaras — filas de vista forma/edificio ── */
@@ -2933,27 +2938,20 @@
                     </svg>
                     Ajustes
                 </h3>
-                <span class="modal-header-version">v248</span>
+                <span class="modal-header-version">v258</span>
             </div>
 
             <div class="modal-scroll-body">
                 <!-- Tipos de dispositivo -->
                 <div class="ajustes-section">
-                    <div class="section-label">Tipos de dispositivos</div>
-                    <div class="btn-group btn-group--no-mt">
+                    <div class="section-label">Infraestructura</div>
+                    <div class="btn-group">
                         <button onclick="UI.abrirTiposDispositivo()" class="btn-ajustes">
                             <svg class="icon icon-line">
                                 <use href="#icon-grid" />
                             </svg>
                             Dispositivos
                         </button>
-                    </div>
-                </div>
-
-                <!-- Edificios -->
-                <div class="ajustes-section">
-                    <div class="section-label">Ubicaciones</div>
-                    <div class="btn-group btn-group--no-mt">
                         <button onclick="UI.abrirEdificios()" class="btn-ajustes">
                             <svg class="icon icon-line">
                                 <use href="#icon-building" />
@@ -3288,7 +3286,7 @@
                     </div>
                     <div class="form-group">
                         <label>IP</label>
-                        <input type="text" id="otro-prod-ip" placeholder="Ej: 192.168.1.50" maxlength="45">
+                        <input type="text" id="otro-prod-ip" placeholder="Ej: 192.168.1.50 o 2001:db8::1" maxlength="46">
                     </div>
                 </div>
 
@@ -3405,6 +3403,11 @@
                     <label>Patrimonio</label>
                     <input type="text" id="nuevo-disp-patrimonio" placeholder="Ej: PAT-00123" maxlength="60">
                 </div>
+
+                <div class="form-group">
+                    <label>Firmware</label>
+                    <input type="text" id="nuevo-disp-firmware" placeholder="Ej: V5.7.15 build 230928" maxlength="80">
+                </div>
             </div>
 
             <div class="modal-sticky-footer">
@@ -3494,6 +3497,11 @@
                 <div class="form-group">
                     <label>Patrimonio</label>
                     <input type="text" id="editar-disp-patrimonio" placeholder="Ej: PAT-00123" maxlength="60">
+                </div>
+
+                <div class="form-group">
+                    <label>Firmware</label>
+                    <input type="text" id="editar-disp-firmware" placeholder="Ej: V5.7.15 build 230928" maxlength="80">
                 </div>
             </div>
 
@@ -3588,7 +3596,13 @@
                 </div>
                 <div class="form-group">
                     <label>IP</label>
-                    <input type="text" id="nuevo-grab-ip" placeholder="Ej: 192.168.1.10" maxlength="45">
+                    <input type="text" id="nuevo-grab-ip" placeholder="Ej: 192.168.1.10 o 2001:db8::1" maxlength="46">
+                </div>
+
+                <div class="form-group">
+                    <label>Comentarios</label>
+                    <textarea id="nuevo-grab-comentarios" class="textarea-modal" placeholder="Notas adicionales…"
+                        rows="2" maxlength="300"></textarea>
                 </div>
             </div>
 
@@ -3656,7 +3670,13 @@
                 </div>
                 <div class="form-group">
                     <label>IP</label>
-                    <input type="text" id="editar-grab-ip" placeholder="Ej: 192.168.1.10" maxlength="45">
+                    <input type="text" id="editar-grab-ip" placeholder="Ej: 192.168.1.10 o 2001:db8::1" maxlength="46">
+                </div>
+
+                <div class="form-group">
+                    <label>Comentarios</label>
+                    <textarea id="editar-grab-comentarios" class="textarea-modal" placeholder="Notas adicionales…"
+                        rows="2" maxlength="300"></textarea>
                 </div>
             </div>
 
@@ -3720,7 +3740,7 @@
                     </div>
                     <div class="form-group">
                         <label>IP</label>
-                        <input type="text" id="canal-ip" placeholder="Ej: 192.168.1.50" maxlength="45">
+                        <input type="text" id="canal-ip" placeholder="Ej: 192.168.1.50 o 2001:db8::1" maxlength="46">
                     </div>
                 </div>
 
@@ -3869,6 +3889,7 @@
                     <option value="forma">Tipo / Forma</option>
                     <option value="estado">Estado</option>
                     <option value="marca">Marca / Modelo</option>
+                    <option value="edificio-piso">Edificio - Piso</option>
                 </select>
             </div>
 
@@ -4100,17 +4121,49 @@
                 cargarEdificios();
 
                 // 3. Sanitización Destructiva de Registros
-                function validarIPv4(ip) {
+                function validarIP(ip) {
                     if (!ip) return true; // Opcional
-                    const partes = ip.split('.');
-                    if (partes.length !== 4) return false;
-                    return partes.every(p => {
-                        if (!/^\d+$/.test(p)) return false;
-                        if (p.length > 1 && p[0] === '0') return false;
-                        const n = Number(p);
-                        return n >= 0 && n <= 255;
-                    });
+                    // ── IPv4 ──
+                    if (ip.includes('.') && !ip.includes(':')) {
+                        const partes = ip.split('.');
+                        if (partes.length !== 4) return false;
+                        return partes.every(p => {
+                            if (!/^\d+$/.test(p)) return false;
+                            if (p.length > 1 && p[0] === '0') return false;
+                            const n = Number(p);
+                            return n >= 0 && n <= 255;
+                        });
+                    }
+                    // ── IPv6 ──
+                    return validarIPv6(ip);
                 }
+
+                function validarIPv6(ip) {
+                    // Acepta: completa, comprimida (::), con zona (%eth0), IPv4-mapped (::ffff:1.2.3.4)
+                    const raw = ip.split('%')[0]; // quitar zona de enlace
+                    if (raw === '::') return true;
+                    const sides = raw.split('::');
+                    if (sides.length > 2) return false;
+                    const grupos = sides.flatMap(s => s ? s.split(':') : []);
+                    if (sides.length === 1 && grupos.length !== 8) return false;
+                    if (sides.length === 2) {
+                        const totalGrupos = (sides[0] ? sides[0].split(':').length : 0)
+                                          + (sides[1] ? sides[1].split(':').length : 0);
+                        if (totalGrupos > 7) return false;
+                    }
+                    // Último grupo puede ser IPv4 en notación mixta (::ffff:192.168.1.1)
+                    const last = grupos[grupos.length - 1];
+                    if (last && last.includes('.')) {
+                        const ipv4part = last;
+                        const partes = ipv4part.split('.');
+                        if (partes.length !== 4) return false;
+                        if (!partes.every(p => /^\d+$/.test(p) && Number(p) <= 255)) return false;
+                        grupos.pop();
+                    }
+                    return grupos.every(g => /^[0-9A-Fa-f]{1,4}$/.test(g));
+                }
+                // Alias para compatibilidad con sanitizadores existentes
+                function validarIPv4(ip) { return validarIP(ip); }
 
                 function validarMAC(mac) {
                     if (!mac) return true; // Opcional
@@ -4137,6 +4190,7 @@
                         serial: sanitize(d.serial || '', 80),
                         mac: sanitize(d.mac || '', 500),
                         patrimonio: sanitize(d.patrimonio || '', 60),
+                        firmware: sanitize(d.firmware || '', 80),
                     };
 
                     if (tipo === 'camara') {
@@ -4172,7 +4226,7 @@
                             canal: i,
                             dispositivoId: _strSeguro(existente?.dispositivoId, 32) || null,
                             descripcion: sanitize(existente?.descripcion || '', 80),
-                            ip: validarIPv4(existente?.ip) ? sanitize(existente?.ip || '', 45) : '',
+                            ip: validarIP(existente?.ip) ? sanitize(existente?.ip || '', 46) : '',
                             puerto: sanitize(existente?.puerto || '', 10),
                             edificio: sanitize(existente?.edificio || '', 60),
                             piso: sanitize(existente?.piso || '', 4),
@@ -4187,12 +4241,13 @@
                         tipo: ['nvr', 'dvr'].includes(g.tipo) ? g.tipo : 'nvr',
                         marca: sanitize(g.marca || '', 50),
                         modelo: sanitize(g.modelo || '', 60),
-                        ip: validarIPv4(g.ip) ? sanitize(g.ip || '', 45) : '',
+                        ip: validarIP(g.ip) ? sanitize(g.ip || '', 46) : '',
                         edificio: sanitize(g.edificio || '', 60),
                         piso: sanitize(g.piso || '', 4),
                         rack: sanitize(g.rack || '', 40),
                         puerto: sanitize(g.puerto || '', 10),
                         mac: sanitize(g.mac || '', 500),
+                        comentarios: sanitize(g.comentarios || '', 300),
                         dispositivoId: _strSeguro(g.dispositivoId, 32) || null,
                         canales_n: n,
                         canales_data: slots,
@@ -4208,7 +4263,7 @@
                         id,
                         dispositivoId: _strSeguro(o.dispositivoId, 32) || null,
                         descripcion: sanitize(o.descripcion || '', 80),
-                        ip: validarIPv4(o.ip) ? sanitize(o.ip || '', 45) : '',
+                        ip: validarIP(o.ip) ? sanitize(o.ip || '', 46) : '',
                         edificio: sanitize(o.edificio || '', 60),
                         piso: sanitize(o.piso || '', 4),
                         rack: sanitize(o.rack || '', 40),
@@ -4232,12 +4287,20 @@
                     return { dispositivos, grabadores };
                 }
 
+                function normalizarPiso(p) {
+                    if (!p || typeof p !== 'string') return '';
+                    const s = sanitize(p, 4).toUpperCase();
+                    // Si es un número puro (incluso negativos como -01), quitamos ceros a la izquierda
+                    if (/^-?\d+$/.test(s)) return parseInt(s, 10).toString();
+                    return s;
+                }
+
                 return {
                     sanitize, genId, fechaISO, deepClone, safeParse, MAX_JSON, SCHEMA_V, TIPOS_BUILTIN,
                     get TIPOS() { return TIPOS; }, guardarTipos, cargarTipos,
                     get edificios() { return _edificios; }, guardarEdificios, cargarEdificios,
                     generarFirma, verificarFirma, sanitizarDisp, sanitizarGrab, sanitizarOtroProd, sanitizarDataTotal,
-                    validarIPv4, validarMAC
+                    validarIPv4, validarMAC, normalizarPiso
                 };
             })();
 
@@ -4527,22 +4590,65 @@
                     .replace(/'/g, '&#39;');
             }
 
-            function validarIPv4(ip) {
+            function validarIP(ip) {
                 if (!ip) return true;
-                const partes = ip.split('.');
-                if (partes.length !== 4) return false;
-                return partes.every(p => {
-                    if (!/^\d+$/.test(p)) return false;
-                    if (p.length > 1 && p[0] === '0') return false;
-                    const n = Number(p);
-                    return n >= 0 && n <= 255;
-                });
+                // ── IPv4 ──
+                if (ip.includes('.') && !ip.includes(':')) {
+                    const partes = ip.split('.');
+                    if (partes.length !== 4) return false;
+                    return partes.every(p => {
+                        if (!/^\d+$/.test(p)) return false;
+                        if (p.length > 1 && p[0] === '0') return false;
+                        const n = Number(p);
+                        return n >= 0 && n <= 255;
+                    });
+                }
+                // ── IPv6 ──
+                return validarIPv6(ip);
             }
+
+            function validarIPv6(ip) {
+                const raw = ip.split('%')[0]; // quitar zona de enlace (%eth0, %1)
+                if (raw === '::') return true;
+                const sides = raw.split('::');
+                if (sides.length > 2) return false;
+                const grupos = sides.flatMap(s => s ? s.split(':') : []);
+                if (sides.length === 1 && grupos.length !== 8) return false;
+                if (sides.length === 2) {
+                    const totalGrupos = (sides[0] ? sides[0].split(':').length : 0)
+                                      + (sides[1] ? sides[1].split(':').length : 0);
+                    if (totalGrupos > 7) return false;
+                }
+                // Notación mixta: último grupo puede ser IPv4 (::ffff:192.168.1.1)
+                const last = grupos[grupos.length - 1];
+                if (last && last.includes('.')) {
+                    const partes = last.split('.');
+                    if (partes.length !== 4) return false;
+                    if (!partes.every(p => /^\d+$/.test(p) && Number(p) <= 255)) return false;
+                    grupos.pop();
+                }
+                return grupos.every(g => /^[0-9A-Fa-f]{1,4}$/.test(g));
+            }
+
+            // Alias — la función de sanitizado del módulo S sigue llamándola validarIPv4
+            function validarIPv4(ip) { return validarIP(ip); }
 
             function validarMAC(mac) {
                 if (!mac) return true;
                 if (/^sinrelevarn?\d{1,3}$/i.test(mac)) return true;
                 return /^([0-9A-Fa-f]{2}[:\-]){5}[0-9A-Fa-f]{2}$/.test(mac);
+            }
+
+            function validarCampoIP(elementId) {
+                const el = document.getElementById(elementId);
+                const ip = el?.value.trim() || '';
+                if (!validarIP(ip)) {
+                    el.classList.add('error');
+                    toast(`IP inválida: "${ip}"`, 'error');
+                    return false;
+                }
+                el.classList.remove('error');
+                return true;
             }
 
             function validarCampoMAC(elementId) {
@@ -4554,18 +4660,6 @@
                 if (invalidos.length) {
                     el.classList.add('error');
                     toast(`MAC inválida: "${invalidos[0]}"`, 'error');
-                    return false;
-                }
-                el.classList.remove('error');
-                return true;
-            }
-
-            function validarCampoIP(elementId) {
-                const el = document.getElementById(elementId);
-                const ip = el?.value.trim() || '';
-                if (!validarIPv4(ip)) {
-                    el.classList.add('error');
-                    toast(`IP inválida: "${ip}"`, 'error');
                     return false;
                 }
                 el.classList.remove('error');
@@ -4837,7 +4931,7 @@
                         } else {
                             const loc = mapD.get(san.id);
                             let updated = false;
-                            ['marca', 'modelo', 'serial', 'mac', 'patrimonio', 'forma', 'estado'].forEach(k => {
+                            ['marca', 'modelo', 'serial', 'mac', 'patrimonio', 'firmware', 'forma', 'estado'].forEach(k => {
                                 if (!loc[k] && san[k]) { loc[k] = san[k]; updated = true; }
                             });
                             if (updated) cDispsUpd++;
@@ -4852,7 +4946,7 @@
                         } else {
                             const loc = mapG.get(san.id);
                             let updated = false;
-                            ['marca', 'modelo', 'ip', 'edificio', 'piso', 'rack', 'puerto', 'mac', 'dispositivoId'].forEach(k => {
+                            ['marca', 'modelo', 'ip', 'edificio', 'piso', 'rack', 'puerto', 'mac', 'comentarios', 'dispositivoId'].forEach(k => {
                                 if (!loc[k] && san[k]) { loc[k] = san[k]; updated = true; }
                             });
                             san.canales_data.forEach(cRem => {
@@ -5179,10 +5273,21 @@
             let _dashTipoAbierto = null;
             let _dashCamarasVista = 'forma';
             let _activosColumnas = (() => { try { return parseInt(localStorage.getItem('cctv_activos_cols')) === 1 ? 1 : 2; } catch { return 2; } })();
-            let _activosOrden = (() => { try { let v = localStorage.getItem('cctv_activos_orden'); if (v === 'tipo') v = 'forma'; return ['estado', 'forma', 'marca'].includes(v) ? v : 'forma'; } catch { return 'forma'; } })();
+
+            // ── CORRECCIÓN 1: Agregar 'edificio-piso' a la lista permitida ──
+            let _activosOrden = (() => {
+                try {
+                    let v = localStorage.getItem('cctv_activos_orden');
+                    if (v === 'tipo') v = 'forma';
+                    return ['estado', 'forma', 'marca', 'edificio-piso'].includes(v) ? v : 'forma';
+                } catch { return 'forma'; }
+            })();
+
             let _activosRecordarEstado = (() => { try { return localStorage.getItem('cctv_activos_recordar') === 'true'; } catch { return false; } })();
-            let _produccionVista = (() => { try { return localStorage.getItem('cctv_prod_vista') || 'lista'; } catch { return 'lista'; } })();
+
             window.UI = window.UI || {};
+
+            // ── CORRECCIÓN 2: Restaurar lógica de memoria ──
             window.UI._activosCollapsed = (() => {
                 if (_activosRecordarEstado) {
                     try {
@@ -5193,12 +5298,51 @@
                 return new Set();
             })();
 
+            window.UI._pisosCollapsed = (() => {
+                if (_activosRecordarEstado) {
+                    try {
+                        const saved = JSON.parse(localStorage.getItem('cctv_pisos_collapsed'));
+                        if (Array.isArray(saved)) return new Set(saved);
+                    } catch { }
+                }
+                return new Set();
+            })();
+
+            // ── ¡ESTA ES LA FUNCIÓN QUE FALTABA PARA GUARDAR! ──
             window.UI._guardarColapsados = function () {
                 if (_activosRecordarEstado) {
-                    try { localStorage.setItem('cctv_act_collapsed', JSON.stringify([...window.UI._activosCollapsed])); } catch { }
+                    try {
+                        localStorage.setItem('cctv_act_collapsed', JSON.stringify([...window.UI._activosCollapsed]));
+                        localStorage.setItem('cctv_pisos_collapsed', JSON.stringify([...window.UI._pisosCollapsed]));
+                    } catch { }
                 }
             };
-            // ─────────────────────────────────────────────────────────────────────────────────
+            // ───────────────────────────────────────────────────
+
+            window.UI._togglePisoActivos = function (floorKey) {
+                const col = window.UI._pisosCollapsed;
+                const floorContainer = document.querySelector(`.sub-grupo-piso[data-floor-key="${CSS.escape(floorKey)}"]`);
+                if (!floorContainer) return;
+
+                const grid = floorContainer.querySelector('.activos-grid-transition');
+                const chevron = floorContainer.querySelector('.nvr-chevron');
+
+                if (col.has(floorKey)) {
+                    col.delete(floorKey);
+                    grid.classList.remove('collapsed');
+                    if (chevron) chevron.style.transform = '';
+                    grid.style.maxHeight = grid.scrollHeight + 'px';
+                    grid.addEventListener('transitionend', () => grid.style.maxHeight = '', { once: true });
+                } else {
+                    col.add(floorKey);
+                    grid.style.maxHeight = grid.scrollHeight + 'px';
+                    grid.getBoundingClientRect();
+                    grid.classList.add('collapsed');
+                    if (chevron) chevron.style.transform = 'rotate(-90deg)';
+                    grid.style.maxHeight = '';
+                }
+                if (window.UI._guardarColapsados) window.UI._guardarColapsados();
+            };
 
             function _estadosDeDisps(dispsDelTipo, idsEnProd) {
                 const res = { produccion: 0, disponible: 0, averiado: 0, revisar: 0, desafectado: 0 };
@@ -5502,20 +5646,57 @@
                     return;
                 }
 
-                // --- 1. Asignaciones (para conocer el estado real) ---
+                /// --- 1. Asignaciones (para conocer el estado real) ---
                 const asignaciones = {};
+                const macCounts = {}; // Para detectar MACs duplicadas
+
+                function registrarMacProd(dispId) {
+                    if (!dispId) return;
+                    const d = _data.dispositivos.find(x => x.id === dispId);
+                    if (d && d.mac) {
+                        d.mac.split(',').forEach(m => {
+                            const k = m.trim().toUpperCase();
+                            // Ignoramos las macs vacías o las que son "SINRELEVAR"
+                            if (k && !k.startsWith('SINRELEVAR')) macCounts[k] = (macCounts[k] || 0) + 1;
+                        });
+                    }
+                }
+
+                function pushAsig(dispId, asig) {
+                    if (!asignaciones[dispId]) asignaciones[dispId] = [];
+                    asignaciones[dispId].push(asig);
+                }
+
                 _data.grabadores.forEach(g => {
-                    if (g.dispositivoId) asignaciones[g.dispositivoId] = { tipo: 'grabador', grab: g };
+                    if (g.dispositivoId) { pushAsig(g.dispositivoId, { tipo: 'grabador', grab: g }); registrarMacProd(g.dispositivoId); }
                     g.canales_data.forEach(c => {
-                        if (c.dispositivoId) asignaciones[c.dispositivoId] = { tipo: 'canal', grab: g, slot: c };
+                        if (c.dispositivoId) { pushAsig(c.dispositivoId, { tipo: 'canal', grab: g, slot: c }); registrarMacProd(c.dispositivoId); }
                     });
                 });
                 (_data.otros_prod || []).forEach(o => {
-                    if (o.dispositivoId) asignaciones[o.dispositivoId] = { tipo: 'otro_prod', item: o };
+                    if (o.dispositivoId) { pushAsig(o.dispositivoId, { tipo: 'otro_prod', item: o }); registrarMacProd(o.dispositivoId); }
                 });
 
+                // Set con las MACs que aparecen más de 1 vez en producción
+                const dupMacs = new Set(Object.keys(macCounts).filter(k => macCounts[k] > 1));
+
+                // Set con los patrimonios que aparecen en más de 1 dispositivo
+                const patCounts = {};
+                _data.dispositivos.forEach(d => {
+                    if (d.patrimonio) {
+                        const k = d.patrimonio.trim().toUpperCase();
+                        if (k) patCounts[k] = (patCounts[k] || 0) + 1;
+                    }
+                });
+                const dupPatrimonios = new Set(Object.keys(patCounts).filter(k => patCounts[k] > 1));
+
+                function tieneMacDuplicada(d) {
+                    if (!d || !d.mac) return false;
+                    return d.mac.split(',').some(m => dupMacs.has(m.trim().toUpperCase()));
+                }
+
                 function getEstadoEfectivo(d) {
-                    return d.estado || (asignaciones[d.id] ? 'produccion' : 'disponible');
+                    return d.estado || (asignaciones[d.id]?.length ? 'produccion' : 'disponible');
                 }
 
                 // --- 2. Lógica de Ordenamiento y Agrupación ---
@@ -5531,6 +5712,18 @@
                     if (_activosOrden === 'marca') {
                         return (d.marca || 'SIN MARCA').toUpperCase();
                     }
+                    // ── Agrupación por Edificio ──
+                    if (_activosOrden === 'edificio-piso') {
+                        const asigs = asignaciones[d.id] || [];
+                        const asig = asigs[0]; // Usamos la primera asignación para agrupar
+                        let edif = "SIN ASIGNAR";
+                        if (asig) {
+                            if (asig.tipo === 'canal') edif = asig.slot.edificio || "SIN ASIGNAR";
+                            else if (asig.tipo === 'otro_prod') edif = asig.item.edificio || "SIN ASIGNAR";
+                            else if (asig.tipo === 'grabador') edif = asig.grab.edificio || "SIN ASIGNAR";
+                        }
+                        return edif.toUpperCase();
+                    }
                     // DEFAULT (Tipo / Forma)
                     if (d.tipo === 'camara') {
                         return d.forma ? d.forma.replace(/-/g, ' ').toUpperCase() : 'CÁMARA (SIN FORMA)';
@@ -5542,7 +5735,10 @@
                 function getGroupSortKey(d) {
                     if (_activosOrden === 'estado') return ordenEstado[getEstadoEfectivo(d)] ?? 9;
                     if (_activosOrden === 'marca') return (d.marca || 'zzz').trim().toLowerCase();
-                    // DEFAULT: Orden Alfabético estricto por el Título del Grupo
+                    if (_activosOrden === 'edificio-piso') {
+                        const label = getGroupLabel(d);
+                        return label === "SIN ASIGNAR" ? "zzzzz" : label.toLowerCase();
+                    }
                     return getGroupLabel(d).toLowerCase();
                 }
 
@@ -5573,8 +5769,10 @@
                     const tokenRegexes = tokens.map(t => new RegExp('(?<![a-z0-9])' + t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![a-z0-9])', 'i'));
 
                     function scoreDispositivo(d) {
-                        const asigD = asignaciones[d.id];
-                        const hayCanal = _busqActivos.has('canal') && asigD?.tipo === 'canal' ? (asigD.slot.descripcion || '').toLowerCase() : '';
+                        const asigD = asignaciones[d.id] || [];
+                        const hayCanal = _busqActivos.has('canal')
+                            ? asigD.filter(a => a.tipo === 'canal').map(a => (a.slot.descripcion || '').toLowerCase()).join(' ')
+                            : '';
                         const tipoKey = _busqActivos.has('tipo') ? d.tipo.toLowerCase() : '';
                         const tipoLabel = _busqActivos.has('tipo') ? (S.TIPOS[d.tipo]?.label || '').toLowerCase() : '';
                         const camposMap = { mac: d.mac, serial: d.serial, marca: d.marca, modelo: d.modelo, patrimonio: d.patrimonio, forma: d.forma };
@@ -5586,18 +5784,19 @@
                             const pisoDisp = (d.piso || '').trim();
                             if (edifDisp || pisoDisp) campos.push([edifDisp, pisoDisp].filter(Boolean).join(' ').toLowerCase());
 
-                            // Ubicación del canal asignado
-                            if (asigD?.tipo === 'canal' && asigD.slot) {
-                                const edifCanal = (asigD.slot.edificio || '').trim();
-                                const pisoCanal = (asigD.slot.piso || '').trim();
-                                if (edifCanal || pisoCanal) campos.push([edifCanal, pisoCanal].filter(Boolean).join(' ').toLowerCase());
-                            }
-                            // Ubicación de otros dispositivos en producción
-                            if (asigD?.tipo === 'otro_prod' && asigD.item) {
-                                const edifOtro = (asigD.item.edificio || '').trim();
-                                const pisoOtro = (asigD.item.piso || '').trim();
-                                if (edifOtro || pisoOtro) campos.push([edifOtro, pisoOtro].filter(Boolean).join(' ').toLowerCase());
-                            }
+                            // Ubicación de todas las asignaciones
+                            asigD.forEach(a => {
+                                if (a.tipo === 'canal' && a.slot) {
+                                    const edifCanal = (a.slot.edificio || '').trim();
+                                    const pisoCanal = (a.slot.piso || '').trim();
+                                    if (edifCanal || pisoCanal) campos.push([edifCanal, pisoCanal].filter(Boolean).join(' ').toLowerCase());
+                                }
+                                if (a.tipo === 'otro_prod' && a.item) {
+                                    const edifOtro = (a.item.edificio || '').trim();
+                                    const pisoOtro = (a.item.piso || '').trim();
+                                    if (edifOtro || pisoOtro) campos.push([edifOtro, pisoOtro].filter(Boolean).join(' ').toLowerCase());
+                                }
+                            });
                         }
 
                         let estadoTextos = [];
@@ -5661,20 +5860,66 @@
                     const estadoEfectivo = getEstadoEfectivo(d);
                     const estadoClase = `estado-${estadoEfectivo}`;
                     const tipoBadgeLabel = (d.tipo === 'camara' && d.forma ? d.forma.replace(/-/g, ' ') : tc.label).toUpperCase();
+
                     let asignInfo = '';
-                    const asig = asignaciones[d.id];
-                    if (asig) {
-                        if (asig.tipo === 'canal') {
-                            const linea2 = [esc(asig.grab.descripcion), `CANAL ${asig.slot.canal}`].join(' · ');
-                            const linea3 = asig.slot.ip ? `<div class="text-truncate">${esc(asig.slot.ip)}</div>` : '';
-                            const desc = asig.slot.descripcion ? `<div class="text-truncate"><span class="badge badge-estado-produccion">${esc(asig.slot.descripcion)}</span></div>` : '';
-                            asignInfo = `${desc}<div class="text-truncate">${linea2}</div>${linea3}`;
-                        } else if (asig.tipo === 'otro_prod') {
-                            const ipHtml = asig.item.ip ? `<div class="text-truncate">${esc(asig.item.ip)}</div>` : '';
-                            asignInfo = `<div class="text-truncate"><span class="badge badge-estado-produccion">En Producción</span></div><div class="text-truncate">${esc(asig.item.descripcion || 'Sin descripción')}</div>${ipHtml}`;
+                    const asigs = asignaciones[d.id] || [];
+                    if (asigs.length) {
+                        // ── MAGIA VISUAL: Si está duplicado, usamos la clase que pinta de violeta ──
+                        const isDup = tieneMacDuplicada(d);
+                        const badgeProdClass = isDup ? 'badge-estado-revisar' : 'badge-estado-produccion';
+                        const hoverTitle = isDup ? 'title="⚠️ MAC Duplicada en Producción"' : '';
+
+                        const bloques = asigs.map(asig => {
+                            if (asig.tipo === 'canal') {
+                                // Solo mostramos GRABADOR · CANAL N por bloque
+                                return {
+                                    linea: [esc(asig.grab.descripcion), `CANAL ${asig.slot.canal}`].join(' · '),
+                                    desc: asig.slot.descripcion || '',
+                                    ip: asig.slot.ip || '',
+                                };
+                            } else if (asig.tipo === 'otro_prod') {
+                                return {
+                                    linea: esc(asig.item.descripcion || 'Sin descripción'),
+                                    desc: 'otro_prod',
+                                    ip: asig.item.ip || '',
+                                };
+                            } else {
+                                return {
+                                    linea: esc(asig.grab.descripcion),
+                                    desc: 'grabador',
+                                    ip: asig.grab.ip || '',
+                                };
+                            }
+                        });
+
+                        if (bloques.length === 1) {
+                            // ── Una sola asignación: comportamiento original ──
+                            const b = bloques[0];
+                            const descHtml = (b.desc && b.desc !== 'otro_prod' && b.desc !== 'grabador')
+                                ? `<div class="text-truncate"><span class="badge ${badgeProdClass}" ${hoverTitle}>${esc(b.desc)}</span></div>` : '';
+                            const ipHtml = b.ip ? `<div class="text-truncate">${esc(b.ip)}</div>` : '';
+                            asignInfo = `${descHtml}<div class="text-truncate">${b.linea}</div>${ipHtml}`;
                         } else {
-                            const ipHtml = asig.grab.ip ? `<div class="text-truncate">${esc(asig.grab.ip)}</div>` : '';
-                            asignInfo = `<div class="text-truncate"><span class="badge badge-estado-produccion">${esc(asig.grab.descripcion)}</span></div>${ipHtml}`;
+                            // ── Múltiples asignaciones: detectar campos comunes ──
+                            const allDesc = bloques.map(b => b.desc);
+                            const allIp   = bloques.map(b => b.ip);
+                            const descUnica = allDesc.every(v => v === allDesc[0]) ? allDesc[0] : null;
+                            const ipUnica   = allIp.every(v => v === allIp[0])     ? allIp[0]   : null;
+
+                            // Badge de descripción: solo si es igual en todos (o canal sin desc no cuenta)
+                            const descComunHtml = (descUnica && descUnica !== '' && descUnica !== 'otro_prod' && descUnica !== 'grabador')
+                                ? `<div class="text-truncate"><span class="badge ${badgeProdClass}" ${hoverTitle}>${esc(descUnica)}</span></div>` : '';
+                            const ipComunHtml = (ipUnica && ipUnica !== '')
+                                ? `<div class="text-truncate">${esc(ipUnica)}</div>` : '';
+
+                            // Cada bloque: solo línea GRABADOR · CANAL N
+                            // (campos únicos ya se muestran afuera; campos distintos se muestran por bloque)
+                            const bloquesHtml = bloques.map(b => {
+                                const ipBloque = (!ipUnica && b.ip) ? `<div class="text-truncate">${esc(b.ip)}</div>` : '';
+                                return `<div class="asig-bloque"><div class="text-truncate">${b.linea}</div>${ipBloque}</div>`;
+                            });
+
+                            asignInfo = `${descComunHtml}<div class="asig-multi">${bloquesHtml.join('<div class="asig-sep"></div>')}</div>${ipComunHtml}`;
                         }
                     }
 
@@ -5689,7 +5934,7 @@
                             ${tc.emoji} ${esc(titulo)} <span class="sep-muted">-</span> ${tipoBadgeLabel} 
                         </div>
                         <div class="dispositivo-meta">${subtitulo ? `<span>${subtitulo}</span>` : ''}</div>
-                        ${(d.serial && d.mac) || d.patrimonio ? `<div class="disp-linea3">${[d.serial && d.mac ? `S/N: ${esc(d.serial)}` : '', d.patrimonio ? `PAT: ${esc(d.patrimonio)}` : ''].filter(Boolean).join(' · ')}</div>` : ''}
+                        ${(d.serial && d.mac) || d.patrimonio ? `<div class="disp-linea3">${[d.serial && d.mac ? `S/N: ${esc(d.serial)}` : '', d.patrimonio ? `<span class="${dupPatrimonios.has(d.patrimonio.trim().toUpperCase()) ? 'pat-dup' : ''}">PAT: ${esc(d.patrimonio)}</span>` : ''].filter(Boolean).join(' · ')}</div>` : ''}
                     </div>${derechaHtml}</div>`;
                 }
 
@@ -5746,16 +5991,105 @@
                     const colStyle = isCollapsed ? ' collapsed' : '';
                     const chevStyle = isCollapsed ? 'transform: rotate(-90deg)' : '';
 
+                    let itemsHtml = "";
+
+                    // ── LÓGICA DE SUB-GRUPOS POR PISO ──
+                    if (_activosOrden === 'edificio-piso') {
+                        const pisos = {};
+                        items.forEach(d => {
+                            const asigs = asignaciones[d.id] || [];
+                            const asig = asigs[0]; // primera asignación para determinar piso
+                            let p = "SIN ASIGNAR";
+                            if (asig) {
+                                if (asig.tipo === 'canal') p = asig.slot.piso || "SIN ASIGNAR";
+                                else if (asig.tipo === 'otro_prod') p = asig.item.piso || "SIN ASIGNAR";
+                                else if (asig.tipo === 'grabador') p = asig.grab.piso || "SIN ASIGNAR";
+                            }
+                            p = S.normalizarPiso(p) || "SIN ASIGNAR";
+
+                            if (!pisos[p]) pisos[p] = [];
+                            pisos[p].push(d);
+                        });
+
+                        // ── ORDENAMIENTO JERÁRQUICO DE PISOS ──
+                        function getPisoPeso(p) {
+                            if (p === "SIN ASIGNAR") return 9999; // Siempre al final
+                            
+                            const s = p.trim().toUpperCase();
+                            
+                            // 1. Subsuelos (ej: "1SS", "SS2", "SS") -> Pesos negativos
+                            if (s.includes('SS')) {
+                                const num = parseInt(s.replace(/\D/g, '')) || 1;
+                                return -num; // 2SS = -2, 1SS = -1
+                            }
+                            
+                            // 2. Planta Baja
+                            if (s === 'PB') return 0;
+                            
+                            // 3. Entre Pisos (ej: "EP", "EP1", "EP2") -> Decimales bajos
+                            if (s.includes('EP')) {
+                                const num = parseInt(s.replace(/\D/g, '')) || 1;
+                                return 0 + (num * 0.1); // EP = 0.1, EP2 = 0.2
+                            }
+                            
+                            // 4. Terraza / Azotea (Preparado para cuando lo agregues)
+                            if (s === 'TERRAZA' || s === 'AZOTEA' || s === 'TZ') return 1000;
+                            
+                            // 5. Pisos numéricos normales (ej: "1", "2", "-1")
+                            const numExacto = parseInt(s);
+                            if (!isNaN(numExacto)) return numExacto;
+                            
+                            // 6. Cualquier otra letra (se agrupa después de la terraza)
+                            return 500; 
+                        }
+
+                        // Ordenamos usando el "peso" de cada piso
+                        const sortedPisos = Object.keys(pisos).sort((a, b) => {
+                            const pesoA = getPisoPeso(a);
+                            const pesoB = getPisoPeso(b);
+                            
+                            // Si tienen distinto peso, los ordenamos de menor a mayor
+                            if (pesoA !== pesoB) return pesoA - pesoB;
+                            
+                            // Si pesan lo mismo (ej: dos pisos con letras), orden alfabético
+                            return a.localeCompare(b, undefined, { numeric: true });
+                        });
+                        // ──────────────────────────────────────────────
+
+                        itemsHtml = sortedPisos.map(p => {
+                            const floorKey = `${gLabel}|${p}`;
+                            const isFloorCollapsed = window.UI._pisosCollapsed.has(floorKey);
+                            const floorColStyle = isFloorCollapsed ? ' collapsed' : '';
+                            const floorChevStyle = isFloorCollapsed ? 'transform: rotate(-90deg)' : '';
+
+                            return `
+                            <div class="sub-grupo-piso" data-floor-key="${esc(floorKey)}" style="margin-bottom: 0.5rem;">
+                                <div class="grupo-piso-header" data-toggle-piso="${esc(floorKey)}" style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: 0.4rem 0.5rem; border-radius: var(--radius-sm); margin-bottom: 0.25rem;">
+                                    <span class="section-label" style="margin: 0; opacity: 0.8; font-size: 0.7rem; border-left: 2px solid var(--c-orange); padding-left: 0.5rem;">
+                                        PISO: ${esc(p)} <span style="opacity: 0.5; font-weight: normal; margin-left: 0.3rem;">(${pisos[p].length} disp.)</span>
+                                    </span>
+                                    <svg class="nvr-chevron" style="${floorChevStyle}; width: 14px; height: 14px; stroke: var(--text-muted);" viewBox="0 0 24 24"><use href="#icon-chevron-down"/></svg>
+                                </div>
+                                <div class="activos-grid-transition ${colClass}${floorColStyle}">
+                                    ${pisos[p].map(renderItem).join('')}
+                                </div>
+                            </div>`;
+                        }).join('');
+                    } else {
+                        // Lógica estándar para el resto de los modos
+                        itemsHtml = `<div class="${colClass}">${items.map(renderItem).join('')}</div>`;
+                    }
+
                     html += `
-                    <div class="grupo-activos-card" data-grupo="${esc(gLabel)}">
-                        <div class="grupo-activos-header" data-toggle-grupo="${esc(gLabel)}">
-                            <span class="grupo-activos-header-label">${esc(gLabel)} <span class="badge badge-otro badge--grupo-count">${items.length}</span></span>
-                            <svg class="nvr-chevron" style="${chevStyle}; stroke: var(--c-orange);" viewBox="0 0 24 24"><use href="#icon-chevron-down"/></svg>
-                        </div>
-                        <div class="activos-grid-transition ${colClass}${colStyle}">
-                            ${items.map(renderItem).join('')}
-                        </div>
-                    </div>`;
+    <div class="grupo-activos-card" data-grupo="${esc(gLabel)}">
+        <div class="grupo-activos-header" data-toggle-grupo="${esc(gLabel)}">
+            <span class="grupo-activos-header-label">${esc(gLabel)} <span class="badge badge-otro badge--grupo-count">${items.length}</span></span>
+            <svg class="nvr-chevron" style="${chevStyle}; stroke: var(--c-orange);" viewBox="0 0 24 24"><use href="#icon-chevron-down"/></svg>
+        </div>
+        <div class="activos-grid-transition${colStyle}">
+            ${itemsHtml}
+        </div>
+    </div>`;
                 });
 
                 lista.innerHTML = html;
@@ -5766,8 +6100,13 @@
                     lista.addEventListener('click', function (e) {
                         const item = e.target.closest('.dispositivo-item[data-disp-id]');
                         if (item) { UI.abrirEditarDispositivo(item.dataset.dispId); return; }
-                        const header = e.target.closest('.grupo-activos-header[data-toggle-grupo]');
-                        if (header) { UI._toggleGrupoActivos(header.dataset.toggleGrupo); return; }
+
+                        const headerGrupo = e.target.closest('.grupo-activos-header[data-toggle-grupo]');
+                        if (headerGrupo) { UI._toggleGrupoActivos(headerGrupo.dataset.toggleGrupo); return; }
+
+                        // ── Soporte para colapsar pisos ──
+                        const headerPiso = e.target.closest('.grupo-piso-header[data-toggle-piso]');
+                        if (headerPiso) { UI._togglePisoActivos(headerPiso.dataset.togglePiso); return; }
                     });
                 }
             }
@@ -5776,6 +6115,31 @@
             function renderProduccion() {
                 const lista = document.getElementById('lista-grabadores');
                 const grabs = [..._data.grabadores].sort((a, b) => (a.descripcion || '').localeCompare(b.descripcion || ''));
+
+                // ── CALCULAR MACS DUPLICADAS DE FORMA GLOBAL ──
+                const macCounts = {};
+                function registrarMacProd(dispId) {
+                    if (!dispId) return;
+                    const d = _data.dispositivos.find(x => x.id === dispId);
+                    if (d && d.mac) {
+                        d.mac.split(',').forEach(m => {
+                            const k = m.trim().toUpperCase();
+                            if (k && !k.startsWith('SINRELEVAR')) macCounts[k] = (macCounts[k] || 0) + 1;
+                        });
+                    }
+                }
+                grabs.forEach(g => {
+                    registrarMacProd(g.dispositivoId);
+                    g.canales_data.forEach(c => registrarMacProd(c.dispositivoId));
+                });
+                (_data.otros_prod || []).forEach(o => registrarMacProd(o.dispositivoId));
+
+                const dupMacs = new Set(Object.keys(macCounts).filter(k => macCounts[k] > 1));
+                function tieneMacDuplicada(d) {
+                    if (!d || !d.mac) return false;
+                    return d.mac.split(',').some(m => dupMacs.has(m.trim().toUpperCase()));
+                }
+                // ──────────────────────────────────────────────
 
                 if (grabs.length === 0) {
                     lista.innerHTML = `<div class="empty-state">
@@ -5792,21 +6156,26 @@
                         if (disp) {
                             const tituloCanal = c.descripcion || disp.mac || disp.serial || '—';
 
+                            // ── APLICAR COLOR VIOLETA EN EL BADGE DEL CANAL ──
+                            const isDup = tieneMacDuplicada(disp);
+                            const badgeStyle = isDup ? 'background: var(--c-purple);' : '';
+                            const tituloHover = isDup ? `[MAC DUPLICADA] ${esc(tituloCanal)}` : esc(tituloCanal);
+
                             // Si es vista Lista (Filas)
                             if (_produccionVista === 'lista') {
                                 return `<div class="canal-slot-lista ocupado" data-canal="${c.canal}">
-                                    <div class="canal-numero">CH ${c.canal}</div>
-                                    <div class="canal-dispositivo-nombre" title="${esc(tituloCanal)}">${esc(tituloCanal)}</div>
+                                    <div class="canal-numero" style="${badgeStyle}">CH ${c.canal}</div>
+                                    <div class="canal-dispositivo-nombre" title="${tituloHover}">${esc(tituloCanal)}</div>
                                     <div class="canal-dispositivo-ip" title="${c.ip ? esc(c.ip) : ''}">${c.ip ? esc(c.ip) : ''}</div>
                                 </div>`;
                             }
                             // Si es vista Mosaico (Tarjetas)
                             else {
                                 return `<div class="canal-slot ocupado" data-canal="${c.canal}">
-                                    <div class="canal-dispositivo-nombre" title="${esc(tituloCanal)}">${esc(tituloCanal)}</div>
+                                    <div class="canal-dispositivo-nombre" title="${tituloHover}">${esc(tituloCanal)}</div>
                                     <div class="canal-slot-footer">
                                         <div class="canal-dispositivo-ip">${c.ip ? esc(c.ip) : ''}</div>
-                                        <div class="canal-numero">CH ${c.canal}</div>
+                                        <div class="canal-numero" style="${badgeStyle}">CH ${c.canal}</div>
                                     </div>
                                 </div>`;
                             }
@@ -5948,6 +6317,7 @@
             })();
             let _busqTimer = null;
             let _importarParsed = null;
+            let _produccionVista = (() => { try { return localStorage.getItem('cctv_prod_vista') || 'mosaico'; } catch { return 'mosaico'; } })();
 
             function _actualizarBotonesEstado(estadoActual) {
                 _estadoEditando = estadoActual;
@@ -6611,21 +6981,28 @@
 
                     // 2. Programamos el renderizado para dentro de 300ms
                     _busqTimer = setTimeout(() => {
-                        // Nos aseguramos de que el Set principal exista
+                        // Nos aseguramos de que los Sets existan
                         if (!window.UI._activosCollapsed) window.UI._activosCollapsed = new Set();
+                        if (!window.UI._pisosCollapsed) window.UI._pisosCollapsed = new Set();
 
                         if (query.trim()) {
                             // Si empezamos a buscar y no habíamos guardado el estado, le sacamos una "foto"
                             if (!window.UI._estadoColapsadoPrevio) {
                                 window.UI._estadoColapsadoPrevio = new Set(window.UI._activosCollapsed);
+                                window.UI._estadoPisosPrevio = new Set(window.UI._pisosCollapsed); // ── FOTO PISOS ──
                             }
                             // Forzamos a expandir todo (vaciando el set de colapsados)
                             window.UI._activosCollapsed.clear();
+                            window.UI._pisosCollapsed.clear(); // ── EXPANDIR PISOS ──
                         } else {
                             // Si borró el texto a mano (quedó vacío), restauramos la foto
                             if (window.UI._estadoColapsadoPrevio) {
                                 window.UI._activosCollapsed = new Set(window.UI._estadoColapsadoPrevio);
                                 window.UI._estadoColapsadoPrevio = null;
+                            }
+                            if (window.UI._estadoPisosPrevio) { // ── RESTAURAR PISOS ──
+                                window.UI._pisosCollapsed = new Set(window.UI._estadoPisosPrevio);
+                                window.UI._estadoPisosPrevio = null;
                             }
                             UI._restaurarFiltrosPrevios();
                         }
@@ -6648,6 +7025,11 @@
                         if (!window.UI._activosCollapsed) window.UI._activosCollapsed = new Set();
                         window.UI._activosCollapsed = new Set(window.UI._estadoColapsadoPrevio);
                         window.UI._estadoColapsadoPrevio = null;
+                    }
+                    if (window.UI._estadoPisosPrevio) { // ── RESTAURAR PISOS ──
+                        if (!window.UI._pisosCollapsed) window.UI._pisosCollapsed = new Set();
+                        window.UI._pisosCollapsed = new Set(window.UI._estadoPisosPrevio);
+                        window.UI._estadoPisosPrevio = null;
                     }
                     UI._restaurarFiltrosPrevios();
                     renderActivos();
@@ -6726,6 +7108,17 @@
                         }
                     }
 
+                    if (serial) {
+                        const serialNorm = serial.toUpperCase();
+                        const dupSerial = otrosDisps.find(x => x.serial && x.serial.toUpperCase() === serialNorm);
+                        if (dupSerial) {
+                            document.getElementById(`${prefijo}-serial`).classList.add('error');
+                            const label = [dupSerial.marca, dupSerial.modelo].filter(Boolean).join(' ') || dupSerial.mac || dupSerial.id;
+                            toast(`Serial duplicado: ${serial} — ya existe en "${label}"`, 'error');
+                            return;
+                        }
+                    }
+
                     historial.empujar(macs.length > 1 ? `Agregar ${macs.length} dispositivos` : 'Agregar dispositivo');
 
                     const base = {
@@ -6736,6 +7129,7 @@
                         forma: document.getElementById(`${prefijo}-forma`).value,
                         canales: document.getElementById(`${prefijo}-canales`).value,
                         patrimonio: document.getElementById(`${prefijo}-patrimonio`).value.trim(),
+                        firmware: document.getElementById(`${prefijo}-firmware`).value.trim(),
                     };
 
                     if (macs.length > 1) {
@@ -6759,6 +7153,7 @@
                     document.getElementById(`${prefijo}-serial`).value = d.serial || '';
                     document.getElementById(`${prefijo}-mac`).value = d.mac || '';
                     document.getElementById(`${prefijo}-patrimonio`).value = d.patrimonio || '';
+                    document.getElementById(`${prefijo}-firmware`).value = d.firmware || '';
                     const esCamara = d.tipo === 'camara';
                     document.getElementById(`${prefijo}-forma-group`).style.display = esCamara ? '' : 'none';
                     document.getElementById(`${prefijo}-forma`).value = d.forma || '';
@@ -6925,6 +7320,17 @@
                         }
                     }
 
+                    if (serial) {
+                        const serialNorm = serial.toUpperCase();
+                        const dupSerial = otrosDisps.find(x => x.serial && x.serial.toUpperCase() === serialNorm);
+                        if (dupSerial) {
+                            document.getElementById(`${prefijo}-serial`).classList.add('error');
+                            const label = [dupSerial.marca, dupSerial.modelo].filter(Boolean).join(' ') || dupSerial.mac || dupSerial.id;
+                            toast(`Serial duplicado: ${serial} — ya existe en "${label}"`, 'error');
+                            return;
+                        }
+                    }
+
                     const base = {
                         tipo,
                         estado: _estadoEditando,
@@ -6934,6 +7340,7 @@
                         forma: document.getElementById(`${prefijo}-forma`).value,
                         canales: document.getElementById(`${prefijo}-canales`).value,
                         patrimonio: document.getElementById(`${prefijo}-patrimonio`).value.trim(),
+                        firmware: document.getElementById(`${prefijo}-firmware`).value.trim(),
                     };
 
                     const obj = _sanDisp({ ...base, id: _editandoDispId, mac: macs[0] || '' });
@@ -6945,6 +7352,7 @@
                         serial: obj.serial || '',
                         mac: obj.mac || '',
                         patrimonio: obj.patrimonio || '',
+                        firmware: obj.firmware || '',
                         forma: obj.forma || '',
                         canales: String(obj.canales || 16),
                     };
@@ -7068,8 +7476,9 @@
                         ip: document.getElementById(`${prefijo}-ip`).value.trim(),
                         puerto: document.getElementById(`${prefijo}-puerto`).value.trim(),
                         edificio: document.getElementById(`${prefijo}-edificio`).value.trim(),
-                        piso: document.getElementById(`${prefijo}-piso`).value.trim(),
+                        piso: S.normalizarPiso(document.getElementById(`${prefijo}-piso`).value),
                         rack: document.getElementById(`${prefijo}-rack`).value.trim(),
+                        comentarios: document.getElementById(`${prefijo}-comentarios`).value.trim(),
                         mac: disp.mac || '',
                         canales: disp.canales || 16,
                         dispositivoId: disp.id,
@@ -7090,6 +7499,7 @@
                     _poblarSelectEdificio(`${prefijo}-edificio`, g.edificio || '');
                     document.getElementById(`${prefijo}-piso`).value = g.piso || '';
                     document.getElementById(`${prefijo}-rack`).value = g.rack || '';
+                    document.getElementById(`${prefijo}-comentarios`).value = g.comentarios || '';
                     const _maxCanalOcupado = g.canales_data
                         .filter(c => c.dispositivoId)
                         .reduce((max, c) => Math.max(max, c.canal), 0);
@@ -7103,6 +7513,7 @@
                         edificio: g.edificio || '',
                         piso: g.piso || '',
                         rack: g.rack || '',
+                        comentarios: g.comentarios || '',
                         dispositivoId: g.dispositivoId || '',
                     };
 
@@ -7170,8 +7581,9 @@
                         ip: document.getElementById(`${prefijo}-ip`).value.trim(),
                         puerto: document.getElementById(`${prefijo}-puerto`).value.trim(),
                         edificio: document.getElementById(`${prefijo}-edificio`).value.trim(),
-                        piso: document.getElementById(`${prefijo}-piso`).value.trim(),
+                        piso: S.normalizarPiso(document.getElementById(`${prefijo}-piso`).value),
                         rack: document.getElementById(`${prefijo}-rack`).value.trim(),
+                        comentarios: document.getElementById(`${prefijo}-comentarios`).value.trim(),
                         mac: disp.mac || '',
                         canales: disp.canales || 16,
                         dispositivoId: disp.id,
@@ -7186,6 +7598,7 @@
                         edificio: datos.edificio || '',
                         piso: datos.piso || '',
                         rack: datos.rack || '',
+                        comentarios: datos.comentarios || '',
                         dispositivoId: datos.dispositivoId || '',
                     };
 
@@ -7449,13 +7862,42 @@
                     dispInput.classList.remove('error');
                     if (!validarCampoIP('canal-ip')) return;
 
+                    // ── NUEVA VALIDACIÓN: Duplicados en el mismo grabador ──
+                    const inputIp = document.getElementById('canal-ip');
+                    const inputDesc = document.getElementById('canal-descripcion');
+                    const nuevaIp = inputIp.value.trim();
+                    const nuevaDesc = inputDesc.value.trim().toLowerCase();
+
+                    inputIp.classList.remove('error');
+                    inputDesc.classList.remove('error');
+
+                    for (const c of g.canales_data) {
+                        // Ignoramos el canal que estamos editando
+                        if (c.canal === _editandoCanalN) continue;
+
+                        // Validar IP (si el campo no está vacío)
+                        if (nuevaIp && c.ip === nuevaIp) {
+                            inputIp.classList.add('error');
+                            toast(`IP duplicada: ya está en uso en el canal ${c.canal} de este grabador`, 'error');
+                            return;
+                        }
+
+                        // Validar Descripción (si el campo no está vacío)
+                        if (nuevaDesc && c.descripcion && c.descripcion.toLowerCase() === nuevaDesc) {
+                            inputDesc.classList.add('error');
+                            toast(`Descripción duplicada: ya está en uso en el canal ${c.canal} de este grabador`, 'error');
+                            return;
+                        }
+                    }
+                    // ───────────────────────────────────────────────────────
+
                     const nuevoSnapCanal = {
                         dispositivoId: document.getElementById('sel-canal-dispositivo').value || '',
                         descripcion: document.getElementById('canal-descripcion').value.trim(),
                         ip: document.getElementById('canal-ip').value.trim(),
                         puerto: document.getElementById('canal-puerto').value.trim(),
                         edificio: document.getElementById('canal-edificio').value.trim(),
-                        piso: document.getElementById('canal-piso').value.trim(),
+                        piso: S.normalizarPiso(document.getElementById('canal-piso').value),
                         rack: document.getElementById('canal-rack').value.trim(),
                         comentarios: document.getElementById('canal-comentarios').value.trim(),
                     };
@@ -7571,7 +8013,7 @@
                         ip: document.getElementById('otro-prod-ip').value.trim(),
                         puerto: document.getElementById('otro-prod-puerto').value.trim(),
                         edificio: document.getElementById('otro-prod-edificio').value.trim(),
-                        piso: document.getElementById('otro-prod-piso').value.trim(),
+                        piso: S.normalizarPiso(document.getElementById('otro-prod-piso').value),
                         rack: document.getElementById('otro-prod-rack').value.trim(),
                         comentarios: document.getElementById('otro-prod-comentarios').value.trim(),
                     };
@@ -7828,7 +8270,7 @@
                             } else {
                                 const loc = mapD.get(san.id);
                                 let updated = false;
-                                ['marca', 'modelo', 'serial', 'mac', 'patrimonio', 'forma', 'estado'].forEach(k => {
+                                ['marca', 'modelo', 'serial', 'mac', 'patrimonio', 'firmware', 'forma', 'estado'].forEach(k => {
                                     if (!loc[k] && san[k]) { loc[k] = san[k]; updated = true; }
                                 });
                                 if (updated) dUpd++;
@@ -7841,7 +8283,7 @@
                             } else {
                                 const loc = mapG.get(san.id);
                                 let updated = false;
-                                ['marca', 'modelo', 'ip', 'edificio', 'piso', 'rack', 'puerto', 'mac', 'dispositivoId'].forEach(k => {
+                                ['marca', 'modelo', 'ip', 'edificio', 'piso', 'rack', 'puerto', 'mac', 'comentarios', 'dispositivoId'].forEach(k => {
                                     if (!loc[k] && san[k]) { loc[k] = san[k]; updated = true; }
                                 });
                                 san.canales_data.forEach(cRem => {
@@ -8152,11 +8594,12 @@
                     // Evitamos que salte si mantienen apretado un botón (ej: botón editar del NVR)
                     if (e.target.closest('button')) return;
 
-                    // Detectamos si tocamos el encabezado de un Grupo de Activos o de un Grabador
+                    // Detectamos si tocamos el encabezado de un Grupo, un Grabador, o un Piso
                     const headerActivos = e.target.closest('.grupo-activos-header');
                     const headerNVR = e.target.closest('.nvr-card-header');
+                    const headerPiso = e.target.closest('.grupo-piso-header'); // <-- NUEVO
 
-                    if (headerActivos || headerNVR) {
+                    if (headerActivos || headerNVR || headerPiso) {
                         _longPressFired = false;
 
                         _pressTimer = setTimeout(() => {
@@ -8169,22 +8612,36 @@
                                 const grupos = document.querySelectorAll('.grupo-activos-card');
                                 if (!grupos.length) return;
 
-                                // 1. Miramos el estado de la tarjeta EXACTA que el usuario presionó
                                 const groupId = headerActivos.dataset.toggleGrupo;
                                 const estabaCerrado = window.UI._activosCollapsed.has(groupId);
-                                
-                                // Si estaba cerrado, su intención al presionar era abrir. Por ende, abrimos todos.
-                                const abrirTodos = estabaCerrado; 
+                                const abrirTodos = estabaCerrado;
 
                                 grupos.forEach(g => {
                                     if (abrirTodos) window.UI._activosCollapsed.delete(g.dataset.grupo);
                                     else window.UI._activosCollapsed.add(g.dataset.grupo);
                                 });
 
-                                // ── Guardamos la memoria ──
                                 if (window.UI._guardarColapsados) window.UI._guardarColapsados();
-
                                 toast(abrirTodos ? 'Todos los grupos expandidos' : 'Todos los grupos colapsados', 'info');
+                                renderActivos();
+                            }
+
+                            else if (headerPiso) {
+                                // ── NUEVA LÓGICA PARA PISOS ──
+                                const pisos = document.querySelectorAll('.sub-grupo-piso');
+                                if (!pisos.length) return;
+
+                                const floorKey = headerPiso.dataset.togglePiso;
+                                const estabaCerrado = window.UI._pisosCollapsed.has(floorKey);
+                                const abrirTodos = estabaCerrado;
+
+                                pisos.forEach(p => {
+                                    if (abrirTodos) window.UI._pisosCollapsed.delete(p.dataset.floorKey);
+                                    else window.UI._pisosCollapsed.add(p.dataset.floorKey);
+                                });
+
+                                if (window.UI._guardarColapsados) window.UI._guardarColapsados();
+                                toast(abrirTodos ? 'Todos los pisos expandidos' : 'Todos los pisos colapsados', 'info');
                                 renderActivos();
                             }
 
@@ -8192,12 +8649,9 @@
                                 const grabs = document.querySelectorAll('.nvr-card');
                                 if (!grabs.length) return;
 
-                                // 1. Miramos el estado de la tarjeta EXACTA que el usuario presionó
                                 const card = headerNVR.closest('.nvr-card');
                                 const grabId = card.dataset.grabId;
                                 const estabaAbierto = _grabExpanded.has(grabId);
-                                
-                                // Si estaba abierto, su intención era cerrar. Por ende, cerramos todos.
                                 const abrirTodos = !estabaAbierto;
 
                                 grabs.forEach(g => {
@@ -8333,13 +8787,10 @@
 </html>
 
 <!--// ====================================================================
-    //                 NOTAS SISTEMA LUSHIBOSCA VERSION 250
+    //                 NOTAS SISTEMA LUSHIBOSCA VERSION 258
     // ====================================================================
 
      - CAMBIOS 
-       v249: Modales ajustes, gist, nuevo-disp, nuevo-grab y editar-grab
-             convertidos a modal-content--flex con modal-sticky-header
-             y modal-sticky-footer para header y botones siempre visibles.
 
      
      - BUGS
