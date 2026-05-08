@@ -3118,27 +3118,22 @@
                     </svg>
                     Dispositivos
                     <span id="contador-dispositivos" class="contador-badge"></span>
-                    <div id="btn-vista-activos-wrap"
-                        style="position: relative; display: inline-block; margin-left: auto;">
-                        <button class="icon-btn" onclick="UI.toggleDropdownActivos()" title="Opciones de vista">
+                    
+                    <div id="btn-vista-activos-wrap" style="position: relative; margin-left: auto;">
+                        <button class="icon-btn btn-inline" onclick="UI.toggleDropdownActivos(event)" title="Opciones de vista" style="margin-left: 0;">
                             <svg class="icon icon-line">
                                 <use href="#icon-sliders" />
                             </svg>
                         </button>
-                        <div id="dropdown-vista-activos" class="combobox-dropdown"
-                            style="display: none; width: 200px; padding: var(--sp-4); right: 0; left: auto; top: calc(100% + var(--sp-2)); z-index: 100;">
-                            <label style="margin-bottom: var(--sp-2); padding-left: 0;">Agrupar por</label>
-                            <select id="sel-vista-orden-dropdown"
-                                onchange="UI.setActivosOrden(this.value); UI.toggleDropdownActivos()">
-                                <option value="edificio-piso">Edificio / Piso</option>
-                                <option value="estado">Estado</option>
-                                <option value="marca">Marca / Modelo</option>
-                                <option value="forma">Tipo / Forma</option>
-                            </select>
+                        <div id="dropdown-vista-activos" class="combobox-dropdown" style="display: none; width: 190px; right: 0; left: auto; top: calc(100% + 4px); z-index: 100;">
+                            <div class="canal-disp-item" onclick="UI.setActivosOrden('edificio-piso'); UI.toggleDropdownActivos()">Edificio / Piso</div>
+                            <div class="canal-disp-item" onclick="UI.setActivosOrden('estado'); UI.toggleDropdownActivos()">Estado</div>
+                            <div class="canal-disp-item" onclick="UI.setActivosOrden('marca'); UI.toggleDropdownActivos()">Marca / Modelo</div>
+                            <div class="canal-disp-item" onclick="UI.setActivosOrden('forma'); UI.toggleDropdownActivos()">Tipo / Forma</div>
                         </div>
                     </div>
-                    <button class="icon-btn btn-edit btn-inline" onclick="UI.abrirNuevoDispositivo()"
-                        title="Agregar dispositivo">
+
+                    <button class="icon-btn btn-edit btn-inline" onclick="UI.abrirNuevoDispositivo()" title="Agregar dispositivo" style="margin-left: 0;">
                         <svg class="icon icon-line">
                             <use href="#icon-plus" />
                         </svg>
@@ -6470,6 +6465,10 @@
             // renderActivos — orquestador
             // ==============================================================
             function renderActivos() {
+                // Sincronizar el select con el valor guardado
+                const selOrden = document.getElementById('sel-vista-orden');
+                if (selOrden && selOrden.value !== _activosOrden) selOrden.value = _activosOrden;
+
                 const lista = document.getElementById('lista-dispositivos');
                 const disps = _data.dispositivos;
                 const query = (document.getElementById('input-busqueda')?.value || '').trim().toLowerCase();
@@ -7041,20 +7040,10 @@
                     }
                 },
 
-                toggleDropdownActivos() {
+                toggleDropdownActivos(e) {
+                    if (e) e.stopPropagation(); // Evita que el clic lo cierre al instante
                     const dd = document.getElementById('dropdown-vista-activos');
-                    if (!dd) return;
-
-                    const estaCerrado = dd.style.display === 'none' || dd.style.display === '';
-
-                    if (estaCerrado) {
-                        // Sincronizar el select con el orden actual antes de mostrar
-                        const sel = document.getElementById('sel-vista-orden-dropdown');
-                        if (sel) sel.value = _activosOrden;
-                        dd.style.display = 'block';
-                    } else {
-                        dd.style.display = 'none';
-                    }
+                    if (dd) dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
                 },
 
                 setActivosOrden(orden) {
@@ -9363,7 +9352,7 @@
                     _canalDispHighlight = -1;
                 }
 
-                // Cierra el dropdown de Vista de Activos al tocar fuera
+                // 3. Cierra el dropdown custom de activos
                 const wrapActivos = document.getElementById('btn-vista-activos-wrap');
                 const ddActivos = document.getElementById('dropdown-vista-activos');
                 if (wrapActivos && ddActivos && !wrapActivos.contains(e.target)) {
