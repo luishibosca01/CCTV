@@ -3014,7 +3014,7 @@
                     </svg>
                     Ajustes
                 </h3>
-                <span class="modal-header-version">v286</span>
+                <span class="modal-header-version">v288</span>
             </div>
 
             <div class="modal-scroll-body">
@@ -6312,7 +6312,7 @@
                 { id: 'modelo', label: 'Modelo' },
                 { id: 'patrimonio', label: 'Patrimonio' },
                 { id: 'forma', label: 'Forma (cámara)' },
-                { id: 'canal', label: 'Descripción de canal' },
+                { id: 'canal', label: 'Descripción' },
                 { id: 'estado', label: 'Estado' },
                 { id: 'ubicacion', label: 'Ubicación (Edificio / Piso)' },
             ];
@@ -6331,7 +6331,12 @@
             function scoreDispositivo(d, { tokens, tokenRegexes, query, asignaciones }) {
                 const asigD = asignaciones[d.id] || [];
                 const hayCanal = _busqActivos.has('canal')
-                    ? asigD.filter(a => a.tipo === 'canal').map(a => (a.slot.descripcion || '').toLowerCase()).join(' ')
+                    ? asigD.map(a => {
+                        if (a.tipo === 'canal') return (a.slot.descripcion || '').toLowerCase();
+                        if (a.tipo === 'otro_prod') return (a.item.descripcion || '').toLowerCase();
+                        if (a.tipo === 'grabador') return (a.grab.descripcion || '').toLowerCase();
+                        return '';
+                    }).filter(Boolean).join(' ')
                     : '';
                 const tipoKey = _busqActivos.has('tipo') ? d.tipo.toLowerCase() : '';
                 const tipoLabel = _busqActivos.has('tipo') ? (S.TIPOS[d.tipo]?.label || '').toLowerCase() : '';
@@ -6937,7 +6942,7 @@
                     toast('Edificio eliminado', 'success');
                 },
 
-                cambiarTab(tab) {
+                cambiarTab(tab, mantenerBusqueda = false) {
                     // Si el usuario toca la pestaña en la que ya está parado...
                     if (_tabActual === tab) {
                         let limpioAlgo = false;
@@ -6971,7 +6976,8 @@
                     const tieneBusqueda = inputBusq && inputBusq.value.trim() !== '';
                     const tieneSnapshot = window.UI._estadoColapsadoPrevio || window.UI._estadoPisosPrevio;
 
-                    if (tieneBusqueda || tieneSnapshot) {
+                    // ── MAGIA: Si mantenerBusqueda es true, saltamos la limpieza ──
+                    if (!mantenerBusqueda && (tieneBusqueda || tieneSnapshot)) {
                         if (inputBusq) inputBusq.value = '';
                         const btnX = document.getElementById('btn-limpiar-busqueda');
                         if (btnX) btnX.style.display = 'none';
@@ -6983,7 +6989,7 @@
                         setTimeout(() => renderActivos(), 200);
                     }
 
-                    if (inputBusq) inputBusq.blur();
+                    if (!mantenerBusqueda && inputBusq) inputBusq.blur();
                     // ────────────────────────────────────────────────────────────────────────────
 
                     ['dashboard', 'activos', 'produccion'].forEach(t => {
@@ -7064,6 +7070,10 @@
 
                     // Mostramos u ocultamos la "X" al instante
                     if (btnX) btnX.style.display = query ? '' : 'none';
+
+                    if (query && _tabActual !== 'activos') {
+                        UI.cambiarTab('activos', true);
+                    }
 
                     // 1. Cancelamos la búsqueda anterior si el usuario sigue escribiendo
                     if (_busqTimer) clearTimeout(_busqTimer);
@@ -8699,7 +8709,7 @@
                 const esCaracterValido = e.key.length === 1 && /^[a-zA-Z0-9:]$/.test(e.key);
 
                 if ((esCaracterValido || e.key === 'Backspace') && !e.ctrlKey && !e.metaKey && !e.altKey) {
-                    if (_tabActual !== 'activos') UI.cambiarTab('activos');
+                    if (_tabActual !== 'activos') UI.cambiarTab('activos', true);
                     const input = document.getElementById('input-busqueda');
                     input.focus();
                 }
@@ -8957,7 +8967,7 @@
 </html>
 
 <!--// ====================================================================
-    //                 NOTAS SISTEMA LUSHIBOSCA VERSION 286
+    //                 NOTAS SISTEMA LUSHIBOSCA VERSION 288
     // ====================================================================
 
      - CAMBIOS 
