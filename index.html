@@ -3118,11 +3118,25 @@
                     </svg>
                     Dispositivos
                     <span id="contador-dispositivos" class="contador-badge"></span>
-                    <button class="icon-btn btn-inline" onclick="UI.abrirVistaActivos()" title="Opciones de vista">
-                        <svg class="icon icon-line">
-                            <use href="#icon-sliders" />
-                        </svg>
-                    </button>
+                    <div id="btn-vista-activos-wrap"
+                        style="position: relative; display: inline-block; margin-left: auto;">
+                        <button class="icon-btn" onclick="UI.toggleDropdownActivos()" title="Opciones de vista">
+                            <svg class="icon icon-line">
+                                <use href="#icon-sliders" />
+                            </svg>
+                        </button>
+                        <div id="dropdown-vista-activos" class="combobox-dropdown"
+                            style="display: none; width: 200px; padding: var(--sp-4); right: 0; left: auto; top: calc(100% + var(--sp-2)); z-index: 100;">
+                            <label style="margin-bottom: var(--sp-2); padding-left: 0;">Agrupar por</label>
+                            <select id="sel-vista-orden-dropdown"
+                                onchange="UI.setActivosOrden(this.value); UI.toggleDropdownActivos()">
+                                <option value="edificio-piso">Edificio / Piso</option>
+                                <option value="estado">Estado</option>
+                                <option value="marca">Marca / Modelo</option>
+                                <option value="forma">Tipo / Forma</option>
+                            </select>
+                        </div>
+                    </div>
                     <button class="icon-btn btn-edit btn-inline" onclick="UI.abrirNuevoDispositivo()"
                         title="Agregar dispositivo">
                         <svg class="icon icon-line">
@@ -3225,7 +3239,17 @@
                         </button>
                     </div>
                 </div>
-
+                <div class="ajustes-section">
+                    <div class="section-label">Interfaz</div>
+                    <label class="gist-autosync-row gist-autosync-row--inline" style="border-top: none; padding: var(--sp-2) 0; cursor: pointer;" onclick="UI.toggleRecordarGrupos()">
+                        <span class="gist-autosync-text">
+                            <span class="gist-autosync-title">Recordar grupos colapsados</span>
+                        </span>
+                        <div class="toggle-switch" id="toggle-recordar-grupos">
+                            <div class="toggle-thumb"></div>
+                        </div>
+                    </label>
+                </div>
                 <!-- Sincronización (Gist) -->
                 <div class="ajustes-section">
                     <div class="section-label">Sincronización</div>
@@ -4242,56 +4266,6 @@
                     <svg class="icon icon-line">
                         <use href="#icon-cancelar" />
                     </svg> Cerrar
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============================================================
-         MODAL — Vista de activos
-    ============================================================ -->
-    <div class="modal" id="modal-vista-activos">
-        <div class="modal-content modal-content--sm">
-            <h3>
-                <svg class="icon icon-line">
-                    <use href="#icon-sliders" />
-                </svg>
-                Vista de activos
-            </h3>
-            <div class="form-group">
-                <label>Columnas</label>
-                <select id="sel-vista-columnas" onchange="UI.setActivosColumnas(+this.value)">
-                    <option value="1">1 columna</option>
-                    <option value="2">2 columnas</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Agrupar por</label>
-                <select id="sel-vista-orden" onchange="UI.setActivosOrden(this.value)">
-                    <option value="edificio-piso">Edificio / Piso</option>
-                    <option value="estado">Estado</option>
-                    <option value="marca">Marca / Modelo</option>
-                    <option value="forma">Tipo / Forma</option>
-                </select>
-            </div>
-
-            <div class="form-group ajustes-section">
-                <label class="gist-autosync-row gist-autosync-row--inline">
-                    <span class="gist-autosync-text">
-                        <span class="gist-autosync-title">Recordar estado colapsado</span>
-                    </span>
-                    <div class="toggle-switch" id="toggle-recordar-grupos" onclick="UI.toggleRecordarGrupos()">
-                        <div class="toggle-thumb"></div>
-                    </div>
-                </label>
-            </div>
-
-            <div class="btn-group btn-group--no-mt">
-                <button class="btn-cancel" onclick="UI.cerrarVistaActivos()">
-                    <svg class="icon icon-line">
-                        <use href="#icon-cancelar" />
-                    </svg>
-                    Cerrar
                 </button>
             </div>
         </div>
@@ -5625,8 +5599,6 @@
                 _renderResumenCamaras(disps, grabs, idsEnProd);
             };
 
-            let _activosColumnas = (() => { try { return parseInt(localStorage.getItem('cctv_activos_cols')) === 1 ? 1 : 2; } catch { return 2; } })();
-
             let _activosOrden = (() => {
                 try {
                     let v = localStorage.getItem('cctv_activos_orden');
@@ -6550,7 +6522,7 @@
                 if (contador) contador.textContent = query ? `${sorted.length} / ${disps.length}` : sorted.length;
 
                 // 4. Agrupar y generar HTML
-                const colClass = _activosColumnas === 1 ? 'lista-1col' : 'lista-2col';
+                const colClass = 'lista-2col';
                 const renderItem = d => _renderItemActivo(d, asignaciones, tieneMacDuplicada, dupPatrimonios);
 
                 const grupos = {};
@@ -7041,25 +7013,17 @@
                     setTimeout(() => UI.abrirAjustes(), 150);
                 },
 
-                // ---- Ajustes ----
                 abrirAjustes() {
                     const oscuro = document.body.classList.contains('dark-mode');
                     const use = document.querySelector('#icono-tema use');
                     if (use) use.setAttribute('href', oscuro ? '#icon-sun' : '#icon-moon');
+
+                    const toggleRecordar = document.getElementById('toggle-recordar-grupos');
+                    if (toggleRecordar) toggleRecordar.classList.toggle('on', _activosRecordarEstado);
+
                     MM.abrir('modal-ajustes');
                 },
 
-                abrirVistaActivos() {
-                    const selCol = document.getElementById('sel-vista-columnas');
-                    const selOrden = document.getElementById('sel-vista-orden');
-                    if (selCol) selCol.value = _activosColumnas;
-                    if (selOrden) selOrden.value = _activosOrden;
-
-                    const toggle = document.getElementById('toggle-recordar-grupos');
-                    if (toggle) toggle.classList.toggle('on', _activosRecordarEstado);
-
-                    MM.abrir('modal-vista-activos');
-                },
 
                 toggleRecordarGrupos() {
                     _activosRecordarEstado = !_activosRecordarEstado;
@@ -7077,15 +7041,20 @@
                     }
                 },
 
-                cerrarVistaActivos() {
-                    MM.cerrar('modal-vista-activos');
-                },
+                toggleDropdownActivos() {
+                    const dd = document.getElementById('dropdown-vista-activos');
+                    if (!dd) return;
 
-                setActivosColumnas(n) {
-                    if (_activosColumnas === n) return;
-                    _activosColumnas = n;
-                    try { localStorage.setItem('cctv_activos_cols', n); } catch (_) { }
-                    renderActivos();
+                    const estaCerrado = dd.style.display === 'none' || dd.style.display === '';
+
+                    if (estaCerrado) {
+                        // Sincronizar el select con el orden actual antes de mostrar
+                        const sel = document.getElementById('sel-vista-orden-dropdown');
+                        if (sel) sel.value = _activosOrden;
+                        dd.style.display = 'block';
+                    } else {
+                        dd.style.display = 'none';
+                    }
                 },
 
                 setActivosOrden(orden) {
@@ -9392,6 +9361,13 @@
                     const ddOtro = document.getElementById('otro-prod-disp-dropdown');
                     if (ddOtro) ddOtro.style.display = 'none';
                     _canalDispHighlight = -1;
+                }
+
+                // Cierra el dropdown de Vista de Activos al tocar fuera
+                const wrapActivos = document.getElementById('btn-vista-activos-wrap');
+                const ddActivos = document.getElementById('dropdown-vista-activos');
+                if (wrapActivos && ddActivos && !wrapActivos.contains(e.target)) {
+                    ddActivos.style.display = 'none';
                 }
             });
 
