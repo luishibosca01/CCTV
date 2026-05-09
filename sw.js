@@ -1,9 +1,11 @@
-const CACHE_NAME = 'CCTVS-v301-v2-cache';
+const CACHE_NAME = 'CCTVS-V301-cache';
 const urlsToCache = [
   './',
   './index.html',
   './manifest.json',
-  './icon.svg'
+  './icon.svg',
+  './app.js',
+  './styles.css'
 ];
 
 // Instalación
