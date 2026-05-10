@@ -30,7 +30,9 @@
     --radius-sm: 12px;
     --radius-pill: 999px;
 
+    --bg-toast: #1f2937;
     --modal-max-w-sm: 360px;
+    --modal-max-w-sm2: 450px;
 
     --sp-1: 0.25rem;
     --sp-2: 0.4rem;
@@ -59,6 +61,7 @@ body.dark-mode {
     --border: #313333;
     --input-bg: #313333;
     --c-gray-btn: #313333;
+    --bg-toast: #2d3748;
     --shadow: 0 4px 20px rgba(0, 0, 0, .4);
     --hover: brightness(1.2);
 }
@@ -1023,20 +1026,12 @@ button:disabled {
     gap: var(--sp-3);
 }
 
-.modal-content--sm {
+.sm {
     max-width: var(--modal-max-w-sm);
 }
 
-.modal-content--reporte {
-    max-width: 480px;
-}
-
-#modal-confirmar .modal-content {
-    max-width: 360px;
-}
-
-#modal-ajustes .modal-content {
-    max-width: 450px;
+.sm2 {
+    max-width: var(--modal-max-w-sm2);
 }
 
 #modal-ajustes .modal-scroll-body .btn-group {
@@ -1120,7 +1115,7 @@ button:disabled {
     border: 1px solid var(--bg-card);
     border-radius: var(--radius);
     padding: var(--sp-4);
-    margin: var(--sp-1);
+    margin: var(--sp-2);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -1754,10 +1749,6 @@ button:disabled {
 
 .dash-chip-main.clickable {
     cursor: pointer;
-}
-
-.dash-chip-main.clickable:active {
-    transform: scale(0.97);
 }
 
 .dash-chip-main .stat-chip-valor {
@@ -2496,10 +2487,6 @@ button:disabled {
     transition: border-color 0.15s;
 }
 
-.reporte-opcion:hover {
-    border-color: var(--c-blue);
-}
-
 .reporte-opcion input[type="checkbox"] {
     margin-top: 2px;
     width: 1rem;
@@ -2675,7 +2662,7 @@ button:disabled {
 @media (hover: hover) and (pointer: fine) {
 
     :is(.btn-edit, .btn-delete, .btn-backup, .btn-cancel, .icon-btn):hover:not(:disabled),
-    :is(.dispositivo-item, .canal-slot-lista, .gist-autosync-row):hover {
+    :is(.dispositivo-item, .canal-slot-lista, .reporte-opcion, .gist-autosync-row):hover {
         filter: var(--hover);
     }
 

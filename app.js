@@ -15,6 +15,52 @@
     })();
 
     // ════════════════════════════════════════════════════════════════════════════
+    // § CONSTANTES — literales compartidos entre módulos
+    // ════════════════════════════════════════════════════════════════════════════
+
+    // Tabs de la aplicación
+    const TABS = ['dashboard', 'activos', 'produccion'];
+
+    // Tiempo de expiración de estado guardado en localStorage
+    const UNA_HORA = 60 * 60 * 1000;
+
+    // Claves localStorage
+    const LS = {
+        TEMA:              'cctv_tema',
+        TAB:               'cctv_tab',
+        ACTIVOS_ORDEN:     'cctv_activos_orden',
+        ACTIVOS_RECORDAR:  'cctv_activos_recordar',
+        ACTIVOS_COLLAPSED: 'cctv_act_collapsed',
+        PISOS_COLLAPSED:   'cctv_pisos_collapsed',
+    };
+
+    // Formas de cámara (orden canónico)
+    const FORMAS = ['domo', 'bullet', 'turret', 'minidomo', 'minibullet', 'domo-ptz'];
+
+    // Formas con etiqueta para UI
+    const FORMAS_DEF = [
+        { key: 'domo',       label: 'Domo'        },
+        { key: 'bullet',     label: 'Bullet'      },
+        { key: 'turret',     label: 'Turret'      },
+        { key: 'minidomo',   label: 'Mini domo'   },
+        { key: 'minibullet', label: 'Mini bullet' },
+        { key: 'domo-ptz',   label: 'Domo PTZ'    },
+    ];
+
+    // Estados de dispositivo con etiqueta para UI
+    const ESTADOS_DEF = [
+        { key: 'produccion',  label: 'En producción', labelPlural: 'En producción' },
+        { key: 'disponible',  label: 'Disponible',    labelPlural: 'Disponibles'   },
+        { key: 'averiado',    label: 'Averiado',      labelPlural: 'Averiados'     },
+        { key: 'revisar',     label: 'En revisión',   labelPlural: 'A revisar'     },
+        { key: 'desafectado', label: 'Desafectado',   labelPlural: 'Desafectados'  },
+    ];
+
+    // Lookup rápido estado → etiqueta singular/plural
+    const ESTADO_LABEL        = Object.fromEntries(ESTADOS_DEF.map(e => [e.key, e.label]));
+    const ESTADO_LABEL_PLURAL = Object.fromEntries(ESTADOS_DEF.map(e => [e.key, e.labelPlural]));
+
+    // ════════════════════════════════════════════════════════════════════════════
     // § UTILIDADES / SCHEMA (S) — sanitización, validación, tipos, edificios
     // ════════════════════════════════════════════════════════════════════════════
     const S = (() => {
@@ -209,7 +255,6 @@
             if (!id || !RE_ID.test(id)) return null;
 
             const tipo = (TIPOS[d.tipo] || extraTipos[d.tipo]) ? d.tipo : 'otro';
-            const FORMAS = ['domo', 'bullet', 'turret', 'minidomo', 'minibullet', 'domo-ptz'];
             const ESTADOS = ['', 'averiado', 'revisar', 'desafectado'];
 
             const obj = {
@@ -475,20 +520,33 @@
     const KEY = 'cctv_data_v1';
     let _data = { dispositivos: [], grabadores: [], otros_prod: [] };
 
+    // Caches de derived data — se invalidan en cada guardar()/cargar()
+    let _cacheAsignaciones   = null;
+    let _cacheDupMacs        = null;
+    let _cacheDupPatrimonios = null;
+
+    function _invalidarCaches() {
+        _cacheAsignaciones   = null;
+        _cacheDupMacs        = null;
+        _cacheDupPatrimonios = null;
+    }
+
     function cargar() {
         try {
             const raw = localStorage.getItem(KEY);
             if (!raw) return;
             const d = S.safeParse(raw);
             _data.dispositivos = Array.isArray(d.dispositivos) ? d.dispositivos : [];
-            _data.grabadores = Array.isArray(d.grabadores) ? d.grabadores : [];
-            _data.otros_prod = Array.isArray(d.otros_prod) ? d.otros_prod : [];
+            _data.grabadores   = Array.isArray(d.grabadores)   ? d.grabadores   : [];
+            _data.otros_prod   = Array.isArray(d.otros_prod)   ? d.otros_prod   : [];
         } catch { _data = { dispositivos: [], grabadores: [], otros_prod: [] }; }
+        _invalidarCaches();
     }
 
     function guardar() {
         try {
             localStorage.setItem(KEY, JSON.stringify(_data));
+            _invalidarCaches();
             GistSync.subirAuto();
             return true;
         }
@@ -1254,15 +1312,18 @@
         renderProduccion();
     }
 
-    let _dashTipoAbierto = null;
-    let _dashTipoAbiertoPrevio = null;
-    let _dashEstadoAbierto = null;
-    let _dashEstadoAbiertoPrevio = null;
-    let _dashCamarasVista = 'edificio';
+    // ── Estado del dashboard ──────────────────────────────────────────────────
+    const _dash = {
+        tipoAbierto:        null,
+        tipoAbiertoPrevio:  null,
+        estadoAbierto:      null,
+        estadoAbiertoPrevio:null,
+        camarasVista:       'edificio',
+    };
 
     function _setCamarasVista(vista) {
-        if (_dashCamarasVista === vista) return;
-        _dashCamarasVista = vista;
+        if (_dash.camarasVista === vista) return;
+        _dash.camarasVista = vista;
 
         const disps = _data.dispositivos;
         const grabs = _data.grabadores;
@@ -1271,49 +1332,51 @@
         _renderResumenCamaras(disps, grabs, idsEnProd);
     };
 
-    let _activosOrden = (() => {
-        try {
-            let v = localStorage.getItem('cctv_activos_orden');
-            if (v === 'tipo') v = 'forma';
-            return ['estado', 'forma', 'marca', 'edificio-piso'].includes(v) ? v : 'forma';
-        } catch { return 'forma'; }
+    // ── Estado de la vista activos ────────────────────────────────────────────
+    const _activosRecordarEstado = (() => {
+        try { return localStorage.getItem(LS.ACTIVOS_RECORDAR) === 'true'; } catch { return false; }
     })();
-
-    let _activosRecordarEstado = (() => { try { return localStorage.getItem('cctv_activos_recordar') === 'true'; } catch { return false; } })();
+    const _activos = {
+        orden: (() => {
+            try {
+                let v = localStorage.getItem(LS.ACTIVOS_ORDEN);
+                if (v === 'tipo') v = 'forma';
+                return ['estado', 'forma', 'marca', 'edificio-piso'].includes(v) ? v : 'forma';
+            } catch { return 'forma'; }
+        })(),
+        collapsed: (() => {
+            if (_activosRecordarEstado) {
+                try {
+                    const saved = JSON.parse(localStorage.getItem(LS.ACTIVOS_COLLAPSED));
+                    if (Array.isArray(saved)) return new Set(saved);
+                } catch { }
+            }
+            return new Set();
+        })(),
+        pisosCollapsed: (() => {
+            if (_activosRecordarEstado) {
+                try {
+                    const saved = JSON.parse(localStorage.getItem(LS.PISOS_COLLAPSED));
+                    if (Array.isArray(saved)) return new Set(saved);
+                } catch { }
+            }
+            return new Set();
+        })(),
+    };
 
     // (UI state props se añaden directamente al objeto UI abajo)
-
-    let _activosCollapsed = (() => {
-        if (_activosRecordarEstado) {
-            try {
-                const saved = JSON.parse(localStorage.getItem('cctv_act_collapsed'));
-                if (Array.isArray(saved)) return new Set(saved);
-            } catch { }
-        }
-        return new Set();
-    })();
-
-    let _pisosCollapsed = (() => {
-        if (_activosRecordarEstado) {
-            try {
-                const saved = JSON.parse(localStorage.getItem('cctv_pisos_collapsed'));
-                if (Array.isArray(saved)) return new Set(saved);
-            } catch { }
-        }
-        return new Set();
-    })();
 
     function _guardarColapsados() {
         if (_activosRecordarEstado) {
             try {
-                localStorage.setItem('cctv_act_collapsed', JSON.stringify([..._activosCollapsed]));
-                localStorage.setItem('cctv_pisos_collapsed', JSON.stringify([..._pisosCollapsed]));
+                localStorage.setItem(LS.ACTIVOS_COLLAPSED, JSON.stringify([..._activos.collapsed]));
+                localStorage.setItem(LS.PISOS_COLLAPSED, JSON.stringify([..._activos.pisosCollapsed]));
             } catch { }
         }
     };
 
     function _togglePisoActivos(floorKey) {
-        const col = _pisosCollapsed;
+        const col = _activos.pisosCollapsed;
         const floorContainer = document.querySelector(`.sub-grupo-piso[data-floor-key="${CSS.escape(floorKey)}"]`);
         if (!floorContainer) return;
 
@@ -1350,8 +1413,8 @@
     }
 
     function _toggleTipoDetalle(tipoKey) {
-        if (_dashTipoAbierto !== tipoKey) _dashEstadoAbierto = null;
-        _dashTipoAbierto = _dashTipoAbierto === tipoKey ? null : tipoKey;
+        if (_dash.tipoAbierto !== tipoKey) _dash.estadoAbierto = null;
+        _dash.tipoAbierto = _dash.tipoAbierto === tipoKey ? null : tipoKey;
 
         const disps = _data.dispositivos;
         const grabs = _data.grabadores;
@@ -1360,9 +1423,9 @@
     };
 
     function _toggleEstadoDetalle(estadoKey) {
-        if (_dashTipoAbierto !== 'camara') return;
+        if (_dash.tipoAbierto !== 'camara') return;
 
-        _dashEstadoAbierto = _dashEstadoAbierto === estadoKey ? null : estadoKey;
+        _dash.estadoAbierto = _dash.estadoAbierto === estadoKey ? null : estadoKey;
 
         const disps = _data.dispositivos;
         const grabs = _data.grabadores;
@@ -1391,15 +1454,8 @@
         const tiposCustom = Object.keys(S.TIPOS).filter(k => !S.TIPOS_BUILTIN[k] && tiposConDisps.has(k)).sort();
         const tiposOrden = [...tiposBuitin, ...tiposCustom];
 
-        const ESTADOS_DEFS = [
-            { key: 'produccion', label: 'En producción' },
-            { key: 'disponible', label: 'Disponibles' },
-            { key: 'averiado', label: 'Averiados' },
-            { key: 'revisar', label: 'A revisar' },
-            { key: 'desafectado', label: 'Desafectados' },
-        ];
 
-        const depth = (!_dashTipoAbierto) ? 0 : (!_dashEstadoAbierto ? 1 : 2);
+        const depth = (!_dash.tipoAbierto) ? 0 : (!_dash.estadoAbierto ? 1 : 2);
 
         const getTiposHtml = () => {
             const chipTotal = `
@@ -1428,7 +1484,7 @@
         };
 
         const getEstadosHtml = (tipoOverride) => {
-            const tipo = tipoOverride || _dashTipoAbierto;
+            const tipo = tipoOverride || _dash.tipoAbierto;
             if (!tipo || !S.TIPOS[tipo]) return '';
 
             const tc = S.TIPOS[tipo];
@@ -1444,7 +1500,7 @@
                         </div>
                     </div>`;
 
-            const chipsEstado = ESTADOS_DEFS.map(e => {
+            const chipsEstado = ESTADOS_DEF.map(e => {
                 const n = est[e.key];
                 const esCamara = tipo === 'camara';
                 const clickable = n > 0
@@ -1466,12 +1522,10 @@
         };
 
         const getFormasHtml = (estadoOverride) => {
-            const estado = estadoOverride || _dashEstadoAbierto;
+            const estado = estadoOverride || _dash.estadoAbierto;
             if (!estado) return '';
 
-            const ESTADOS_NOMBRES = { produccion: 'En producción', disponible: 'Disponibles', averiado: 'Averiados', revisar: 'A revisar', desafectado: 'Desafectados' };
             const camarasDelEstado = disps.filter(d => d.tipo === 'camara' && (d.estado || (idsEnProd.has(d.id) ? 'produccion' : 'disponible')) === estado);
-            const FORMAS_DEF = [{ key: 'domo', label: 'Domo' }, { key: 'bullet', label: 'Bullet' }, { key: 'turret', label: 'Turret' }, { key: 'minidomo', label: 'Mini domo' }, { key: 'minibullet', label: 'Mini bullet' }, { key: 'domo-ptz', label: 'Domo PTZ' }];
 
             const conteo = {};
             camarasDelEstado.forEach(d => { const k = d.forma || '__sin__'; conteo[k] = (conteo[k] || 0) + 1; });
@@ -1479,7 +1533,7 @@
             const chipEstado = `
                     <div class="dash-chip-main clickable" data-action="toggle-estado" data-estado="${estado}">
                         <div class="stat-chip-valor stat-chip-val--${estado}">${camarasDelEstado.length}</div>
-                        <div class="stat-chip-label stat-chip-val--${estado}">${(ESTADOS_NOMBRES[estado] || estado).toUpperCase()}</div>
+                        <div class="stat-chip-label stat-chip-val--${estado}">${(ESTADO_LABEL_PLURAL[estado] || estado).toUpperCase()}</div>
                         <div class="dash-chip-btn-group">
                             <div class="stat-chip-volver dash-chip-btn">◀ VOLVER</div>
                             <div class="stat-chip-volver dash-chip-btn" data-action="ir-activos" data-tipo="camara" data-estado="${estado}">VER TODOS ▶</div>
@@ -1506,13 +1560,13 @@
         let enDetalle = depth > 0;
         let isSlidingAtrasNivel2 = false;
 
-        const saltandoNivel = (_dashEstadoAbiertoPrevio !== _dashEstadoAbierto && _dashTipoAbierto && _dashTipoAbiertoPrevio === _dashTipoAbierto);
-        const saltandoAdelante = saltandoNivel && _dashEstadoAbierto !== null;
-        const saltandoAtras = saltandoNivel && _dashEstadoAbierto === null;
+        const saltandoNivel = (_dash.estadoAbiertoPrevio !== _dash.estadoAbierto && _dash.tipoAbierto && _dash.tipoAbiertoPrevio === _dash.tipoAbierto);
+        const saltandoAdelante = saltandoNivel && _dash.estadoAbierto !== null;
+        const saltandoAtras = saltandoNivel && _dash.estadoAbierto === null;
 
         if (depth === 0) {
             htmlIzq = getTiposHtml();
-            htmlDer = getEstadosHtml(_dashTipoAbiertoPrevio);
+            htmlDer = getEstadosHtml(_dash.tipoAbiertoPrevio);
         }
         else if (depth === 1) {
             htmlIzq = getTiposHtml();
@@ -1521,7 +1575,7 @@
             if (saltandoAtras) {
 
                 htmlIzq = getEstadosHtml();
-                htmlDer = getFormasHtml(_dashEstadoAbiertoPrevio);
+                htmlDer = getFormasHtml(_dash.estadoAbiertoPrevio);
                 enDetalle = false;
                 isSlidingAtrasNivel2 = true;
             }
@@ -1548,7 +1602,7 @@
         const alturaActual = contenedor.offsetHeight;
         const esPrimeraCarga = alturaActual === 0;
 
-        if (_dashTipoAbiertoPrevio === _dashTipoAbierto && _dashEstadoAbiertoPrevio === _dashEstadoAbierto && !esPrimeraCarga) {
+        if (_dash.tipoAbiertoPrevio === _dash.tipoAbierto && _dash.estadoAbiertoPrevio === _dash.estadoAbierto && !esPrimeraCarga) {
             panelIzq.innerHTML = htmlIzq;
             panelDer.innerHTML = htmlDer;
             return;
@@ -1562,8 +1616,8 @@
             wrap.style.transition = '';
         }
 
-        _dashTipoAbiertoPrevio = _dashTipoAbierto;
-        _dashEstadoAbiertoPrevio = _dashEstadoAbierto;
+        _dash.tipoAbiertoPrevio = _dash.tipoAbierto;
+        _dash.estadoAbiertoPrevio = _dash.estadoAbierto;
 
         if (!esPrimeraCarga) {
             contenedor.style.transition = 'none';
@@ -1749,13 +1803,13 @@
 
         ['forma', 'edificio', 'modelo'].forEach(v => {
             const btn = document.getElementById(`mini-tab-${v}`);
-            if (btn) btn.classList.toggle('activa', _dashCamarasVista === v);
+            if (btn) btn.classList.toggle('activa', _dash.camarasVista === v);
         });
 
         let vistaHtml = '';
 
-        if (_dashCamarasVista === 'forma' || _dashCamarasVista === 'modelo') {
-            const campoAgrupar = _dashCamarasVista === 'forma' ? 'forma' : 'modelo';
+        if (_dash.camarasVista === 'forma' || _dash.camarasVista === 'modelo') {
+            const campoAgrupar = _dash.camarasVista === 'forma' ? 'forma' : 'modelo';
 
             const conteo = {};
             camarasDisps.forEach(d => {
@@ -1770,12 +1824,7 @@
             });
 
             let filasRaw = [];
-            if (_dashCamarasVista === 'forma') {
-                const FORMAS_DEF = [
-                    { key: 'domo', label: 'Domo' }, { key: 'bullet', label: 'Bullet' },
-                    { key: 'turret', label: 'Turret' }, { key: 'minidomo', label: 'Mini domo' },
-                    { key: 'minibullet', label: 'Mini bullet' }, { key: 'domo-ptz', label: 'Domo PTZ' }
-                ];
+            if (_dash.camarasVista === 'forma') {
                 filasRaw = FORMAS_DEF.map(f => ({ label: f.label, ...(conteo[f.key] || { total: 0, prod: 0, averiado: 0, revisar: 0, desafectado: 0 }) }))
                     .filter(f => f.total > 0)
                     .sort((a, b) => a.label.localeCompare(b.label));
@@ -1802,7 +1851,7 @@
                             ${col('REVIS.', 'var(--c-purple)')}
                             ${col('DESAF.', 'var(--text-muted)')}
                         </div>`;
-                const esModoModelo = _dashCamarasVista === 'modelo';
+                const esModoModelo = _dash.camarasVista === 'modelo';
                 const rows = filasRaw.map((f, i) => {
                     const esCopiable = esModoModelo && f.label !== 'Sin modelo';
                     const labelSpan = esCopiable
@@ -1904,6 +1953,7 @@
     }
 
     function _buildAsignaciones() {
+        if (_cacheAsignaciones) return _cacheAsignaciones;
         const asignaciones = {};
         const pushAsig = (dispId, asig) => {
             (asignaciones[dispId] || (asignaciones[dispId] = [])).push(asig);
@@ -1917,10 +1967,11 @@
         (_data.otros_prod || []).forEach(o => {
             if (o.dispositivoId) pushAsig(o.dispositivoId, { tipo: 'otro_prod', item: o });
         });
-        return asignaciones;
+        return (_cacheAsignaciones = asignaciones);
     }
 
     function _buildDupPatrimonios(disps) {
+        if (_cacheDupPatrimonios) return _cacheDupPatrimonios;
         const counts = {};
         disps.forEach(d => {
             if (d.patrimonio) {
@@ -1928,7 +1979,7 @@
                 if (k) counts[k] = (counts[k] || 0) + 1;
             }
         });
-        return new Set(Object.keys(counts).filter(k => counts[k] > 1));
+        return (_cacheDupPatrimonios = new Set(Object.keys(counts).filter(k => counts[k] > 1)));
     }
 
     function _getPisoPeso(p) {
@@ -1943,13 +1994,12 @@
     }
 
     function _getGroupLabel(d, asignaciones) {
-        const ORDEN_ESTADO_MAP = { produccion: 'En producción', disponible: 'Disponibles', averiado: 'Averiados', revisar: 'A revisar', desafectado: 'Desafectados' };
-        if (_activosOrden === 'estado') {
+        if (_activos.orden === 'estado') {
             const est = getEstadoEfectivo(d, asignaciones);
-            return ORDEN_ESTADO_MAP[est] || est.toUpperCase();
+            return ESTADO_LABEL_PLURAL[est] || est.toUpperCase();
         }
-        if (_activosOrden === 'marca') return (d.marca || 'SIN MARCA').toUpperCase();
-        if (_activosOrden === 'edificio-piso') {
+        if (_activos.orden === 'marca') return (d.marca || 'SIN MARCA').toUpperCase();
+        if (_activos.orden === 'edificio-piso') {
             const asig = (asignaciones[d.id] || [])[0];
             if (!asig) return 'SIN ASIGNAR';
             const edif = asig.tipo === 'canal' ? asig.slot.edificio
@@ -1963,10 +2013,10 @@
 
     function _getGroupSortKey(d, asignaciones) {
         const ORDEN_ESTADO = { produccion: 0, disponible: 1, revisar: 2, averiado: 3, desafectado: 4 };
-        if (_activosOrden === 'estado') return ORDEN_ESTADO[getEstadoEfectivo(d, asignaciones)] ?? 9;
-        if (_activosOrden === 'marca') return (d.marca || 'zzz').trim().toLowerCase();
+        if (_activos.orden === 'estado') return ORDEN_ESTADO[getEstadoEfectivo(d, asignaciones)] ?? 9;
+        if (_activos.orden === 'marca') return (d.marca || 'zzz').trim().toLowerCase();
         const label = _getGroupLabel(d, asignaciones);
-        return (_activosOrden === 'edificio-piso' && label === 'SIN ASIGNAR') ? 'zzzzz' : label.toLowerCase();
+        return (_activos.orden === 'edificio-piso' && label === 'SIN ASIGNAR') ? 'zzzzz' : label.toLowerCase();
     }
 
     function _renderAsignInfo(d, asignaciones, tieneMacDuplicada) {
@@ -2051,7 +2101,7 @@
 
         return sortedPisos.map(p => {
             const floorKey = `${gLabel}|${p}`;
-            const isFloorCollapsed = _pisosCollapsed.has(floorKey);
+            const isFloorCollapsed = _activos.pisosCollapsed.has(floorKey);
             return `<div class="sub-grupo-piso" data-floor-key="${esc(floorKey)}" style="margin-bottom: 0.5rem;">
                         <div class="grupo-piso-header" data-toggle-piso="${esc(floorKey)}" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:0.4rem 0.5rem;border-radius:var(--radius-sm);margin-bottom:0.25rem;">
                             <span class="section-label" style="margin:0;opacity:0.8;font-size:0.7rem;border-left:2px solid var(--c-orange);padding-left:0.5rem;">
@@ -2067,7 +2117,7 @@
     }
 
     function _toggleGrupoActivos(groupId) {
-            const col = _activosCollapsed;
+            const col = _activos.collapsed;
             const card = document.querySelector(`.grupo-activos-card[data-grupo="${CSS.escape(groupId)}"]`);
             if (!card) return;
             const grid = card.querySelector('.activos-grid-transition');
@@ -2092,7 +2142,7 @@
     function renderActivos() {
 
         const selOrden = document.getElementById('sel-vista-orden');
-        if (selOrden && selOrden.value !== _activosOrden) selOrden.value = _activosOrden;
+        if (selOrden && selOrden.value !== _activos.orden) selOrden.value = _activos.orden;
 
         const lista = document.getElementById('lista-dispositivos');
         const disps = _data.dispositivos;
@@ -2160,8 +2210,8 @@
         let html = ``;
 
         Object.entries(grupos).forEach(([gLabel, items]) => {
-            const isCollapsed = _activosCollapsed.has(gLabel);
-            const itemsHtml = _activosOrden === 'edificio-piso'
+            const isCollapsed = _activos.collapsed.has(gLabel);
+            const itemsHtml = _activos.orden === 'edificio-piso'
                 ? _renderSubgruposPiso(items, gLabel, asignaciones, colClass, renderItem)
                 : `<div class="${colClass}">${items.map(renderItem).join('')}</div>`;
 
@@ -2316,39 +2366,39 @@
         }
     }
 
-    let _editandoDispId = null;
-    let _estadoEditando = '';
-    let _editandoGrabId = null;
-    let _editandoOtroProdId = null;
-    let _snapshotOtroProd = null;
-    let _snapshotDisp = null;
-    let _snapshotGrab = null;
-    let _snapshotCanal = null;
-    let _editandoCanalGrabId = null;
-    let _editandoCanalN = null;
-    let _canalDesdeDispId = null;
-    let _volverDesdeCanal = false;
-    let _canalDispOcupados = new Set();
-    let _canalDispHighlight = -1;
-    let _edificiosOrigen = 'ajustes';
-    let _edificiosSnapForm = null;
-
+    // ── Estado de edición activa ──────────────────────────────────────────────
+    const _edicion = {
+        dispId:        null,
+        grabId:        null,
+        otroProdId:    null,
+        canalGrabId:   null,
+        canalN:        null,
+        snapshotDisp:  null,
+        snapshotGrab:  null,
+        snapshotCanal: null,
+        snapshotOtroProd: null,
+        canalDesdeDispId: null,
+        volverDesdeCanal: false,
+        canalDispOcupados: new Set(),
+        canalDispHighlight: -1,
+        edificiosOrigen:   'ajustes',
+        edificiosSnapForm: null,
+        estado:            '',
+    };
     let _tabActual = (() => {
         try {
-            const saved = JSON.parse(localStorage.getItem('cctv_tab') || 'null');
-            const TABS = ['dashboard', 'activos', 'produccion'];
-            const UNA_HORA = 60 * 60 * 1000;
+            const saved = JSON.parse(localStorage.getItem(LS.TAB) || 'null');
             if (saved && TABS.includes(saved.tab) && (Date.now() - saved.ts) < UNA_HORA) {
                 return saved.tab;
             }
         } catch (_) { }
         return 'dashboard';
     })();
-    let _busqTimer = null;
+    let _busqTimer    = null;
     let _importarParsed = null;
 
     function _actualizarBotonesEstado(estadoActual) {
-        _estadoEditando = estadoActual;
+        _edicion.estado = estadoActual;
         ['averiado', 'revisar', 'desafectado'].forEach(e => {
             const btn = document.getElementById(`btn-estado-${e}`);
             if (btn) btn.classList.toggle('activo', estadoActual === e);
@@ -2358,7 +2408,6 @@
     const _grabExpanded = (() => {
         try {
             const saved = JSON.parse(localStorage.getItem(KEY_EXPANDED) || 'null');
-            const UNA_HORA = 60 * 60 * 1000;
             if (saved && Array.isArray(saved.ids) && (Date.now() - saved.ts) < UNA_HORA) {
                 localStorage.setItem(KEY_EXPANDED, JSON.stringify({ ids: saved.ids, ts: Date.now() }));
                 return new Set(saved.ids);
@@ -2472,6 +2521,7 @@
     }
 
     function _calcDupMacs() {
+        if (_cacheDupMacs) return _cacheDupMacs;
         const macCounts = {};
         function _contarMac(dispId) {
             if (!dispId) return;
@@ -2490,7 +2540,7 @@
         });
         (_data.otros_prod || []).forEach(o => _contarMac(o.dispositivoId));
         const dupMacs = new Set(Object.keys(macCounts).filter(k => macCounts[k] > 1));
-        return (d) => d?.mac?.split(',').some(m => dupMacs.has(m.trim().toUpperCase())) ?? false;
+        return (_cacheDupMacs = (d) => d?.mac?.split(',').some(m => dupMacs.has(m.trim().toUpperCase())) ?? false);
     }
     const _busqActivos = (() => {
         try {
@@ -2517,26 +2567,26 @@
 
     function _restaurarColapsos() {
         if (_estadoColapsadoPrevio) {
-            _activosCollapsed = new Set(_estadoColapsadoPrevio);
+            _activos.collapsed = new Set(_estadoColapsadoPrevio);
             _estadoColapsadoPrevio = null;
         }
         if (_estadoPisosPrevio) {
-            _pisosCollapsed = new Set(_estadoPisosPrevio);
+            _activos.pisosCollapsed = new Set(_estadoPisosPrevio);
             _estadoPisosPrevio = null;
         }
     }
 
     function _expandirTodosLosGrupos() {
-        if (!_activosCollapsed) _activosCollapsed = new Set();
-        if (!_pisosCollapsed) _pisosCollapsed = new Set();
+        if (!_activos.collapsed) _activos.collapsed = new Set();
+        if (!_activos.pisosCollapsed) _activos.pisosCollapsed = new Set();
         if (!_estadoColapsadoPrevio) {
-            _estadoColapsadoPrevio = new Set(_activosCollapsed);
+            _estadoColapsadoPrevio = new Set(_activos.collapsed);
         }
         if (!_estadoPisosPrevio) {
-            _estadoPisosPrevio = new Set(_pisosCollapsed);
+            _estadoPisosPrevio = new Set(_activos.pisosCollapsed);
         }
-        _activosCollapsed.clear();
-        _pisosCollapsed.clear();
+        _activos.collapsed.clear();
+        _activos.pisosCollapsed.clear();
     }
 
     function _sincFiltrosUI() {
@@ -2557,7 +2607,7 @@
 
         alternarTema() {
             const oscuro = document.body.classList.toggle('dark-mode');
-            localStorage.setItem('cctv_tema', String(oscuro));
+            localStorage.setItem(LS.TEMA, String(oscuro));
             const use = document.querySelector('#icono-tema use');
             if (use) use.setAttribute('href', oscuro ? '#icon-sun' : '#icon-moon');
         },
@@ -2620,13 +2670,13 @@
 
         toggleRecordarGrupos() {
             _activosRecordarEstado = !_activosRecordarEstado;
-            try { localStorage.setItem('cctv_activos_recordar', String(_activosRecordarEstado)); } catch { }
+            try { localStorage.setItem(LS.ACTIVOS_RECORDAR, String(_activosRecordarEstado)); } catch { }
 
             const toggle = document.getElementById('toggle-recordar-grupos');
             if (toggle) toggle.classList.toggle('on', _activosRecordarEstado);
 
             if (!_activosRecordarEstado) {
-                try { localStorage.removeItem('cctv_act_collapsed'); } catch { }
+                try { localStorage.removeItem(LS.ACTIVOS_COLLAPSED); } catch { }
                 toast('Ya no se recordarán los grupos colapsados', 'info');
             } else {
                 if (_guardarColapsados) _guardarColapsados();
@@ -2642,15 +2692,15 @@
             dd.style.display = abriendo ? 'block' : 'none';
             if (abriendo) {
                 dd.querySelectorAll('.canal-disp-item[data-orden]').forEach(el => {
-                    el.classList.toggle('activo-vista', el.dataset.orden === _activosOrden);
+                    el.classList.toggle('activo-vista', el.dataset.orden === _activos.orden);
                 });
             }
         },
 
         setActivosOrden(orden) {
-            if (_activosOrden === orden) return;
-            _activosOrden = orden;
-            try { localStorage.setItem('cctv_activos_orden', orden); } catch (_) { }
+            if (_activos.orden === orden) return;
+            _activos.orden = orden;
+            try { localStorage.setItem(LS.ACTIVOS_ORDEN, orden); } catch (_) { }
             renderActivos();
         },
 
@@ -2739,16 +2789,9 @@
             const grabs = _data.grabadores.map(g => S.sanitizarGrab(g)).filter(Boolean);
             const edifs = S.edificios;
             const TIPOS = S.TIPOS;
-            const FORMAS = ['domo', 'bullet', 'turret', 'minidomo', 'minibullet', 'domo-ptz'];
             const ESTADOS_LABELS = { '': 'Operativo', averiado: 'Averiado', revisar: 'En revisión', desafectado: 'Desafectado' };
 
-            const asignaciones = {};
-            const pushAsig = (id, asig) => { (asignaciones[id] || (asignaciones[id] = [])).push(asig); };
-            _data.grabadores.forEach(g => {
-                if (g.dispositivoId) pushAsig(g.dispositivoId, { tipo: 'grabador', grab: g });
-                (g.canales_data || []).forEach(c => { if (c.dispositivoId) pushAsig(c.dispositivoId, { tipo: 'canal', grab: g, slot: c }); });
-            });
-            (_data.otros_prod || []).forEach(o => { if (o.dispositivoId) pushAsig(o.dispositivoId, { tipo: 'otro_prod', item: o }); });
+            const asignaciones = _buildAsignaciones();
 
             const idsEnProd = _calcIdsEnProd();
 
@@ -2852,8 +2895,7 @@
                     else if (idsEnProd.has(d.id)) conteo.produccion++;
                     else conteo.disponible++;
                 });
-                const labels = { produccion: 'En producción', disponible: 'Disponible', averiado: 'Averiado', revisar: 'En revisión', desafectado: 'Desafectado' };
-                const rows = Object.entries(labels).map(([k, label]) => `<tr><td>${esc(label)}</td><td class="num">${conteo[k] || 0}</td></tr>`).join('');
+                const rows = Object.entries(ESTADO_LABEL).map(([k, label]) => `<tr><td>${esc(label)}</td><td class="num">${conteo[k] || 0}</td></tr>`).join('');
                 secciones.push(`<section><h2>Estado de dispositivos</h2><table><thead><tr><th>Estado</th><th class="num">Cantidad</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td><strong>Total</strong></td><td class="num"><strong>${disps.length}</strong></td></tr></tfoot></table></section>`);
             }
 
@@ -2984,7 +3026,6 @@
             }
             cont.innerHTML = custom.map(([k, v]) => `
                         <div class="tipo-custom-row">
-                            <span class="tipo-custom-emoji">${v.emoji}</span>
                             <span class="tipo-custom-label">${esc(v.label)}</span>
                             <button data-action="eliminar-tipo" data-key="${esc(k)}" class="icon-btn btn-delete btn-delete--sm" title="Eliminar tipo">
                                 <svg class="icon icon-line icon--sm"><use href="#icon-trash"/></svg>
@@ -3037,10 +3078,10 @@
         },
 
         abrirEdificios(origen = 'ajustes') {
-            _edificiosOrigen = origen;
+            _edicion.edificiosOrigen = origen;
 
             if (origen === 'canal') {
-                _edificiosSnapForm = {
+                _edicion.edificiosSnapForm = {
                     dispositivoId: document.getElementById('sel-canal-dispositivo').value || '',
                     dispInput: document.getElementById('canal-disp-input').value || '',
                     descripcion: document.getElementById('canal-descripcion').value || '',
@@ -3053,7 +3094,7 @@
                 };
                 MM.cerrar('modal-canal');
             } else if (origen === 'nuevo-grab') {
-                _edificiosSnapForm = {
+                _edicion.edificiosSnapForm = {
                     nombre: document.getElementById('nuevo-grab-nombre').value || '',
                     dispositivoId: document.getElementById('nuevo-grab-dispositivo-id').value || '',
                     ip: document.getElementById('nuevo-grab-ip').value || '',
@@ -3064,12 +3105,12 @@
                 };
                 MM.cerrar('modal-nuevo-grab');
             } else if (origen === 'editar-grab') {
-                _edificiosSnapForm = {
+                _edicion.edificiosSnapForm = {
 
                 };
                 MM.cerrar('modal-editar-grab');
             } else if (origen === 'otro-prod') {
-                _edificiosSnapForm = {
+                _edicion.edificiosSnapForm = {
                     dispositivoId: document.getElementById('sel-otro-prod-dispositivo').value || '',
                     dispInput: document.getElementById('otro-prod-disp-input').value || '',
                     descripcion: document.getElementById('otro-prod-descripcion').value || '',
@@ -3100,13 +3141,13 @@
         },
 
         cerrarEdificios() {
-            const origen = _edificiosOrigen;
-            const snap = _edificiosSnapForm;
+            const origen = _edicion.edificiosOrigen;
+            const snap = _edicion.edificiosSnapForm;
             MM.cerrar('modal-edificios');
 
             if (origen === 'canal' && snap) {
                 setTimeout(() => {
-                    UI.abrirAsignarCanal(_editandoCanalGrabId, _editandoCanalN, _canalDesdeDispId);
+                    UI.abrirAsignarCanal(_edicion.canalGrabId, _edicion.canalN, _edicion.canalDesdeDispId);
                     setTimeout(() => {
                         document.getElementById('sel-canal-dispositivo').value = snap.dispositivoId;
                         document.getElementById('canal-disp-input').value = snap.dispInput;
@@ -3119,7 +3160,7 @@
                         _poblarSelectEdificio('canal-edificio', snap.edificio);
                         const btnVerActivo = document.getElementById('btn-ver-activo-canal');
                         if (btnVerActivo) btnVerActivo.style.display = snap.dispositivoId ? '' : 'none';
-                        _edificiosSnapForm = null;
+                        _edicion.edificiosSnapForm = null;
                     }, 220);
                 }, 150);
             } else if (origen === 'nuevo-grab' && snap) {
@@ -3133,13 +3174,13 @@
                         document.getElementById('nuevo-grab-piso').value = snap.piso;
                         document.getElementById('nuevo-grab-rack').value = snap.rack;
                         _poblarSelectEdificio('nuevo-grab-edificio', snap.edificio);
-                        _edificiosSnapForm = null;
+                        _edicion.edificiosSnapForm = null;
                     }, 220);
                 }, 150);
             } else if (origen === 'editar-grab' && snap) {
             } else if (origen === 'otro-prod' && snap) {
                 setTimeout(() => {
-                    if (_editandoOtroProdId) UI.abrirEditarOtroProd(_editandoOtroProdId);
+                    if (_edicion.otroProdId) UI.abrirEditarOtroProd(_edicion.otroProdId);
                     else UI.abrirNuevoOtroProd();
 
                     setTimeout(() => {
@@ -3154,11 +3195,11 @@
                         _poblarSelectEdificio('otro-prod-edificio', snap.edificio);
                         const btnVerActivo = document.getElementById('btn-ver-activo-otro-prod');
                         if (btnVerActivo) btnVerActivo.style.display = snap.dispositivoId ? '' : 'none';
-                        _edificiosSnapForm = null;
+                        _edicion.edificiosSnapForm = null;
                     }, 220);
                 }, 150);
             } else {
-                _edificiosSnapForm = null;
+                _edicion.edificiosSnapForm = null;
                 setTimeout(() => UI.abrirAjustes(), 150);
             }
         },
@@ -3234,8 +3275,8 @@
                     limpioAlgo = true;
                 }
 
-                if (tab === 'dashboard' && _dashTipoAbierto) {
-                    _dashTipoAbierto = null;
+                if (tab === 'dashboard' && _dash.tipoAbierto) {
+                    _dash.tipoAbierto = null;
                     renderDashboard();
                     limpioAlgo = true;
                 }
@@ -3243,8 +3284,8 @@
                 return;
             }
 
-            if (_dashTipoAbierto) {
-                _dashTipoAbierto = null;
+            if (_dash.tipoAbierto) {
+                _dash.tipoAbierto = null;
                 setTimeout(() => renderDashboard(), 200);
             }
 
@@ -3266,12 +3307,12 @@
 
             if (!mantenerBusqueda && inputBusq) inputBusq.blur();
 
-            ['dashboard', 'activos', 'produccion'].forEach(t => {
+            TABS.forEach(t => {
                 const tabBtn = document.getElementById('tab-' + t);
                 if (tabBtn) tabBtn.classList.toggle('activa', t === tab);
             });
 
-            localStorage.setItem('cctv_tab', JSON.stringify({ tab, ts: Date.now() }));
+            localStorage.setItem(LS.TAB, JSON.stringify({ tab, ts: Date.now() }));
 
             const panelSaliente = document.getElementById('panel-' + _tabActual);
             const panelEntrante = document.getElementById('panel-' + tab);
@@ -3302,15 +3343,15 @@
 
             _forzarFiltros('tipo', 'estado', 'forma');
 
-            if (_dashTipoAbierto) {
-                _dashTipoAbierto = null;
-                _dashEstadoAbierto = null;
+            if (_dash.tipoAbierto) {
+                _dash.tipoAbierto = null;
+                _dash.estadoAbierto = null;
                 setTimeout(() => renderDashboard(), 200);
             }
-            ['dashboard', 'activos', 'produccion'].forEach(t => {
+            TABS.forEach(t => {
                 document.getElementById('tab-' + t).classList.toggle('activa', t === 'activos');
             });
-            localStorage.setItem('cctv_tab', JSON.stringify({ tab: 'activos', ts: Date.now() }));
+            localStorage.setItem(LS.TAB, JSON.stringify({ tab: 'activos', ts: Date.now() }));
             const panelSaliente = document.getElementById('panel-' + _tabActual);
             const panelEntrante = document.getElementById('panel-activos');
             _tabActual = 'activos';
@@ -3416,7 +3457,7 @@
         },
 
         abrirNuevoDispositivo() {
-            _editandoDispId = null;
+            _edicion.dispId = null;
             _limpiarFormDisp('nuevo-disp');
             _poblarSelectTipo('nuevo-disp', null);
             MM.abrir('modal-nuevo-disp');
@@ -3491,7 +3532,7 @@
 
         abrirEditarDispositivo(id) {
             const d = _data.dispositivos.find(x => x.id === id); if (!d) return;
-            _editandoDispId = id;
+            _edicion.dispId = id;
             const prefijo = 'editar-disp';
             _poblarSelectTipo(prefijo, d.tipo);
             document.getElementById(`${prefijo}-marca`).value = d.marca;
@@ -3563,7 +3604,7 @@
             } else {
                 btnAsig.style.display = 'none';
             }
-            _snapshotDisp = {
+            _edicion.snapshotDisp = {
                 tipo: d.tipo,
                 estado: d.estado || '',
                 marca: d.marca,
@@ -3588,19 +3629,19 @@
 
             MM.abrir('modal-editar-disp', { onEscape: () => UI.cerrarModalEditarDispositivo() });
             const btnCerrarDisp = document.querySelector('#modal-editar-disp .btn-cancel');
-            if (btnCerrarDisp) btnCerrarDisp.innerHTML = _volverDesdeCanal
+            if (btnCerrarDisp) btnCerrarDisp.innerHTML = _edicion.volverDesdeCanal
                 ? '<svg class="icon icon-line"><use href="#icon-undo"/></svg>Volver'
                 : '<svg class="icon icon-line"><use href="#icon-cancelar"/></svg>Cancelar';
         },
 
         cerrarModalEditarDispositivo() {
             MM.cerrar('modal-editar-disp');
-            _estadoEditando = '';
-            const volver = _volverDesdeCanal;
-            const grabId = _editandoCanalGrabId;
-            const canalN = _editandoCanalN;
-            _editandoDispId = null;
-            _volverDesdeCanal = false;
+            _edicion.estado = '';
+            const volver = _edicion.volverDesdeCanal;
+            const grabId = _edicion.canalGrabId;
+            const canalN = _edicion.canalN;
+            _edicion.dispId = null;
+            _edicion.volverDesdeCanal = false;
             if (volver && grabId === 'OTRO_PROD') {
                 setTimeout(() => canalN ? UI.abrirEditarOtroProd(canalN) : UI.abrirNuevoOtroProd(), 180);
             } else if (volver && grabId != null && canalN != null) {
@@ -3609,7 +3650,7 @@
         },
 
         toggleEstadoDisp(estado) {
-            const nuevo = _estadoEditando === estado ? '' : estado;
+            const nuevo = _edicion.estado === estado ? '' : estado;
             _actualizarBotonesEstado(nuevo);
         },
 
@@ -3629,8 +3670,8 @@
                 return;
             }
 
-            const dispActual = _data.dispositivos.find(x => x.id === _editandoDispId);
-            const grabAsociado = dispActual ? _data.grabadores.find(g => g.dispositivoId === _editandoDispId) : null;
+            const dispActual = _data.dispositivos.find(x => x.id === _edicion.dispId);
+            const grabAsociado = dispActual ? _data.grabadores.find(g => g.dispositivoId === _edicion.dispId) : null;
             if (grabAsociado) {
                 const canalesOcupados = grabAsociado.canales_data.filter(c => c.dispositivoId).length;
                 if (tipo !== dispActual.tipo) {
@@ -3647,14 +3688,14 @@
                     }
                 }
             }
-            const enCanal = _data.grabadores.some(g => g.canales_data.some(c => c.dispositivoId === _editandoDispId));
+            const enCanal = _data.grabadores.some(g => g.canales_data.some(c => c.dispositivoId === _edicion.dispId));
             if (enCanal && dispActual && tipo !== dispActual.tipo) {
                 document.getElementById(`${prefijo}-tipo`).classList.add('error');
                 toast('No se puede cambiar el tipo: el dispositivo está asignado a un canal en producción', 'error');
                 return;
             }
 
-            const otrosDisps = _data.dispositivos.filter(x => x.id !== _editandoDispId);
+            const otrosDisps = _data.dispositivos.filter(x => x.id !== _edicion.dispId);
             for (const m of macs) {
                 const mNorm = m.toUpperCase();
                 const dup = otrosDisps.find(x => x.mac && x.mac.toUpperCase() === mNorm);
@@ -3679,7 +3720,7 @@
 
             const base = {
                 tipo,
-                estado: _estadoEditando,
+                estado: _edicion.estado,
                 marca: document.getElementById(`${prefijo}-marca`).value.trim(),
                 modelo: document.getElementById(`${prefijo}-modelo`).value.trim(),
                 serial,
@@ -3689,7 +3730,7 @@
                 firmware: document.getElementById(`${prefijo}-firmware`).value.trim(),
             };
 
-            const obj = S.sanitizarDisp({ ...base, id: _editandoDispId, mac: macs[0] || '' });
+            const obj = S.sanitizarDisp({ ...base, id: _edicion.dispId, mac: macs[0] || '' });
             const nuevoSnap = {
                 tipo: obj.tipo,
                 estado: obj.estado || '',
@@ -3702,22 +3743,22 @@
                 forma: obj.forma || '',
                 canales: String(obj.canales || 16),
             };
-            const huboCambios = JSON.stringify(nuevoSnap) !== JSON.stringify(_snapshotDisp);
-            if (!huboCambios) { toast('Sin cambios', 'info'); MM.cerrar('modal-editar-disp'); _editandoDispId = null; _snapshotDisp = null; return; }
+            const huboCambios = JSON.stringify(nuevoSnap) !== JSON.stringify(_edicion.snapshotDisp);
+            if (!huboCambios) { toast('Sin cambios', 'info'); MM.cerrar('modal-editar-disp'); _edicion.dispId = null; _edicion.snapshotDisp = null; return; }
 
             const estadosConDesasignacion = ['averiado', 'revisar', 'desafectado'];
             const esCamara = dispActual && !['nvr', 'dvr'].includes(dispActual.tipo);
-            const estadoCambioAInactivo = estadosConDesasignacion.includes(_estadoEditando) &&
-                !estadosConDesasignacion.includes(_snapshotDisp?.estado || '');
+            const estadoCambioAInactivo = estadosConDesasignacion.includes(_edicion.estado) &&
+                !estadosConDesasignacion.includes(_edicion.snapshotDisp?.estado || '');
             if (esCamara && estadoCambioAInactivo) {
                 let grabConCanal = null, slotConCanal = null;
                 for (const g of _data.grabadores) {
-                    const slot = g.canales_data.find(c => c.dispositivoId === _editandoDispId);
+                    const slot = g.canales_data.find(c => c.dispositivoId === _edicion.dispId);
                     if (slot) { grabConCanal = g; slotConCanal = slot; break; }
                 }
                 if (grabConCanal && slotConCanal) {
                     const LABELS = { averiado: 'Averiado', revisar: 'A revisar', desafectado: 'Desafectado' };
-                    const msg = `Marcar como "${LABELS[_estadoEditando]}" quitará este dispositivo del Canal ${slotConCanal.canal} del ${grabConCanal.descripcion}\n ¿Confirmar?`;
+                    const msg = `Marcar como "${LABELS[_edicion.estado]}" quitará este dispositivo del Canal ${slotConCanal.canal} del ${grabConCanal.descripcion}\n ¿Confirmar?`;
                     const ok = await confirmarModal(msg, 'Guardar');
                     if (!ok) return;
 
@@ -3730,39 +3771,39 @@
                 historial.empujar('Editar dispositivo');
             }
 
-            const idx = _data.dispositivos.findIndex(x => x.id === _editandoDispId);
+            const idx = _data.dispositivos.findIndex(x => x.id === _edicion.dispId);
             if (idx !== -1) _data.dispositivos[idx] = obj;
-            _sincronizarGrabadores(_editandoDispId);
+            _sincronizarGrabadores(_edicion.dispId);
             toast('Dispositivo actualizado', 'success');
 
-            guardar(); render(); MM.cerrar('modal-editar-disp'); _editandoDispId = null; _snapshotDisp = null;
+            guardar(); render(); MM.cerrar('modal-editar-disp'); _edicion.dispId = null; _edicion.snapshotDisp = null;
         },
 
         editarAsignacionCamara() {
-            if (!_editandoDispId) return;
+            if (!_edicion.dispId) return;
             let grabId = null, nCanal = null;
             for (const g of _data.grabadores) {
-                const slot = g.canales_data.find(c => c.dispositivoId === _editandoDispId);
+                const slot = g.canales_data.find(c => c.dispositivoId === _edicion.dispId);
                 if (slot) { grabId = g.id; nCanal = slot.canal; break; }
             }
             if (!grabId) return;
-            const dispId = _editandoDispId;
+            const dispId = _edicion.dispId;
             MM.cerrar('modal-editar-disp');
             setTimeout(() => UI.abrirAsignarCanal(grabId, nCanal, dispId), 180);
         },
 
         verGrabadorDesdeDispositivo() {
-            if (!_editandoDispId) return;
-            const grab = _data.grabadores.find(g => g.dispositivoId === _editandoDispId);
+            if (!_edicion.dispId) return;
+            const grab = _data.grabadores.find(g => g.dispositivoId === _edicion.dispId);
             if (!grab) return;
             MM.cerrar('modal-editar-disp');
             setTimeout(() => UI.abrirEditarGrabador(grab.id), 180);
         },
 
         async eliminarDispositivo() {
-            if (!_editandoDispId) return;
-            const d = _data.dispositivos.find(x => x.id === _editandoDispId);
-            const grabAsoc = _data.grabadores.find(g => g.dispositivoId === _editandoDispId);
+            if (!_edicion.dispId) return;
+            const d = _data.dispositivos.find(x => x.id === _edicion.dispId);
+            const grabAsoc = _data.grabadores.find(g => g.dispositivoId === _edicion.dispId);
             if (grabAsoc) {
                 const ocupados = grabAsoc.canales_data.filter(c => c.dispositivoId).length;
                 if (ocupados > 0) {
@@ -3770,7 +3811,7 @@
                     return;
                 }
             }
-            const enCanal = _data.grabadores.some(g => g.canales_data.some(c => c.dispositivoId === _editandoDispId));
+            const enCanal = _data.grabadores.some(g => g.canales_data.some(c => c.dispositivoId === _edicion.dispId));
             if (enCanal) {
                 toast('No se puede eliminar: el dispositivo está asignado a un canal en producción', 'error');
                 return;
@@ -3780,15 +3821,15 @@
 
             historial.empujar('Eliminar dispositivo');
             if (grabAsoc) {
-                _data.grabadores = _data.grabadores.filter(g => g.dispositivoId !== _editandoDispId);
+                _data.grabadores = _data.grabadores.filter(g => g.dispositivoId !== _edicion.dispId);
             }
-            _data.dispositivos = _data.dispositivos.filter(x => x.id !== _editandoDispId);
-            guardar(); render(); MM.cerrar('modal-editar-disp'); _editandoDispId = null;
+            _data.dispositivos = _data.dispositivos.filter(x => x.id !== _edicion.dispId);
+            guardar(); render(); MM.cerrar('modal-editar-disp'); _edicion.dispId = null;
             toast('Dispositivo eliminado', 'success');
         },
 
         abrirNuevoGrabador() {
-            _editandoGrabId = null;
+            _edicion.grabId = null;
             _limpiarFormGrab('nuevo-grab');
             _poblarSelectorGrabador('nuevo-grab', null);
             _poblarSelectEdificio('nuevo-grab-edificio', '');
@@ -3836,7 +3877,7 @@
 
         abrirEditarGrabador(id) {
             const g = _data.grabadores.find(x => x.id === id); if (!g) return;
-            _editandoGrabId = id;
+            _edicion.grabId = id;
             const prefijo = 'editar-grab';
             document.getElementById(`${prefijo}-nombre`).value = g.descripcion;
             document.getElementById(`${prefijo}-ip`).value = g.ip || '';
@@ -3850,7 +3891,7 @@
                 .reduce((max, c) => Math.max(max, c.canal), 0);
             _poblarSelectorGrabador(prefijo, g.dispositivoId || null, _maxCanalOcupado);
 
-            _snapshotGrab = {
+            _edicion.snapshotGrab = {
                 descripcion: g.descripcion,
                 ip: g.ip || '',
                 puerto: g.puerto || '',
@@ -3868,7 +3909,7 @@
 
         cerrarModalEditarGrabador() {
             MM.cerrar('modal-editar-grab');
-            _editandoGrabId = null;
+            _edicion.grabId = null;
         },
 
         onGrabDispositivoChange() {
@@ -3895,7 +3936,7 @@
             const disp = _data.dispositivos.find(x => x.id === dispId);
             if (!disp) { toast('Dispositivo no encontrado', 'error'); return; }
 
-            const grabActual = _data.grabadores.find(x => x.id === _editandoGrabId);
+            const grabActual = _data.grabadores.find(x => x.id === _edicion.grabId);
             if (grabActual) {
                 const maxCanalOcupado = grabActual.canales_data
                     .filter(c => c.dispositivoId)
@@ -3908,7 +3949,7 @@
             }
 
             const datos = {
-                id: _editandoGrabId,
+                id: _edicion.grabId,
                 descripcion,
                 tipo: disp.tipo,
                 marca: disp.marca,
@@ -3924,7 +3965,7 @@
                 dispositivoId: disp.id,
             };
 
-            const idx = _data.grabadores.findIndex(x => x.id === _editandoGrabId);
+            const idx = _data.grabadores.findIndex(x => x.id === _edicion.grabId);
 
             const nuevoSnapGrab = {
                 descripcion: datos.descripcion,
@@ -3937,8 +3978,8 @@
                 dispositivoId: datos.dispositivoId || '',
             };
 
-            const huboCambiosGrab = JSON.stringify(nuevoSnapGrab) !== JSON.stringify(_snapshotGrab);
-            if (!huboCambiosGrab) { toast('Sin cambios', 'info'); MM.cerrar('modal-editar-grab'); _editandoGrabId = null; _snapshotGrab = null; return; }
+            const huboCambiosGrab = JSON.stringify(nuevoSnapGrab) !== JSON.stringify(_edicion.snapshotGrab);
+            if (!huboCambiosGrab) { toast('Sin cambios', 'info'); MM.cerrar('modal-editar-grab'); _edicion.grabId = null; _edicion.snapshotGrab = null; return; }
 
             historial.empujar('Editar grabador');
 
@@ -3947,12 +3988,12 @@
                 _data.grabadores[idx] = S.sanitizarGrab(datos);
             }
             toast('Grabador actualizado', 'success');
-            guardar(); render(); MM.cerrar('modal-editar-grab'); _editandoGrabId = null; _snapshotGrab = null;
+            guardar(); render(); MM.cerrar('modal-editar-grab'); _edicion.grabId = null; _edicion.snapshotGrab = null;
         },
 
         async eliminarGrabador() {
-            if (!_editandoGrabId) return;
-            const g = _data.grabadores.find(x => x.id === _editandoGrabId);
+            if (!_edicion.grabId) return;
+            const g = _data.grabadores.find(x => x.id === _edicion.grabId);
             const ocupados = g ? g.canales_data.filter(c => c.dispositivoId).length : 0;
             const avisoExtra = ocupados > 0
                 ? `\n¡Atención! Tiene ${ocupados} canal${ocupados === 1 ? '' : 'es'} ocupado${ocupados === 1 ? '' : 's'}. Las cámaras quedarán libres.`
@@ -3963,15 +4004,15 @@
 
             historial.empujar('Eliminar grabador');
 
-            _data.grabadores = _data.grabadores.filter(x => x.id !== _editandoGrabId);
-            guardar(); render(); MM.cerrar('modal-editar-grab'); _editandoGrabId = null;
+            _data.grabadores = _data.grabadores.filter(x => x.id !== _edicion.grabId);
+            guardar(); render(); MM.cerrar('modal-editar-grab'); _edicion.grabId = null;
             toast('Grabador eliminado', 'success');
         },
 
         abrirAsignarCanal(grabId, nCanal, desdeDispId = null) {
-            _editandoCanalGrabId = grabId;
-            _editandoCanalN = nCanal;
-            _canalDesdeDispId = desdeDispId || null;
+            _edicion.canalGrabId = grabId;
+            _edicion.canalN = nCanal;
+            _edicion.canalDesdeDispId = desdeDispId || null;
             const g = _data.grabadores.find(x => x.id === grabId); if (!g) return;
             const slot = g.canales_data.find(c => c.canal === nCanal);
 
@@ -3986,7 +4027,7 @@
                 }
             }
 
-            _canalDispOcupados = new Set(
+            _edicion.canalDispOcupados = new Set(
                 g.canales_data
                     .filter(c => c.canal !== nCanal && c.dispositivoId)
                     .map(c => c.dispositivoId)
@@ -4002,11 +4043,11 @@
                 input.value = '';
             }
             document.getElementById('canal-disp-dropdown').style.display = 'none';
-            _canalDispHighlight = -1;
+            _edicion.canalDispHighlight = -1;
 
             MM.abrir('modal-canal', { onEscape: () => UI.cerrarModalCanal() });
 
-            _snapshotCanal = {
+            _edicion.snapshotCanal = {
                 dispositivoId: slot?.dispositivoId || '',
                 descripcion: slot?.descripcion || '',
                 ip: slot?.ip || '',
@@ -4051,7 +4092,7 @@
             if (!filtrados.length && query) {
                 dd.innerHTML = `<div class="canal-disp-item canal-disp-item-vaciobtn">Sin resultados</div>`;
                 dd.style.display = '';
-                _canalDispHighlight = -1;
+                _edicion.canalDispHighlight = -1;
                 return;
             }
 
@@ -4060,7 +4101,7 @@
 
             const ESTADO_LABELS_DISP = { averiado: 'averiado', revisar: 'a revisar', desafectado: 'desafectado' };
             filtrados.forEach((d, i) => {
-                const ocupado = _canalDispOcupados.has(d.id);
+                const ocupado = _edicion.canalDispOcupados.has(d.id);
                 const estadoInactivo = ESTADO_LABELS_DISP[d.estado] || '';
                 const deshabilitado = ocupado || !!estadoInactivo;
                 const mac = esc(d.mac || d.serial || d.id);
@@ -4085,7 +4126,7 @@
 
             dd.innerHTML = items.join('');
             dd.style.display = '';
-            _canalDispHighlight = -1;
+            _edicion.canalDispHighlight = -1;
 
             dd.querySelectorAll('.canal-disp-item:not(.ocupado)').forEach(el => {
                 el.addEventListener('mousedown', e => {
@@ -4099,7 +4140,7 @@
             document.getElementById('sel-canal-dispositivo').value = id || '';
             document.getElementById('canal-disp-input').value = id ? (mac || id) : '';
             document.getElementById('canal-disp-dropdown').style.display = 'none';
-            _canalDispHighlight = -1;
+            _edicion.canalDispHighlight = -1;
             const btn = document.getElementById('btn-ver-activo-canal');
             if (btn) btn.style.display = id ? '' : 'none';
         },
@@ -4112,25 +4153,25 @@
 
             if (e.key === 'ArrowDown') {
                 e.preventDefault();
-                _canalDispHighlight = Math.min(_canalDispHighlight + 1, items.length - 1);
+                _edicion.canalDispHighlight = Math.min(_edicion.canalDispHighlight + 1, items.length - 1);
             } else if (e.key === 'ArrowUp') {
                 e.preventDefault();
-                _canalDispHighlight = Math.max(_canalDispHighlight - 1, 0);
+                _edicion.canalDispHighlight = Math.max(_edicion.canalDispHighlight - 1, 0);
             } else if (e.key === 'Enter') {
                 e.preventDefault();
-                if (_canalDispHighlight >= 0) {
-                    const el = items[_canalDispHighlight];
+                if (_edicion.canalDispHighlight >= 0) {
+                    const el = items[_edicion.canalDispHighlight];
                     UI._canalDispSeleccionar(el.dataset.id, el.dataset.mac);
                 }
                 return;
             } else if (e.key === 'Escape') {
                 dd.style.display = 'none';
-                _canalDispHighlight = -1;
+                _edicion.canalDispHighlight = -1;
                 return;
             } else { return; }
 
-            items.forEach((el, i) => el.classList.toggle('highlighted', i === _canalDispHighlight));
-            if (_canalDispHighlight >= 0) items[_canalDispHighlight].scrollIntoView({ block: 'nearest' });
+            items.forEach((el, i) => el.classList.toggle('highlighted', i === _edicion.canalDispHighlight));
+            if (_edicion.canalDispHighlight >= 0) items[_edicion.canalDispHighlight].scrollIntoView({ block: 'nearest' });
         },
 
         _pisoFiltrar(el) {
@@ -4146,15 +4187,15 @@
 
         cerrarModalCanal() {
             MM.cerrar('modal-canal');
-            const dispId = _canalDesdeDispId;
-            _editandoCanalGrabId = null; _editandoCanalN = null; _canalDesdeDispId = null;
+            const dispId = _edicion.canalDesdeDispId;
+            _edicion.canalGrabId = null; _edicion.canalN = null; _edicion.canalDesdeDispId = null;
             if (dispId) setTimeout(() => UI.abrirEditarDispositivo(dispId), 180);
         },
 
         verActivoDesdeCanal() {
             const dispId = document.getElementById('sel-canal-dispositivo').value;
             if (!dispId) return;
-            _volverDesdeCanal = true;
+            _edicion.volverDesdeCanal = true;
             MM.cerrar('modal-canal');
             setTimeout(() => UI.abrirEditarDispositivo(dispId), 180);
         },
@@ -4172,8 +4213,8 @@
         },
 
         guardarAsignacionCanal() {
-            const g = _data.grabadores.find(x => x.id === _editandoCanalGrabId); if (!g) return;
-            const slot = g.canales_data.find(c => c.canal === _editandoCanalN); if (!slot) return;
+            const g = _data.grabadores.find(x => x.id === _edicion.canalGrabId); if (!g) return;
+            const slot = g.canales_data.find(c => c.canal === _edicion.canalN); if (!slot) return;
 
             const dispInput = document.getElementById('canal-disp-input');
             const dispId = document.getElementById('sel-canal-dispositivo').value;
@@ -4206,7 +4247,7 @@
 
             for (const c of g.canales_data) {
 
-                if (c.canal === _editandoCanalN) continue;
+                if (c.canal === _edicion.canalN) continue;
 
                 if (nuevaIp && c.ip === nuevaIp) {
                     inputIp.classList.add('error');
@@ -4231,11 +4272,11 @@
                 rack: document.getElementById('canal-rack').value.trim(),
                 comentarios: document.getElementById('canal-comentarios').value.trim(),
             };
-            const huboCambiosCanal = JSON.stringify(nuevoSnapCanal) !== JSON.stringify(_snapshotCanal);
-            if (!huboCambiosCanal) { toast('Sin cambios', 'info'); MM.cerrar('modal-canal'); _editandoCanalGrabId = null; _editandoCanalN = null; _snapshotCanal = null; return; }
+            const huboCambiosCanal = JSON.stringify(nuevoSnapCanal) !== JSON.stringify(_edicion.snapshotCanal);
+            if (!huboCambiosCanal) { toast('Sin cambios', 'info'); MM.cerrar('modal-canal'); _edicion.canalGrabId = null; _edicion.canalN = null; _edicion.snapshotCanal = null; return; }
 
-            const fueAsignado = !_snapshotCanal.dispositivoId && nuevoSnapCanal.dispositivoId;
-            const fueDesasignado = _snapshotCanal.dispositivoId && !nuevoSnapCanal.dispositivoId;
+            const fueAsignado = !_edicion.snapshotCanal.dispositivoId && nuevoSnapCanal.dispositivoId;
+            const fueDesasignado = _edicion.snapshotCanal.dispositivoId && !nuevoSnapCanal.dispositivoId;
             const msg = fueAsignado ? 'Dispositivo asignado' : fueDesasignado ? 'Canal liberado' : 'Canal actualizado';
 
             historial.empujar(msg);
@@ -4246,12 +4287,12 @@
             guardar(); render(); MM.cerrar('modal-canal');
 
             toast(msg, 'success');
-            _editandoCanalGrabId = null; _editandoCanalN = null; _snapshotCanal = null;
+            _edicion.canalGrabId = null; _edicion.canalN = null; _edicion.snapshotCanal = null;
         },
 
         abrirNuevoOtroProd() {
-            _editandoOtroProdId = null;
-            _snapshotOtroProd = null;
+            _edicion.otroProdId = null;
+            _edicion.snapshotOtroProd = null;
             document.getElementById('otro-prod-descripcion').value = '';
             document.getElementById('otro-prod-ip').value = '';
             document.getElementById('otro-prod-puerto').value = '';
@@ -4274,7 +4315,7 @@
                 ...grabs.filter(g => g.dispositivoId).map(g => g.dispositivoId),
                 ...(_data.otros_prod || []).filter(o => o.dispositivoId).map(o => o.dispositivoId)
             ];
-            _canalDispOcupados = new Set(idsOcupados);
+            _edicion.canalDispOcupados = new Set(idsOcupados);
 
             document.getElementById('modal-otro-prod-titulo').textContent = 'Agregar a Producción';
             MM.abrir('modal-otro-prod');
@@ -4282,7 +4323,7 @@
 
         abrirEditarOtroProd(id) {
             const o = (_data.otros_prod || []).find(x => x.id === id); if (!o) return;
-            _editandoOtroProdId = id;
+            _edicion.otroProdId = id;
 
             document.getElementById('modal-otro-prod-titulo').textContent = 'Editar Dispositivo';
             document.getElementById('otro-prod-descripcion').value = o.descripcion || '';
@@ -4315,11 +4356,11 @@
                 ...grabs.filter(g => g.dispositivoId).map(g => g.dispositivoId),
                 ...(_data.otros_prod || []).filter(op => op.dispositivoId && op.id !== id).map(op => op.dispositivoId)
             ];
-            _canalDispOcupados = new Set(idsOcupados);
+            _edicion.canalDispOcupados = new Set(idsOcupados);
 
             MM.abrir('modal-otro-prod');
 
-            _snapshotOtroProd = {
+            _edicion.snapshotOtroProd = {
                 dispositivoId: o.dispositivoId || '',
                 descripcion: o.descripcion || '',
                 ip: o.ip || '',
@@ -4333,8 +4374,8 @@
 
         cerrarOtroProd() {
             MM.cerrar('modal-otro-prod');
-            _editandoOtroProdId = null;
-            _snapshotOtroProd = null;
+            _edicion.otroProdId = null;
+            _edicion.snapshotOtroProd = null;
         },
 
         guardarOtroProd() {
@@ -4350,7 +4391,7 @@
             if (!validarCampoIP('otro-prod-ip')) return;
 
             const datos = {
-                id: _editandoOtroProdId || S.genId(),
+                id: _edicion.otroProdId || S.genId(),
                 dispositivoId: dispId,
                 descripcion: document.getElementById('otro-prod-descripcion').value.trim(),
                 ip: document.getElementById('otro-prod-ip').value.trim(),
@@ -4361,11 +4402,11 @@
                 comentarios: document.getElementById('otro-prod-comentarios').value.trim(),
             };
 
-            historial.empujar(_editandoOtroProdId ? 'Editar dispositivo en producción' : 'Agregar dispositivo a producción');
+            historial.empujar(_edicion.otroProdId ? 'Editar dispositivo en producción' : 'Agregar dispositivo a producción');
 
             if (!_data.otros_prod) _data.otros_prod = [];
 
-            if (_editandoOtroProdId) {
+            if (_edicion.otroProdId) {
                 const nuevoSnapOtro = {
                     dispositivoId: datos.dispositivoId || '',
                     descripcion: datos.descripcion || '',
@@ -4376,10 +4417,10 @@
                     rack: datos.rack || '',
                     comentarios: datos.comentarios || '',
                 };
-                if (JSON.stringify(nuevoSnapOtro) === JSON.stringify(_snapshotOtroProd)) {
-                    toast('Sin cambios', 'info'); MM.cerrar('modal-otro-prod'); _editandoOtroProdId = null; _snapshotOtroProd = null; return;
+                if (JSON.stringify(nuevoSnapOtro) === JSON.stringify(_edicion.snapshotOtroProd)) {
+                    toast('Sin cambios', 'info'); MM.cerrar('modal-otro-prod'); _edicion.otroProdId = null; _edicion.snapshotOtroProd = null; return;
                 }
-                const idx = _data.otros_prod.findIndex(x => x.id === _editandoOtroProdId);
+                const idx = _data.otros_prod.findIndex(x => x.id === _edicion.otroProdId);
                 if (idx !== -1) _data.otros_prod[idx] = S.sanitizarOtroProd(datos);
                 toast('Actualizado', 'success');
             } else {
@@ -4391,12 +4432,12 @@
         },
 
         async eliminarOtroProd() {
-            if (!_editandoOtroProdId) return;
+            if (!_edicion.otroProdId) return;
             const ok = await confirmarModal('¿Quitar este dispositivo de producción? No se eliminará del inventario, solo se desasignará.', 'Quitar');
             if (!ok) return;
 
             historial.empujar('Quitar dispositivo de producción');
-            _data.otros_prod = _data.otros_prod.filter(x => x.id !== _editandoOtroProdId);
+            _data.otros_prod = _data.otros_prod.filter(x => x.id !== _edicion.otroProdId);
 
             guardar(); render(); MM.cerrar('modal-otro-prod');
             toast('Quitado de producción', 'success');
@@ -4424,7 +4465,7 @@
 
             const ESTADO_LABELS_DISP = { averiado: 'averiado', revisar: 'a revisar', desafectado: 'desafectado' };
             const items = filtrados.map(d => {
-                const ocupado = _canalDispOcupados.has(d.id);
+                const ocupado = _edicion.canalDispOcupados.has(d.id);
                 const estadoInactivo = ESTADO_LABELS_DISP[d.estado] || '';
                 const deshabilitado = ocupado || !!estadoInactivo;
                 const etiqueta = ocupado ? ' <span class="estado-tag">(en uso)</span>' : estadoInactivo ? ` <span class="estado-tag">(${estadoInactivo})</span>` : '';
@@ -4458,14 +4499,14 @@
 
             if (e.key === 'ArrowDown') {
                 e.preventDefault();
-                _canalDispHighlight = Math.min(_canalDispHighlight + 1, items.length - 1);
+                _edicion.canalDispHighlight = Math.min(_edicion.canalDispHighlight + 1, items.length - 1);
             } else if (e.key === 'ArrowUp') {
                 e.preventDefault();
-                _canalDispHighlight = Math.max(_canalDispHighlight - 1, 0);
+                _edicion.canalDispHighlight = Math.max(_edicion.canalDispHighlight - 1, 0);
             } else if (e.key === 'Enter') {
                 e.preventDefault();
-                if (_canalDispHighlight >= 0) {
-                    const el = items[_canalDispHighlight];
+                if (_edicion.canalDispHighlight >= 0) {
+                    const el = items[_edicion.canalDispHighlight];
                     document.getElementById('sel-otro-prod-dispositivo').value = el.dataset.id;
                     document.getElementById('otro-prod-disp-input').value = el.dataset.mac || el.dataset.id;
                     dd.style.display = 'none';
@@ -4474,20 +4515,20 @@
                 return;
             } else if (e.key === 'Escape') {
                 dd.style.display = 'none';
-                _canalDispHighlight = -1;
+                _edicion.canalDispHighlight = -1;
                 return;
             } else { return; }
 
-            items.forEach((el, i) => el.classList.toggle('highlighted', i === _canalDispHighlight));
-            if (_canalDispHighlight >= 0) items[_canalDispHighlight].scrollIntoView({ block: 'nearest' });
+            items.forEach((el, i) => el.classList.toggle('highlighted', i === _edicion.canalDispHighlight));
+            if (_edicion.canalDispHighlight >= 0) items[_edicion.canalDispHighlight].scrollIntoView({ block: 'nearest' });
         },
 
         verActivoDesdeOtroProd() {
             const dispId = document.getElementById('sel-otro-prod-dispositivo').value;
             if (!dispId) return;
-            _volverDesdeCanal = true;
-            _editandoCanalGrabId = 'OTRO_PROD';
-            _editandoCanalN = _editandoOtroProdId;
+            _edicion.volverDesdeCanal = true;
+            _edicion.canalGrabId = 'OTRO_PROD';
+            _edicion.canalN = _edicion.otroProdId;
             MM.cerrar('modal-otro-prod');
             setTimeout(() => UI.abrirEditarDispositivo(dispId), 180);
         },
@@ -4759,7 +4800,7 @@
         const sel = document.getElementById(`${prefijo}-dispositivo-id`);
         const enUso = new Set(
             _data.grabadores
-                .filter(g => g.dispositivoId && g.id !== _editandoGrabId)
+                .filter(g => g.dispositivoId && g.id !== _edicion.grabId)
                 .map(g => g.dispositivoId)
         );
         sel.innerHTML = '<option value="">Seleccionar…</option>';
@@ -4816,14 +4857,14 @@
         const cbCanal = document.getElementById('canal-disp-combobox');
         if (cbCanal && !cbCanal.contains(e.target)) {
             document.getElementById('canal-disp-dropdown').style.display = 'none';
-            _canalDispHighlight = -1;
+            _edicion.canalDispHighlight = -1;
         }
 
         const cbOtro = document.getElementById('otro-prod-disp-combobox');
         if (cbOtro && !cbOtro.contains(e.target)) {
             const ddOtro = document.getElementById('otro-prod-disp-dropdown');
             if (ddOtro) ddOtro.style.display = 'none';
-            _canalDispHighlight = -1;
+            _edicion.canalDispHighlight = -1;
         }
 
         const wrapActivos = document.getElementById('btn-vista-activos-wrap');
@@ -4834,9 +4875,9 @@
     });
 
     document.getElementById('card-resumen-general').addEventListener('mousedown', e => {
-        if (!_dashTipoAbierto) return;
+        if (!_dash.tipoAbierto) return;
         if (!e.target.closest('#dash-disp-tree')) {
-            _dashTipoAbierto = null;
+            _dash.tipoAbierto = null;
             renderDashboard();
         }
     });
@@ -4882,7 +4923,7 @@
         }
 
         if (!modalAbierto && e.altKey) {
-            const tabs = ['dashboard', 'activos', 'produccion'];
+            const tabs = TABS;
             const idxActual = tabs.indexOf(_tabActual);
 
             if (e.key === 'ArrowLeft') {
@@ -4974,12 +5015,12 @@
                         if (!grupos.length) return;
 
                         const groupId = headerActivos.dataset.toggleGrupo;
-                        const estabaCerrado = _activosCollapsed.has(groupId);
+                        const estabaCerrado = _activos.collapsed.has(groupId);
                         const abrirTodos = estabaCerrado;
 
                         grupos.forEach(g => {
-                            if (abrirTodos) _activosCollapsed.delete(g.dataset.grupo);
-                            else _activosCollapsed.add(g.dataset.grupo);
+                            if (abrirTodos) _activos.collapsed.delete(g.dataset.grupo);
+                            else _activos.collapsed.add(g.dataset.grupo);
                         });
 
                         if (_guardarColapsados) _guardarColapsados();
@@ -4993,12 +5034,12 @@
                         if (!pisos.length) return;
 
                         const floorKey = headerPiso.dataset.togglePiso;
-                        const estabaCerrado = _pisosCollapsed.has(floorKey);
+                        const estabaCerrado = _activos.pisosCollapsed.has(floorKey);
                         const abrirTodos = estabaCerrado;
 
                         pisos.forEach(p => {
-                            if (abrirTodos) _pisosCollapsed.delete(p.dataset.floorKey);
-                            else _pisosCollapsed.add(p.dataset.floorKey);
+                            if (abrirTodos) _activos.pisosCollapsed.delete(p.dataset.floorKey);
+                            else _activos.pisosCollapsed.add(p.dataset.floorKey);
                         });
 
                         if (_guardarColapsados) _guardarColapsados();
@@ -5201,7 +5242,7 @@
         on('gist-autosync-toggle', 'click', () => GistSync.toggleAuto());
         document.querySelector('#modal-gist .btn-edit')
             ?.addEventListener('click', () => GistSync.guardarConfig());
-        document.querySelector('#modal-gist .btn-cancel')
+        document.querySelector('#modal-gist .modal-sticky-footer .btn-cancel')
             ?.addEventListener('click', () => UI.cerrarGist());
 
         // Modal gist novedades
@@ -5316,7 +5357,7 @@
     // ════════════════════════════════════════════════════════════════════════════
     // § INIT — arranque de la aplicación
     // ════════════════════════════════════════════════════════════════════════════
-    ['dashboard', 'activos', 'produccion'].forEach(t => {
+    TABS.forEach(t => {
         const btn = document.getElementById('tab-' + t);
         const panel = document.getElementById('panel-' + t);
         if (btn) btn.classList.toggle('activa', t === _tabActual);
