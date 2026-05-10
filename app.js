@@ -191,7 +191,6 @@
             return grupos.every(g => /^[0-9A-Fa-f]{1,4}$/.test(g));
         }
 
-        function validarIPv4(ip) { return validarIP(ip); }
 
         function validarMAC(mac) {
             if (!mac) return true;
@@ -326,7 +325,7 @@
             get TIPOS() { return TIPOS; }, guardarTipos, cargarTipos,
             get edificios() { return _edificios; }, guardarEdificios, cargarEdificios,
             generarFirma, verificarFirma, sanitizarDisp, sanitizarGrab, sanitizarOtroProd, sanitizarDataTotal,
-            validarIP, validarIPv4, validarIPv6, validarMAC, normalizarPiso
+            validarIP, validarIPv6, validarMAC, normalizarPiso
         };
     })();
 
@@ -863,18 +862,20 @@
             }, DEBOUNCE_MS);
         }
 
-        function _combinarDatosRemotos(remoto) {
+        // ── Helper: merge de entidades (dispositivos, grabadores, otros_prod) ──────
+        // Acepta datos ya sanitizados o crudos (los sanitiza internamente).
+        // NO maneja tipos/edificios — eso lo hace _combinarDatosRemotos.
+        function _combinarEntidades(remoto) {
             let cDispsAdd = 0, cDispsUpd = 0;
             let cGrabsAdd = 0, cGrabsUpd = 0;
             let cOtrosAdd = 0, cOtrosUpd = 0;
-            let cTipos = 0, cEdif = 0;
 
             const mapD = new Map(_data.dispositivos.map(d => [d.id, d]));
             const mapG = new Map(_data.grabadores.map(g => [g.id, g]));
             const mapO = new Map((_data.otros_prod || []).map(o => [o.id, o]));
 
             (remoto.dispositivos || []).forEach(d => {
-                const san = _sanDisp(d, remoto.tiposCustom || {});
+                const san = d._sanitized ? d : _sanDisp(d, remoto.tiposCustom || {});
                 if (!san) return;
                 if (!mapD.has(san.id)) {
                     _data.dispositivos.push(san); mapD.set(san.id, san); cDispsAdd++;
@@ -889,7 +890,7 @@
             });
 
             (remoto.grabadores || []).forEach(g => {
-                const san = _sanGrab(g);
+                const san = g._sanitized ? g : _sanGrab(g);
                 if (!san) return;
                 if (!mapG.has(san.id)) {
                     _data.grabadores.push(san); mapG.set(san.id, san); cGrabsAdd++;
@@ -912,7 +913,7 @@
             });
 
             (remoto.otros_prod || []).forEach(o => {
-                const san = S.sanitizarOtroProd(o);
+                const san = o._sanitized ? o : S.sanitizarOtroProd(o);
                 if (!san) return;
                 if (!mapO.has(san.id)) {
                     if (!_data.otros_prod) _data.otros_prod = [];
@@ -926,6 +927,14 @@
                     if (updated) cOtrosUpd++;
                 }
             });
+
+            return { cDispsAdd, cDispsUpd, cGrabsAdd, cGrabsUpd, cOtrosAdd, cOtrosUpd };
+        }
+
+        function _combinarDatosRemotos(remoto) {
+            let cTipos = 0, cEdif = 0;
+
+            const res = _combinarEntidades(remoto);
 
             if (remoto.tiposCustom && typeof remoto.tiposCustom === 'object') {
                 Object.entries(remoto.tiposCustom).forEach(([k, v]) => {
@@ -953,7 +962,7 @@
                 if (cEdif > 0) S.guardarEdificios();
             }
 
-            return { cDispsAdd, cDispsUpd, cGrabsAdd, cGrabsUpd, cOtrosAdd, cOtrosUpd, cTipos, cEdif };
+            return { ...res, cTipos, cEdif };
         }
 
         async function bajar() {
@@ -1080,14 +1089,7 @@
                     if (!r.ok || !scopeWarn) return;
                     if (r.peligrosos && r.peligrosos.length > 0) {
                         scopeWarn.style.display = '';
-                        scopeWarn.replaceChildren(
-                            Object.assign(document.createElement('strong'), { textContent: '⚠️ Permisos excesivos detectados: ' }),
-                            document.createTextNode('Este token tiene los scopes '),
-                            Object.assign(document.createElement('code'), { textContent: r.peligrosos.join(', ') }),
-                            document.createTextNode(' además de '),
-                            Object.assign(document.createElement('code'), { textContent: 'gist' }),
-                            document.createTextNode('. Recomendamos crear un token nuevo con solo el scope gist.')
-                        );
+                        scopeWarn.innerHTML = `⚠️ <strong>Permisos excesivos detectados:</strong> Este token tiene los scopes <code>${r.peligrosos.join(', ')}</code> además de <code>gist</code>. Recomendamos crear un token nuevo con solo el scope <code>gist</code>.`;
                     }
                 });
             }
@@ -1206,7 +1208,7 @@
             }
         }
 
-        return { subir, bajar, subirAuto, verificarAlAbrir, toggleToken, toggleAuto, guardarConfig, poblarModal, init, actualizarBotonesAjustes: _actualizarBotonesAjustes };
+        return { subir, bajar, subirAuto, verificarAlAbrir, toggleToken, toggleAuto, guardarConfig, poblarModal, init, actualizarBotonesAjustes: _actualizarBotonesAjustes, _generarPayload, _combinarEntidades };
     })();
 
     function render() {
@@ -1386,7 +1388,7 @@
                 if (!tc) return '';
                 const n = disps.filter(d => d.tipo === tipoKey).length;
                 return `
-                        <div class="stat-chip stat-chip-tipo" onclick="_toggleTipoDetalle('${tipoKey}')">
+                        <div class="stat-chip stat-chip-tipo" data-action="toggle-tipo" data-tipo="${tipoKey}">
                             <div class="stat-chip-valor">${n}</div>
                             <div class="stat-chip-label">${tc.emoji} ${(tc.label + (tipoKey === 'camara' ? 's' : '')).toUpperCase()}</div>
                             <span class="stat-chip-arrow">▶</span>
@@ -1409,7 +1411,7 @@
             const est = _estadosDeDisps(dispsDelTipo, idsEnProd);
 
             const chipSeleccionado = `
-                    <div class="dash-chip-main clickable" onclick="_toggleTipoDetalle('${tipo}')">
+                    <div class="dash-chip-main clickable" data-action="toggle-tipo" data-tipo="${tipo}">
                         <div class="stat-chip-valor">${dispsDelTipo.length}</div>
                         <div class="stat-chip-label">${tc.emoji} ${(tc.label + (tipo === 'camara' ? 's' : '')).toUpperCase()}</div>
                         <div class="dash-chip-btn-group">
@@ -1420,14 +1422,9 @@
             const chipsEstado = ESTADOS_DEFS.map(e => {
                 const n = est[e.key];
                 const esCamara = tipo === 'camara';
-                const clickAction = (esCamara && n > 0)
-                    ? `_toggleEstadoDetalle('${e.key}')`
-                    : `UI.irAActivosConFiltro('${tipo}','${e.key}')`;
-
                 const clickable = n > 0
-                    ? `class="stat-chip stat-chip-tipo" onclick="event.stopPropagation(); ${clickAction}"`
-                    : `class="stat-chip" onclick="event.stopPropagation();"`;
-
+                    ? `class="stat-chip stat-chip-tipo" data-action="toggle-estado-o-ir" data-tipo="${tipo}" data-estado="${e.key}" data-es-camara="${esCamara}"`
+                    : `class="stat-chip" data-action="stop"`;
                 return `
                         <div ${clickable}>
                             <div class="stat-chip-valor stat-chip-val--${e.key}">${n}</div>
@@ -1455,12 +1452,12 @@
             camarasDelEstado.forEach(d => { const k = d.forma || '__sin__'; conteo[k] = (conteo[k] || 0) + 1; });
 
             const chipEstado = `
-                    <div class="dash-chip-main clickable" onclick="_toggleEstadoDetalle('${estado}')">
+                    <div class="dash-chip-main clickable" data-action="toggle-estado" data-estado="${estado}">
                         <div class="stat-chip-valor stat-chip-val--${estado}">${camarasDelEstado.length}</div>
                         <div class="stat-chip-label stat-chip-val--${estado}">${(ESTADOS_NOMBRES[estado] || estado).toUpperCase()}</div>
                         <div class="dash-chip-btn-group">
                             <div class="stat-chip-volver dash-chip-btn">◀ VOLVER</div>
-                            <div class="stat-chip-volver dash-chip-btn" onclick="event.stopPropagation(); UI.irAActivosConFiltro('camara', '${estado}')">VER TODOS ▶</div>
+                            <div class="stat-chip-volver dash-chip-btn" data-action="ir-activos" data-tipo="camara" data-estado="${estado}">VER TODOS ▶</div>
                         </div>
                     </div>`;
 
@@ -1468,7 +1465,7 @@
             if (conteo['__sin__'] > 0) filas.push({ key: '', label: 'Sin forma' });
 
             const chipsForma = filas.map(f => `
-                        <div class="stat-chip stat-chip-tipo" onclick="event.stopPropagation(); UI.irAActivosConFiltro('camara', '${estado}', '${f.key}')">
+                        <div class="stat-chip stat-chip-tipo" data-action="ir-activos" data-tipo="camara" data-estado="${estado}" data-forma="${f.key}">
                             <div class="stat-chip-valor">${conteo[f.key || '__sin__']}</div>
                             <div class="stat-chip-label">${f.label.toUpperCase()}</div>
                         </div>`).join('');
@@ -1700,6 +1697,27 @@
         });
     }
 
+    function _toggleEdificio(rowEl) {
+        const container = document.getElementById('dash-camaras');
+        const wrapper = rowEl.parentNode;
+        const pisos = wrapper.querySelector('.dash-edif-pisos');
+        const yaAbierto = pisos.classList.contains('dash-edif-pisos--open');
+
+        container.querySelectorAll('.dash-edif-pisos--open').forEach(p => {
+            p.classList.remove('dash-edif-pisos--open');
+        });
+        container.querySelectorAll('.dash-edif-row--open').forEach(r => {
+            r.classList.remove('dash-edif-row--open');
+            r.style.borderBottom = '';
+        });
+
+        if (!yaAbierto) {
+            pisos.classList.add('dash-edif-pisos--open');
+            rowEl.classList.add('dash-edif-row--open');
+            rowEl.style.borderBottom = 'none';
+        }
+    }
+
     function _renderResumenCamaras(disps, grabs, idsEnProd) {
         const camarasDisps = disps.filter(d => d.tipo === 'camara');
         const enProd = camarasDisps.filter(d => idsEnProd.has(d.id)).length;
@@ -1815,27 +1833,6 @@
             } else {
                 const chevron = `<svg class="dash-edif-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>`;
 
-                window._toggleEdificio = function (rowEl) {
-                    const container = document.getElementById('dash-camaras');
-                    const wrapper = rowEl.parentNode;
-                    const pisos = wrapper.querySelector('.dash-edif-pisos');
-                    const yaAbierto = pisos.classList.contains('dash-edif-pisos--open');
-
-                    container.querySelectorAll('.dash-edif-pisos--open').forEach(p => {
-                        p.classList.remove('dash-edif-pisos--open');
-                    });
-                    container.querySelectorAll('.dash-edif-row--open').forEach(r => {
-                        r.classList.remove('dash-edif-row--open');
-                        r.style.borderBottom = '';
-                    });
-
-                    if (!yaAbierto) {
-                        pisos.classList.add('dash-edif-pisos--open');
-                        rowEl.classList.add('dash-edif-row--open');
-                        rowEl.style.borderBottom = 'none';
-                    }
-                };
-
                 vistaHtml = filas.map((f, i) => {
                     const pisosOrdenados = Object.entries(f.pisos)
                         .sort((a, b) => {
@@ -1856,7 +1853,7 @@
                     return `
                             <div>
                                 <div class="dash-edif-row anim-in" style="animation-delay:${i * 0.03}s;animation-fill-mode:both"
-                                    onclick="window._toggleEdificio(this)">
+                                    data-action="toggle-edificio">
                                     <span class="dash-edif-label">${chevron}${esc(f.label)}</span>
                                     <span class="dash-cam-val" style="color:var(--text-main)">${f.total}</span>
                                 </div>
@@ -2135,7 +2132,13 @@
             (grupos[gLabel] || (grupos[gLabel] = [])).push(d);
         });
 
-        let html = `<style>.activos-grid-transition{transition:max-height 0.3s ease,opacity 0.25s ease;overflow:hidden}.activos-grid-transition.collapsed{max-height:0!important;opacity:0!important}</style>`;
+        if (!document.getElementById('activos-grid-transition-css')) {
+            const el = document.createElement('style');
+            el.id = 'activos-grid-transition-css';
+            el.textContent = '.activos-grid-transition{transition:max-height 0.3s ease,opacity 0.25s ease;overflow:hidden}.activos-grid-transition.collapsed{max-height:0!important;opacity:0!important}';
+            document.head.appendChild(el);
+        }
+        let html = ``;
 
         Object.entries(grupos).forEach(([gLabel, items]) => {
             const isCollapsed = window.UI._activosCollapsed.has(gLabel);
@@ -2157,6 +2160,7 @@
         if (!lista._delegRegistrada) {
             lista._delegRegistrada = true;
             lista.addEventListener('click', e => {
+                if (e.target.closest('[data-copy]')) return; // deja que el handler de data-copy lo maneje
                 const item = e.target.closest('.dispositivo-item[data-disp-id]');
                 if (item) { UI.abrirEditarDispositivo(item.dataset.dispId); return; }
                 const headerGrupo = e.target.closest('.grupo-activos-header[data-toggle-grupo]');
@@ -2234,6 +2238,7 @@
         if (!lista._delegRegistrada) {
             lista._delegRegistrada = true;
             lista.addEventListener('click', function (e) {
+                if (e.target.closest('[data-copy]')) return; // deja que el handler de data-copy lo maneje
                 const btnEdit = e.target.closest('.nvr-btn-editar');
                 if (btnEdit) {
                     e.stopPropagation();
@@ -2634,11 +2639,17 @@
                             <span class="filtro-label">${f.label}</span>
                             <span class="filtro-toggle">
                                 <input type="checkbox" id="filtro-cb-${f.id}"
-                                    ${_busqActivos.has(f.id) ? 'checked' : ''}
-                                    onchange="UI._onFiltroChange('${f.id}', this.checked)">
+                                    data-filtro-id="${f.id}"
+                                    ${_busqActivos.has(f.id) ? 'checked' : ''}>
                                 <span class="filtro-toggle-track"></span>
                             </span>
                         </label>`).join('');
+
+            lista.querySelectorAll('input[data-filtro-id]').forEach(cb => {
+                cb.addEventListener('change', function () {
+                    UI._onFiltroChange(this.dataset.filtroId, this.checked);
+                });
+            });
 
             _sincFiltrosUI();
             MM.abrir('modal-filtros-busqueda');
@@ -2790,16 +2801,8 @@
                 });
                 let html = '';
                 const edificioKeys = [...Object.keys(mapa)].sort((a, b) => a === '__sin_edif__' ? 1 : b === '__sin_edif__' ? -1 : a.localeCompare(b));
-                const getPisoPeso = p => {
-                    if (!p || p === '__sin_piso__') return 9999;
-                    const s = p.trim().toUpperCase();
-                    if (s.includes('SS')) return -(parseInt(s.replace(/\D/g, '')) || 1);
-                    if (s === 'PB') return 0;
-                    if (s.includes('EP')) return (parseInt(s.replace(/\D/g, '')) || 1) * 0.1;
-                    if (s === 'TERRAZA' || s === 'AZOTEA' || s === 'TZ') return 1000;
-                    const n = parseInt(s);
-                    return isNaN(n) ? 500 : n;
-                };
+                // Reusar _getPisoPeso global; __sin_piso__ mapea a 9999 igual que 'SIN ASIGNAR'
+                const getPisoPeso = p => _getPisoPeso(!p || p === '__sin_piso__' ? 'SIN ASIGNAR' : p);
                 edificioKeys.forEach(e => {
                     const label = e === '__sin_edif__' ? 'Sin edificio' : esc(e);
                     const total = Object.values(mapa[e]).reduce((s, n) => s + n, 0);
@@ -3505,25 +3508,24 @@
                 inputCanales.title = '';
             }
 
-            let avisoHtml = '';
+            let avisoStrong = '';
             if (enProduccionComoGrab && canalesOcupados > 0) {
-                avisoHtml = `<div id="aviso-prod-disp" class="aviso-prod">
-                            ⚠️ Este grabador está en producción con <strong>${canalesOcupados} canal${canalesOcupados === 1 ? '' : 'es'} ocupado${canalesOcupados === 1 ? '' : 's'}</strong>.<br>
-                            No se puede cambiar el tipo, canales ni eliminar mientras tenga cámaras asignadas.
-                        </div>`;
+                avisoStrong = `⚠️ Este grabador está en producción con ${canalesOcupados} canal${canalesOcupados === 1 ? '' : 'es'} ocupado${canalesOcupados === 1 ? '' : 's'}. No se puede cambiar el tipo, canales ni eliminar mientras tenga cámaras asignadas.`;
             } else if (enProduccionComoGrab) {
-                avisoHtml = `<div id="aviso-prod-disp" class="aviso-prod">
-                            ℹ️ Este grabador está en producción. No se puede eliminar
-                        </div>`;
+                avisoStrong = `ℹ️ Este grabador está en producción. No se puede eliminar`;
             } else if (enProduccionComoCanal) {
-                avisoHtml = `<div id="aviso-prod-disp" class="aviso-prod">
-                            ℹ️ Este dispositivo está asignado a un grabador en producción.
-                        </div>`;
+                avisoStrong = `ℹ️ Este dispositivo está asignado a un grabador en producción.`;
             }
             const formBody = document.querySelector('#modal-editar-disp .modal-scroll-body');
             const existente = document.getElementById('aviso-prod-disp');
             if (existente) existente.remove();
-            if (avisoHtml && formBody) formBody.insertAdjacentHTML('afterbegin', avisoHtml);
+            if (avisoStrong && formBody) {
+                const aviso = document.createElement('div');
+                aviso.id = 'aviso-prod-disp';
+                aviso.className = 'aviso-prod';
+                aviso.textContent = avisoStrong;
+                formBody.insertBefore(aviso, formBody.firstChild);
+            }
 
             const btnEliminar = document.querySelector('#modal-editar-disp .btn-delete');
             if (btnEliminar) {
@@ -4591,67 +4593,23 @@
                 _data.otros_prod = newOtros;
                 toast('Datos reemplazados correctamente', 'success');
             } else {
-                const mapD = new Map(_data.dispositivos.map(d => [d.id, d]));
-                const mapG = new Map(_data.grabadores.map(g => [g.id, g]));
-                const mapO = new Map((_data.otros_prod || []).map(o => [o.id, o]));
-
-                let dAdd = 0, dUpd = 0, gAdd = 0, gUpd = 0, oAdd = 0, oUpd = 0;
-
-                newDisps.forEach(san => {
-                    if (!mapD.has(san.id)) {
-                        _data.dispositivos.push(san); mapD.set(san.id, san); dAdd++;
-                    } else {
-                        const loc = mapD.get(san.id);
-                        let updated = false;
-                        ['marca', 'modelo', 'serial', 'mac', 'patrimonio', 'firmware', 'forma', 'estado'].forEach(k => {
-                            if (!loc[k] && san[k]) { loc[k] = san[k]; updated = true; }
-                        });
-                        if (updated) dUpd++;
-                    }
-                });
-
-                newGrabs.forEach(san => {
-                    if (!mapG.has(san.id)) {
-                        _data.grabadores.push(san); mapG.set(san.id, san); gAdd++;
-                    } else {
-                        const loc = mapG.get(san.id);
-                        let updated = false;
-                        ['marca', 'modelo', 'ip', 'edificio', 'piso', 'rack', 'puerto', 'mac', 'comentarios', 'dispositivoId'].forEach(k => {
-                            if (!loc[k] && san[k]) { loc[k] = san[k]; updated = true; }
-                        });
-                        san.canales_data.forEach(cRem => {
-                            const cLoc = loc.canales_data.find(c => c.canal === cRem.canal);
-                            if (cLoc) {
-                                ['dispositivoId', 'descripcion', 'ip', 'puerto', 'edificio', 'piso', 'rack', 'comentarios'].forEach(k => {
-                                    if (!cLoc[k] && cRem[k]) { cLoc[k] = cRem[k]; updated = true; }
-                                });
-                            }
-                        });
-                        if (updated) gUpd++;
-                    }
-                });
-
-                newOtros.forEach(san => {
-                    if (!mapO.has(san.id)) {
-                        if (!_data.otros_prod) _data.otros_prod = [];
-                        _data.otros_prod.push(san); mapO.set(san.id, san); oAdd++;
-                    } else {
-                        const loc = mapO.get(san.id);
-                        let updated = false;
-                        ['dispositivoId', 'descripcion', 'ip', 'edificio', 'piso', 'rack', 'puerto', 'comentarios'].forEach(k => {
-                            if (!loc[k] && san[k]) { loc[k] = san[k]; updated = true; }
-                        });
-                        if (updated) oUpd++;
-                    }
-                });
+                // Reusar _combinarDatosRemotos pasando los datos ya sanitizados como si fuera un remoto
+                const pseudoRemoto = {
+                    dispositivos: newDisps,
+                    grabadores: newGrabs,
+                    otros_prod: newOtros,
+                    tiposCustom: {},   // ya aplicados arriba
+                    edificios: [],     // ya aplicados arriba
+                };
+                const resMerge = GistSync._combinarEntidades(pseudoRemoto);
 
                 const msgs = [];
-                if (dAdd) msgs.push(`+${dAdd} disp`);
-                if (dUpd) msgs.push(`~${dUpd} disp`);
-                if (gAdd) msgs.push(`+${gAdd} grab`);
-                if (gUpd) msgs.push(`~${gUpd} grab`);
-                if (oAdd) msgs.push(`+${oAdd} otros`);
-                if (oUpd) msgs.push(`~${oUpd} otros`);
+                if (resMerge.cDispsAdd) msgs.push(`+${resMerge.cDispsAdd} disp`);
+                if (resMerge.cDispsUpd) msgs.push(`~${resMerge.cDispsUpd} disp`);
+                if (resMerge.cGrabsAdd) msgs.push(`+${resMerge.cGrabsAdd} grab`);
+                if (resMerge.cGrabsUpd) msgs.push(`~${resMerge.cGrabsUpd} grab`);
+                if (resMerge.cOtrosAdd) msgs.push(`+${resMerge.cOtrosAdd} otros`);
+                if (resMerge.cOtrosUpd) msgs.push(`~${resMerge.cOtrosUpd} otros`);
 
                 toast(msgs.length ? `Datos combinados (${msgs.join(', ')})` : 'Sin datos nuevos para combinar', msgs.length ? 'success' : 'info');
             }
@@ -4661,24 +4619,7 @@
 
         async exportarJSON() {
             try {
-                const disps = _data.dispositivos.map(_sanDisp).filter(Boolean);
-                const grabs = _data.grabadores.map(_sanGrab).filter(Boolean);
-                const otros = (_data.otros_prod || []).map(S.sanitizarOtroProd).filter(Boolean);
-                const tiposCustom = {};
-                Object.entries(S.TIPOS).forEach(([k, v]) => {
-                    if (!v.builtin) tiposCustom[k] = { label: v.label, emoji: v.emoji };
-                });
-                const payload = {
-                    dispositivos: disps,
-                    grabadores: grabs,
-                    otros_prod: otros,
-                    tiposCustom,
-                    edificios: S.edificios.slice(),
-                    version: S.SCHEMA_V,
-                    fecha: S.fechaISO()
-                };
-
-                payload.hash = await S.generarFirma(payload);
+                const payload = await GistSync._generarPayload();
 
                 const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
@@ -5079,10 +5020,12 @@
 
         document.addEventListener('mousedown', handlePressStart);
         document.addEventListener('touchstart', handlePressStart, { passive: true });
+
         document.addEventListener('mouseup', handlePressEnd);
         document.addEventListener('mouseleave', handlePressEnd);
         document.addEventListener('touchend', handlePressEnd);
         document.addEventListener('touchcancel', handlePressEnd);
+
         document.addEventListener('click', e => {
             if (_longPressFired) {
                 e.preventDefault();
@@ -5142,8 +5085,8 @@
             ?.addEventListener('click', () => UI.abrirAjustes());
 
         // Tabs
-        on('tab-dashboard',  'click', () => UI.cambiarTab('dashboard'));
-        on('tab-activos',    'click', () => UI.cambiarTab('activos'));
+        on('tab-dashboard', 'click', () => UI.cambiarTab('dashboard'));
+        on('tab-activos', 'click', () => UI.cambiarTab('activos'));
         on('tab-produccion', 'click', () => UI.cambiarTab('produccion'));
 
         // Búsqueda
@@ -5191,13 +5134,13 @@
         // Ajustes
         document.querySelectorAll('#modal-ajustes .btn-ajustes').forEach(btn => {
             const icon = btn.querySelector('use')?.getAttribute('href');
-            if (icon === '#icon-grid')     btn.addEventListener('click', () => UI.abrirTiposDispositivo());
+            if (icon === '#icon-grid') btn.addEventListener('click', () => UI.abrirTiposDispositivo());
             if (icon === '#icon-building') btn.addEventListener('click', () => UI.abrirEdificios());
-            if (icon === '#icon-report')   btn.addEventListener('click', () => UI.abrirReporte());
-            if (icon === '#icon-gist')     btn.addEventListener('click', () => UI.abrirGist());
-            if (icon === '#icon-upload')   btn.addEventListener('click', () => UI.abrirImportarDesdeAjustes());
+            if (icon === '#icon-report') btn.addEventListener('click', () => UI.abrirReporte());
+            if (icon === '#icon-gist') btn.addEventListener('click', () => UI.abrirGist());
+            if (icon === '#icon-upload') btn.addEventListener('click', () => UI.abrirImportarDesdeAjustes());
             if (icon === '#icon-download') btn.addEventListener('click', () => UI.exportarJSON());
-            if (icon === '#icon-trash')    btn.addEventListener('click', () => UI.borrarTodosLosDatos());
+            if (icon === '#icon-trash') btn.addEventListener('click', () => UI.borrarTodosLosDatos());
         });
         on('label-recordar-grupos', 'click', () => UI.toggleRecordarGrupos());
         on('btn-ajustes-gist-subir', 'click', () => GistSync.subir());
@@ -5226,9 +5169,9 @@
             ?.addEventListener('click', () => UI.cerrarEdificios());
 
         // Modal Gist
-        on('gist-token-eye',       'click', () => GistSync.toggleToken());
-        on('btn-gist-subir',       'click', () => GistSync.subir());
-        on('btn-gist-bajar',       'click', () => GistSync.bajar());
+        on('gist-token-eye', 'click', () => GistSync.toggleToken());
+        on('btn-gist-subir', 'click', () => GistSync.subir());
+        on('btn-gist-bajar', 'click', () => GistSync.bajar());
         on('gist-autosync-toggle', 'click', () => GistSync.toggleAuto());
         document.querySelector('#modal-gist .btn-edit')
             ?.addEventListener('click', () => GistSync.guardarConfig());
@@ -5243,8 +5186,8 @@
         on('btn-scroll-top', 'click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
         // Modal otro-prod
-        on('otro-prod-disp-input', 'input',   () => UI._otroProdDispFiltrar());
-        on('otro-prod-disp-input', 'focus',   () => UI._otroProdDispFiltrar());
+        on('otro-prod-disp-input', 'input', () => UI._otroProdDispFiltrar());
+        on('otro-prod-disp-input', 'focus', () => UI._otroProdDispFiltrar());
         on('otro-prod-disp-input', 'keydown', (e) => UI._otroProdDispKeydown(e));
         on('btn-ver-activo-otro-prod', 'click', () => UI.verActivoDesdeOtroProd());
         on('otro-prod-piso', 'input', () => UI._pisoFiltrar(document.getElementById('otro-prod-piso')));
@@ -5263,9 +5206,8 @@
 
         // Modal editar dispositivo
         on('editar-disp-tipo', 'change', () => UI.onDispTipoChange('editar-disp'));
-        on('btn-editar-asignacion',  'click', () => UI.editarAsignacionCamara());
-        on('btn-estado-averiado',    'click', () => UI.toggleEstadoDisp('averiado'));
-        on('btn-estado-revisar',     'click', () => UI.toggleEstadoDisp('revisar'));
+        on('btn-estado-averiado', 'click', () => UI.toggleEstadoDisp('averiado'));
+        on('btn-estado-revisar', 'click', () => UI.toggleEstadoDisp('revisar'));
         on('btn-estado-desafectado', 'click', () => UI.toggleEstadoDisp('desafectado'));
         document.querySelector('#modal-editar-disp .btn-edit')
             ?.addEventListener('click', () => UI.guardarEdicionDispositivo());
@@ -5293,8 +5235,8 @@
             ?.addEventListener('click', () => UI.cerrarModalEditarGrabador());
 
         // Modal canal
-        on('canal-disp-input', 'input',   () => UI._canalDispFiltrar());
-        on('canal-disp-input', 'focus',   () => UI._canalDispFiltrar());
+        on('canal-disp-input', 'input', () => UI._canalDispFiltrar());
+        on('canal-disp-input', 'focus', () => UI._canalDispFiltrar());
         on('canal-disp-input', 'keydown', (e) => UI._canalDispKeydown(e));
         on('btn-ver-activo-canal', 'click', () => UI.verActivoDesdeCanal());
         on('canal-piso', 'input', () => UI._pisoFiltrar(document.getElementById('canal-piso')));
@@ -5306,9 +5248,9 @@
 
         // Modal importar
         on('importar-dropzone', 'click', () => document.getElementById('file-import').click());
-        on('file-import',    'change', (e) => UI.onImportarFileChange(e));
+        on('file-import', 'change', (e) => UI.onImportarFileChange(e));
         on('btn-reemplazar', 'click', () => UI.importarDatos('replace'));
-        on('btn-combinar',   'click', () => UI.importarDatos('merge'));
+        on('btn-combinar', 'click', () => UI.importarDatos('merge'));
         document.querySelector('#modal-importar .btn-cancel')
             ?.addEventListener('click', () => { UI.cerrarImportar(); setTimeout(() => UI.abrirAjustes(), 150); });
 
@@ -5317,21 +5259,31 @@
         document.querySelector('#modal-filtros-busqueda .btn-cancel')
             ?.addEventListener('click', () => UI.cerrarFiltrosBusqueda());
 
-        // ── Delegación en contenedores dinámicos ──────────────────────────
-
-        // data-copy: copiar IPs y modelos generados dinámicamente
+        // Delegación: data-copy (IPs y modelos generados dinámicamente)
         document.addEventListener('click', (e) => {
             const el = e.target.closest('[data-copy]');
-            if (el) UI.copiarAlPortapapeles(el.dataset.copy, e);
+            if (el) { e.stopPropagation(); UI.copiarAlPortapapeles(el.dataset.copy, e); }
         });
 
-        // data-action: botones de eliminar en listas dinámicas
+        // Delegación: data-action (botones en listas dinámicas)
         document.addEventListener('click', (e) => {
             const btn = e.target.closest('[data-action]');
             if (!btn) return;
+            e.stopPropagation();
             const action = btn.dataset.action;
-            if (action === 'eliminar-tipo')     UI.eliminarTipoCustom(btn.dataset.key);
+            if (action === 'eliminar-tipo') UI.eliminarTipoCustom(btn.dataset.key);
             if (action === 'eliminar-edificio') UI.eliminarEdificio(Number(btn.dataset.idx));
+            if (action === 'toggle-tipo') _toggleTipoDetalle(btn.dataset.tipo);
+            if (action === 'toggle-estado') _toggleEstadoDetalle(btn.dataset.estado);
+            if (action === 'ir-activos') UI.irAActivosConFiltro(btn.dataset.tipo, btn.dataset.estado, btn.dataset.forma);
+            if (action === 'toggle-estado-o-ir') {
+                if (btn.dataset.esCamara === 'true') _toggleEstadoDetalle(btn.dataset.estado);
+                else UI.irAActivosConFiltro(btn.dataset.tipo, btn.dataset.estado);
+            }
+            if (action === 'toggle-edificio') {
+                const rowEl = e.target.closest('.dash-edif-row');
+                if (rowEl) _toggleEdificio(rowEl);
+            }
         });
     }
 

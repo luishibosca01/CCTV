@@ -498,7 +498,7 @@
             align-items: center;
             justify-content: center;
             padding: var(--sp-1);
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(2px);
             transition: opacity 0.3s, visibility 0.3s;
         }
 
@@ -2510,22 +2510,9 @@
 /* SVG sprite oculto */
 .svg-sprite { display: none; }
 
-/* Elementos inicialmente ocultos */
-#btn-install-app,
-#btn-limpiar-busqueda,
-#btn-ajustes-gist-subir,
-#btn-ajustes-gist-bajar,
-#btn-scroll-top,
-#btn-ver-activo-otro-prod,
-#btn-editar-asignacion,
-#btn-ver-activo-grab,
-#btn-ver-activo-canal,
-#gist-link-btn,
-#nuevo-disp-forma-group,
-#nuevo-disp-canales-group,
-#editar-disp-forma-group,
-#editar-disp-canales-group,
-#file-import { display: none; }
+/* Elementos inicialmente ocultos — el ocultado inicial se maneja con style="display:none"
+   en el HTML. No duplicar aquí: el JS usa style.display='' para mostrar,
+   lo que borraría el inline style dejando que una regla CSS tome control y los oculte permanentemente. */
 
 /* Wrapper botón vista activos */
 #btn-vista-activos-wrap { position: relative; margin-left: auto; }
@@ -2540,8 +2527,11 @@
     z-index: 100;
 }
 
-/* Botones inline sin margen extra */
-.btn-inline { margin-left: 0; }
+/* Botón inline: empuja al extremo derecho del flex container */
+.btn-inline { margin-left: auto; }
+
+/* Cuando el wrap de vista ya ocupó el margin-left:auto, el btn-inline que le sigue va pegado */
+#btn-vista-activos-wrap + .btn-inline { margin-left: 0; }
 
 /* Label toggle recordar grupos */
 #label-recordar-grupos {
