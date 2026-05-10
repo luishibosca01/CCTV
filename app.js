@@ -4,7 +4,7 @@
     // ════════════════════════════════════════════════════════════════════════════
     // § BOOT — dark-mode y tab inicial (síncrono, antes del parse completo)
     // ════════════════════════════════════════════════════════════════════════════
-    ;(() => {
+    ; (() => {
         try {
             const t = localStorage.getItem('cctv_tema');
             if (t === 'true' || t === null) document.body.classList.add('dark-mode');
@@ -26,12 +26,12 @@
 
     // Claves localStorage
     const LS = {
-        TEMA:              'cctv_tema',
-        TAB:               'cctv_tab',
-        ACTIVOS_ORDEN:     'cctv_activos_orden',
-        ACTIVOS_RECORDAR:  'cctv_activos_recordar',
+        TEMA: 'cctv_tema',
+        TAB: 'cctv_tab',
+        ACTIVOS_ORDEN: 'cctv_activos_orden',
+        ACTIVOS_RECORDAR: 'cctv_activos_recordar',
         ACTIVOS_COLLAPSED: 'cctv_act_collapsed',
-        PISOS_COLLAPSED:   'cctv_pisos_collapsed',
+        PISOS_COLLAPSED: 'cctv_pisos_collapsed',
     };
 
     // Formas de cámara (orden canónico)
@@ -39,25 +39,25 @@
 
     // Formas con etiqueta para UI
     const FORMAS_DEF = [
-        { key: 'domo',       label: 'Domo'        },
-        { key: 'bullet',     label: 'Bullet'      },
-        { key: 'turret',     label: 'Turret'      },
-        { key: 'minidomo',   label: 'Mini domo'   },
+        { key: 'domo', label: 'Domo' },
+        { key: 'bullet', label: 'Bullet' },
+        { key: 'turret', label: 'Turret' },
+        { key: 'minidomo', label: 'Mini domo' },
         { key: 'minibullet', label: 'Mini bullet' },
-        { key: 'domo-ptz',   label: 'Domo PTZ'    },
+        { key: 'domo-ptz', label: 'Domo PTZ' },
     ];
 
     // Estados de dispositivo con etiqueta para UI
     const ESTADOS_DEF = [
-        { key: 'produccion',  label: 'En producción', labelPlural: 'En producción' },
-        { key: 'disponible',  label: 'Disponible',    labelPlural: 'Disponibles'   },
-        { key: 'averiado',    label: 'Averiado',      labelPlural: 'Averiados'     },
-        { key: 'revisar',     label: 'En revisión',   labelPlural: 'A revisar'     },
-        { key: 'desafectado', label: 'Desafectado',   labelPlural: 'Desafectados'  },
+        { key: 'produccion', label: 'En producción', labelPlural: 'En producción' },
+        { key: 'disponible', label: 'Disponible', labelPlural: 'Disponibles' },
+        { key: 'averiado', label: 'Averiado', labelPlural: 'Averiados' },
+        { key: 'revisar', label: 'En revisión', labelPlural: 'A revisar' },
+        { key: 'desafectado', label: 'Desafectado', labelPlural: 'Desafectados' },
     ];
 
     // Lookup rápido estado → etiqueta singular/plural
-    const ESTADO_LABEL        = Object.fromEntries(ESTADOS_DEF.map(e => [e.key, e.label]));
+    const ESTADO_LABEL = Object.fromEntries(ESTADOS_DEF.map(e => [e.key, e.label]));
     const ESTADO_LABEL_PLURAL = Object.fromEntries(ESTADOS_DEF.map(e => [e.key, e.labelPlural]));
 
     // ════════════════════════════════════════════════════════════════════════════
@@ -521,13 +521,13 @@
     let _data = { dispositivos: [], grabadores: [], otros_prod: [] };
 
     // Caches de derived data — se invalidan en cada guardar()/cargar()
-    let _cacheAsignaciones   = null;
-    let _cacheDupMacs        = null;
+    let _cacheAsignaciones = null;
+    let _cacheDupMacs = null;
     let _cacheDupPatrimonios = null;
 
     function _invalidarCaches() {
-        _cacheAsignaciones   = null;
-        _cacheDupMacs        = null;
+        _cacheAsignaciones = null;
+        _cacheDupMacs = null;
         _cacheDupPatrimonios = null;
     }
 
@@ -537,8 +537,8 @@
             if (!raw) return;
             const d = S.safeParse(raw);
             _data.dispositivos = Array.isArray(d.dispositivos) ? d.dispositivos : [];
-            _data.grabadores   = Array.isArray(d.grabadores)   ? d.grabadores   : [];
-            _data.otros_prod   = Array.isArray(d.otros_prod)   ? d.otros_prod   : [];
+            _data.grabadores = Array.isArray(d.grabadores) ? d.grabadores : [];
+            _data.otros_prod = Array.isArray(d.otros_prod) ? d.otros_prod : [];
         } catch { _data = { dispositivos: [], grabadores: [], otros_prod: [] }; }
         _invalidarCaches();
     }
@@ -981,7 +981,12 @@
                     san.canales_data.forEach(cRem => {
                         const cLoc = loc.canales_data.find(c => c.canal === cRem.canal);
                         if (cLoc) {
-                            ['dispositivoId', 'descripcion', 'ip', 'puerto', 'edificio', 'piso', 'rack', 'comentarios'].forEach(k => {
+                            if (!cLoc.dispositivoId && cRem.dispositivoId) {
+                                const dispLocal = _data.dispositivos.find(d => d.id === cRem.dispositivoId);
+                                const inactivo = dispLocal && ['averiado', 'revisar', 'desafectado'].includes(dispLocal.estado);
+                                if (!inactivo) { cLoc.dispositivoId = cRem.dispositivoId; updated = true; }
+                            }
+                            ['descripcion', 'ip', 'puerto', 'edificio', 'piso', 'rack', 'comentarios'].forEach(k => {
                                 if (!cLoc[k] && cRem[k]) { cLoc[k] = cRem[k]; updated = true; }
                             });
                         }
@@ -1250,8 +1255,6 @@
                     if (resMerge.cGrabsUpd) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Grabadores a enriquecer</span><span class="gist-novedades-chip-count gist-novedades-chip-count--purple">~${resMerge.cGrabsUpd}</span></div>`);
                     if (resMerge.cOtrosAdd) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Otros disp. nuevos</span><span class="gist-novedades-chip-count">+${resMerge.cOtrosAdd}</span></div>`);
                     if (resMerge.cOtrosUpd) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Otros a enriquecer</span><span class="gist-novedades-chip-count gist-novedades-chip-count--purple">~${resMerge.cOtrosUpd}</span></div>`);
-                    if (resMerge.cOtrosAdd) msgs.push(`+${resMerge.cOtrosAdd} otros`);
-                    if (resMerge.cOtrosUpd) msgs.push(`~${resMerge.cOtrosUpd} otros`);
                     if (resMerge.cTipos) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Tipos Custom</span><span class="gist-novedades-chip-count">+${resMerge.cTipos}</span></div>`);
                     if (resMerge.cEdif) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Edificios</span><span class="gist-novedades-chip-count">+${resMerge.cEdif}</span></div>`);
                     detalle.innerHTML = chips.join('');
@@ -1293,9 +1296,9 @@
     // ════════════════════════════════════════════════════════════════════════════
     // § RENDER — funciones de renderizado (dashboard, activos, producción)
     // ════════════════════════════════════════════════════════════════════════════
-    let _filtrosPrevios        = null;
+    let _filtrosPrevios = null;
     let _estadoColapsadoPrevio = null;
-    let _estadoPisosPrevio     = null;
+    let _estadoPisosPrevio = null;
 
     function _calcIdsEnProd() {
         const { grabadores: grabs, otros_prod: otros = [] } = _data;
@@ -1314,11 +1317,11 @@
 
     // ── Estado del dashboard ──────────────────────────────────────────────────
     const _dash = {
-        tipoAbierto:        null,
-        tipoAbiertoPrevio:  null,
-        estadoAbierto:      null,
-        estadoAbiertoPrevio:null,
-        camarasVista:       'edificio',
+        tipoAbierto: null,
+        tipoAbiertoPrevio: null,
+        estadoAbierto: null,
+        estadoAbiertoPrevio: null,
+        camarasVista: 'edificio',
     };
 
     function _setCamarasVista(vista) {
@@ -1333,7 +1336,7 @@
     };
 
     // ── Estado de la vista activos ────────────────────────────────────────────
-    const _activosRecordarEstado = (() => {
+    let _activosRecordarEstado = (() => {
         try { return localStorage.getItem(LS.ACTIVOS_RECORDAR) === 'true'; } catch { return false; }
     })();
     const _activos = {
@@ -1734,9 +1737,8 @@
         const htmlLista = grabDatos.map(({ g, ocup, libre, pct, colorBarra }) => {
             return `<div class="dash-grab-row">
                     <div class="dash-grab-row-header">
-                        <span class="dash-grab-row-nombre">${esc(g.descripcion)}</span>
-                        <span class="badge badge-${g.tipo}-filled">${g.tipo.toUpperCase()}</span>
-                        <span class="dash-grab-row-ip">${g.ip ? esc(g.ip) : ''}</span>
+                        <span class="dash-grab-row-nombre">${esc(g.descripcion)}</span>                        
+                        ${g.ip ? `<span class="dash-grab-row-ip ip-copiable" data-copy="${esc(g.ip)}" title="Copiar IP">${esc(g.ip)}</span>` : `<span class="dash-grab-row-ip"></span>`}
                     </div>
                     <div class="dash-grab-row-stats">
                         <span>${ocup}/${g.canales_n} ocupados · ${libre} libres</span>
@@ -2105,7 +2107,7 @@
             return `<div class="sub-grupo-piso" data-floor-key="${esc(floorKey)}" style="margin-bottom: 0.5rem;">
                         <div class="grupo-piso-header" data-toggle-piso="${esc(floorKey)}" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:0.4rem 0.5rem;border-radius:var(--radius-sm);margin-bottom:0.25rem;">
                             <span class="section-label" style="margin:0;opacity:0.8;font-size:0.7rem;border-left:2px solid var(--c-orange);padding-left:0.5rem;">
-                                PISO: ${esc(p)} <span style="opacity:0.5;font-weight:normal;margin-left:0.3rem;">(${pisos[p].length} disp.)</span>
+                                PISO: ${esc(p)} <span style="font-weight:normal;margin-left:0.3rem;">(${pisos[p].length})</span>
                             </span>
                             <svg class="nvr-chevron" style="${isFloorCollapsed ? 'transform:rotate(-90deg);' : ''}width:14px;height:14px;stroke:var(--text-muted);" viewBox="0 0 24 24"><use href="#icon-chevron-down"/></svg>
                         </div>
@@ -2117,26 +2119,26 @@
     }
 
     function _toggleGrupoActivos(groupId) {
-            const col = _activos.collapsed;
-            const card = document.querySelector(`.grupo-activos-card[data-grupo="${CSS.escape(groupId)}"]`);
-            if (!card) return;
-            const grid = card.querySelector('.activos-grid-transition');
-            const chevron = card.querySelector('.nvr-chevron');
-            if (col.has(groupId)) {
-                col.delete(groupId);
-                grid.classList.remove('collapsed');
-                chevron.style.transform = '';
-                grid.style.maxHeight = grid.scrollHeight + 'px';
-                grid.addEventListener('transitionend', () => grid.style.maxHeight = '', { once: true });
-            } else {
-                col.add(groupId);
-                grid.style.maxHeight = grid.scrollHeight + 'px';
-                grid.getBoundingClientRect();
-                grid.classList.add('collapsed');
-                chevron.style.transform = 'rotate(-90deg)';
-                grid.style.maxHeight = '';
-            }
-            if (_guardarColapsados) _guardarColapsados();
+        const col = _activos.collapsed;
+        const card = document.querySelector(`.grupo-activos-card[data-grupo="${CSS.escape(groupId)}"]`);
+        if (!card) return;
+        const grid = card.querySelector('.activos-grid-transition');
+        const chevron = card.querySelector('.nvr-chevron');
+        if (col.has(groupId)) {
+            col.delete(groupId);
+            grid.classList.remove('collapsed');
+            chevron.style.transform = '';
+            grid.style.maxHeight = grid.scrollHeight + 'px';
+            grid.addEventListener('transitionend', () => grid.style.maxHeight = '', { once: true });
+        } else {
+            col.add(groupId);
+            grid.style.maxHeight = grid.scrollHeight + 'px';
+            grid.getBoundingClientRect();
+            grid.classList.add('collapsed');
+            chevron.style.transform = 'rotate(-90deg)';
+            grid.style.maxHeight = '';
+        }
+        if (_guardarColapsados) _guardarColapsados();
     }
 
     function renderActivos() {
@@ -2368,22 +2370,22 @@
 
     // ── Estado de edición activa ──────────────────────────────────────────────
     const _edicion = {
-        dispId:        null,
-        grabId:        null,
-        otroProdId:    null,
-        canalGrabId:   null,
-        canalN:        null,
-        snapshotDisp:  null,
-        snapshotGrab:  null,
+        dispId: null,
+        grabId: null,
+        otroProdId: null,
+        canalGrabId: null,
+        canalN: null,
+        snapshotDisp: null,
+        snapshotGrab: null,
         snapshotCanal: null,
         snapshotOtroProd: null,
         canalDesdeDispId: null,
         volverDesdeCanal: false,
         canalDispOcupados: new Set(),
         canalDispHighlight: -1,
-        edificiosOrigen:   'ajustes',
+        edificiosOrigen: 'ajustes',
         edificiosSnapForm: null,
-        estado:            '',
+        estado: '',
     };
     let _tabActual = (() => {
         try {
@@ -2394,7 +2396,7 @@
         } catch (_) { }
         return 'dashboard';
     })();
-    let _busqTimer    = null;
+    let _busqTimer = null;
     let _importarParsed = null;
 
     function _actualizarBotonesEstado(estadoActual) {
@@ -2436,6 +2438,7 @@
         { id: 'canal', label: 'Descripción' },
         { id: 'estado', label: 'Estado' },
         { id: 'ubicacion', label: 'Ubicación' },
+        { id: 'ip', label: 'Dirección IP' },
     ];
     const KEY_BUSQ = 'cctv_busq_activos';
 
@@ -2487,6 +2490,14 @@
                     const pisoOtro = (a.item.piso || '').trim();
                     if (edifOtro || pisoOtro) campos.push([edifOtro, pisoOtro].filter(Boolean).join(' ').toLowerCase());
                 }
+            });
+        }
+
+        if (_busqActivos.has('ip')) {
+            asigD.forEach(a => {
+                if (a.tipo === 'canal' && a.slot && a.slot.ip) campos.push(a.slot.ip.toLowerCase());
+                if (a.tipo === 'otro_prod' && a.item && a.item.ip) campos.push(a.item.ip.toLowerCase());
+                if (a.tipo === 'grabador' && a.grab && a.grab.ip) campos.push(a.grab.ip.toLowerCase());
             });
         }
 
@@ -3109,19 +3120,20 @@
 
                 };
                 MM.cerrar('modal-editar-grab');
-            } else if (origen === 'otro-prod') {
+            } else if (origen === 'nuevo-otro-prod' || origen === 'editar-otro-prod') {
+                const prefijo = origen;
                 _edicion.edificiosSnapForm = {
-                    dispositivoId: document.getElementById('sel-otro-prod-dispositivo').value || '',
-                    dispInput: document.getElementById('otro-prod-disp-input').value || '',
-                    descripcion: document.getElementById('otro-prod-descripcion').value || '',
-                    ip: document.getElementById('otro-prod-ip').value || '',
-                    puerto: document.getElementById('otro-prod-puerto').value || '',
-                    edificio: document.getElementById('otro-prod-edificio').value || '',
-                    piso: document.getElementById('otro-prod-piso').value || '',
-                    rack: document.getElementById('otro-prod-rack').value || '',
-                    comentarios: document.getElementById('otro-prod-comentarios').value || ''
+                    dispositivoId: document.getElementById(`sel-${prefijo}-dispositivo`).value || '',
+                    dispInput: document.getElementById(`${prefijo}-disp-input`).value || '',
+                    descripcion: document.getElementById(`${prefijo}-descripcion`).value || '',
+                    ip: document.getElementById(`${prefijo}-ip`).value || '',
+                    puerto: document.getElementById(`${prefijo}-puerto`).value || '',
+                    edificio: document.getElementById(`${prefijo}-edificio`).value || '',
+                    piso: document.getElementById(`${prefijo}-piso`).value || '',
+                    rack: document.getElementById(`${prefijo}-rack`).value || '',
+                    comentarios: document.getElementById(`${prefijo}-comentarios`).value || ''
                 };
-                MM.cerrar('modal-otro-prod');
+                MM.cerrar(`modal-${origen}`);
             } else {
                 MM.cerrar('modal-ajustes');
             }
@@ -3178,23 +3190,30 @@
                     }, 220);
                 }, 150);
             } else if (origen === 'editar-grab' && snap) {
-            } else if (origen === 'otro-prod' && snap) {
+            } else if ((origen === 'nuevo-otro-prod' || origen === 'editar-otro-prod') && snap) {
                 setTimeout(() => {
-                    if (_edicion.otroProdId) UI.abrirEditarOtroProd(_edicion.otroProdId);
-                    else UI.abrirNuevoOtroProd();
+                    if (origen === 'editar-otro-prod' && _edicion.otroProdId) {
+                        UI.abrirEditarOtroProd(_edicion.otroProdId);
+                    } else {
+                        UI.abrirNuevoOtroProd();
+                    }
 
                     setTimeout(() => {
-                        document.getElementById('sel-otro-prod-dispositivo').value = snap.dispositivoId;
-                        document.getElementById('otro-prod-disp-input').value = snap.dispInput;
-                        document.getElementById('otro-prod-descripcion').value = snap.descripcion;
-                        document.getElementById('otro-prod-ip').value = snap.ip;
-                        document.getElementById('otro-prod-puerto').value = snap.puerto;
-                        document.getElementById('otro-prod-piso').value = snap.piso;
-                        document.getElementById('otro-prod-rack').value = snap.rack;
-                        document.getElementById('otro-prod-comentarios').value = snap.comentarios;
-                        _poblarSelectEdificio('otro-prod-edificio', snap.edificio);
-                        const btnVerActivo = document.getElementById('btn-ver-activo-otro-prod');
-                        if (btnVerActivo) btnVerActivo.style.display = snap.dispositivoId ? '' : 'none';
+                        const prefijo = origen;
+                        document.getElementById(`sel-${prefijo}-dispositivo`).value = snap.dispositivoId;
+                        document.getElementById(`${prefijo}-disp-input`).value = snap.dispInput;
+                        document.getElementById(`${prefijo}-descripcion`).value = snap.descripcion;
+                        document.getElementById(`${prefijo}-ip`).value = snap.ip;
+                        document.getElementById(`${prefijo}-puerto`).value = snap.puerto;
+                        document.getElementById(`${prefijo}-piso`).value = snap.piso;
+                        document.getElementById(`${prefijo}-rack`).value = snap.rack;
+                        document.getElementById(`${prefijo}-comentarios`).value = snap.comentarios;
+                        _poblarSelectEdificio(`${prefijo}-edificio`, snap.edificio);
+                        
+                        if (prefijo === 'editar-otro-prod') {
+                            const btnVerActivo = document.getElementById('btn-ver-activo-otro-prod');
+                            if (btnVerActivo) btnVerActivo.style.display = snap.dispositivoId ? '' : 'none';
+                        }
                         _edicion.edificiosSnapForm = null;
                     }, 220);
                 }, 150);
@@ -3627,6 +3646,7 @@
                 }
             });
 
+            ModalLock.reset('modal-editar-disp');
             MM.abrir('modal-editar-disp', { onEscape: () => UI.cerrarModalEditarDispositivo() });
             const btnCerrarDisp = document.querySelector('#modal-editar-disp .btn-cancel');
             if (btnCerrarDisp) btnCerrarDisp.innerHTML = _edicion.volverDesdeCanal
@@ -3902,6 +3922,7 @@
                 dispositivoId: g.dispositivoId || '',
             };
 
+            ModalLock.reset('modal-editar-grab');
             MM.abrir('modal-editar-grab');
             const btnVerActivo = document.getElementById('btn-ver-activo-grab');
             if (btnVerActivo) btnVerActivo.style.display = g.dispositivoId ? '' : 'none';
@@ -4045,6 +4066,7 @@
             document.getElementById('canal-disp-dropdown').style.display = 'none';
             _edicion.canalDispHighlight = -1;
 
+            ModalLock.reset('modal-canal');
             MM.abrir('modal-canal', { onEscape: () => UI.cerrarModalCanal() });
 
             _edicion.snapshotCanal = {
@@ -4290,24 +4312,24 @@
             _edicion.canalGrabId = null; _edicion.canalN = null; _edicion.snapshotCanal = null;
         },
 
+        _limpiarFormOtroProd(prefijo) {
+            document.getElementById(`${prefijo}-descripcion`).value = '';
+            document.getElementById(`${prefijo}-ip`).value = '';
+            document.getElementById(`${prefijo}-puerto`).value = '';
+            _poblarSelectEdificio(`${prefijo}-edificio`, '');
+            document.getElementById(`${prefijo}-piso`).value = '';
+            document.getElementById(`${prefijo}-rack`).value = '';
+            document.getElementById(`${prefijo}-comentarios`).value = '';
+            document.getElementById(`sel-${prefijo}-dispositivo`).value = '';
+            document.getElementById(`${prefijo}-disp-input`).value = '';
+            document.getElementById(`${prefijo}-disp-input`).classList.remove('error');
+            document.getElementById(`${prefijo}-disp-dropdown`).style.display = 'none';
+        },
+
         abrirNuevoOtroProd() {
             _edicion.otroProdId = null;
             _edicion.snapshotOtroProd = null;
-            document.getElementById('otro-prod-descripcion').value = '';
-            document.getElementById('otro-prod-ip').value = '';
-            document.getElementById('otro-prod-puerto').value = '';
-            _poblarSelectEdificio('otro-prod-edificio', '');
-            document.getElementById('otro-prod-piso').value = '';
-            document.getElementById('otro-prod-rack').value = '';
-            document.getElementById('otro-prod-comentarios').value = '';
-            document.getElementById('sel-otro-prod-dispositivo').value = '';
-            document.getElementById('otro-prod-disp-input').value = '';
-            document.getElementById('otro-prod-disp-input').classList.remove('error');
-            document.getElementById('otro-prod-disp-dropdown').style.display = 'none';
-            document.getElementById('btn-ver-activo-otro-prod').style.display = 'none';
-            document.getElementById('btn-eliminar-otro-prod').style.display = 'none';
-            document.getElementById('otro-prod-grupo-superior').appendChild(document.getElementById('btn-cancelar-otro-prod'));
-            document.getElementById('otro-prod-grupo-inferior').style.display = 'none';
+            this._limpiarFormOtroProd('nuevo-otro-prod');
 
             const grabs = _data.grabadores;
             const idsOcupados = [
@@ -4317,25 +4339,28 @@
             ];
             _edicion.canalDispOcupados = new Set(idsOcupados);
 
-            document.getElementById('modal-otro-prod-titulo').textContent = 'Agregar a Producción';
-            MM.abrir('modal-otro-prod');
+            MM.abrir('modal-nuevo-otro-prod');
+        },
+
+        cerrarNuevoOtroProd() {
+            MM.cerrar('modal-nuevo-otro-prod');
         },
 
         abrirEditarOtroProd(id) {
             const o = (_data.otros_prod || []).find(x => x.id === id); if (!o) return;
             _edicion.otroProdId = id;
+            const prefijo = 'editar-otro-prod';
 
-            document.getElementById('modal-otro-prod-titulo').textContent = 'Editar Dispositivo';
-            document.getElementById('otro-prod-descripcion').value = o.descripcion || '';
-            document.getElementById('otro-prod-ip').value = o.ip || '';
-            document.getElementById('otro-prod-puerto').value = o.puerto || '';
-            _poblarSelectEdificio('otro-prod-edificio', o.edificio || '');
-            document.getElementById('otro-prod-piso').value = o.piso || '';
-            document.getElementById('otro-prod-rack').value = o.rack || '';
-            document.getElementById('otro-prod-comentarios').value = o.comentarios || '';
+            document.getElementById(`${prefijo}-descripcion`).value = o.descripcion || '';
+            document.getElementById(`${prefijo}-ip`).value = o.ip || '';
+            document.getElementById(`${prefijo}-puerto`).value = o.puerto || '';
+            _poblarSelectEdificio(`${prefijo}-edificio`, o.edificio || '');
+            document.getElementById(`${prefijo}-piso`).value = o.piso || '';
+            document.getElementById(`${prefijo}-rack`).value = o.rack || '';
+            document.getElementById(`${prefijo}-comentarios`).value = o.comentarios || '';
 
-            const hiddenSel = document.getElementById('sel-otro-prod-dispositivo');
-            const input = document.getElementById('otro-prod-disp-input');
+            const hiddenSel = document.getElementById(`sel-${prefijo}-dispositivo`);
+            const input = document.getElementById(`${prefijo}-disp-input`);
             input.classList.remove('error');
 
             hiddenSel.value = o.dispositivoId || '';
@@ -4345,11 +4370,9 @@
             } else {
                 input.value = '';
             }
-            document.getElementById('otro-prod-disp-dropdown').style.display = 'none';
+            document.getElementById(`${prefijo}-disp-dropdown`).style.display = 'none';
             document.getElementById('btn-ver-activo-otro-prod').style.display = o.dispositivoId ? '' : 'none';
-            document.getElementById('btn-eliminar-otro-prod').style.display = '';
-            document.getElementById('otro-prod-grupo-inferior').appendChild(document.getElementById('btn-cancelar-otro-prod'));
-            document.getElementById('otro-prod-grupo-inferior').style.display = '';
+
             const grabs = _data.grabadores;
             const idsOcupados = [
                 ...grabs.flatMap(g => g.canales_data.filter(c => c.dispositivoId).map(c => c.dispositivoId)),
@@ -4358,7 +4381,8 @@
             ];
             _edicion.canalDispOcupados = new Set(idsOcupados);
 
-            MM.abrir('modal-otro-prod');
+            ModalLock.reset('modal-editar-otro-prod');
+            MM.abrir('modal-editar-otro-prod');
 
             _edicion.snapshotOtroProd = {
                 dispositivoId: o.dispositivoId || '',
@@ -4372,15 +4396,15 @@
             };
         },
 
-        cerrarOtroProd() {
-            MM.cerrar('modal-otro-prod');
+        cerrarEditarOtroProd() {
+            MM.cerrar('modal-editar-otro-prod');
             _edicion.otroProdId = null;
             _edicion.snapshotOtroProd = null;
         },
 
-        guardarOtroProd() {
-            const dispId = document.getElementById('sel-otro-prod-dispositivo').value;
-            const dispInput = document.getElementById('otro-prod-disp-input');
+        guardarOtroProd(prefijo) {
+            const dispId = document.getElementById(`sel-${prefijo}-dispositivo`).value;
+            const dispInput = document.getElementById(`${prefijo}-disp-input`);
 
             if (!dispId) {
                 dispInput.classList.add('error');
@@ -4388,18 +4412,18 @@
                 return;
             }
             dispInput.classList.remove('error');
-            if (!validarCampoIP('otro-prod-ip')) return;
+            if (!validarCampoIP(`${prefijo}-ip`)) return;
 
             const datos = {
                 id: _edicion.otroProdId || S.genId(),
                 dispositivoId: dispId,
-                descripcion: document.getElementById('otro-prod-descripcion').value.trim(),
-                ip: document.getElementById('otro-prod-ip').value.trim(),
-                puerto: document.getElementById('otro-prod-puerto').value.trim(),
-                edificio: document.getElementById('otro-prod-edificio').value.trim(),
-                piso: S.normalizarPiso(document.getElementById('otro-prod-piso').value),
-                rack: document.getElementById('otro-prod-rack').value.trim(),
-                comentarios: document.getElementById('otro-prod-comentarios').value.trim(),
+                descripcion: document.getElementById(`${prefijo}-descripcion`).value.trim(),
+                ip: document.getElementById(`${prefijo}-ip`).value.trim(),
+                puerto: document.getElementById(`${prefijo}-puerto`).value.trim(),
+                edificio: document.getElementById(`${prefijo}-edificio`).value.trim(),
+                piso: S.normalizarPiso(document.getElementById(`${prefijo}-piso`).value),
+                rack: document.getElementById(`${prefijo}-rack`).value.trim(),
+                comentarios: document.getElementById(`${prefijo}-comentarios`).value.trim(),
             };
 
             historial.empujar(_edicion.otroProdId ? 'Editar dispositivo en producción' : 'Agregar dispositivo a producción');
@@ -4408,27 +4432,22 @@
 
             if (_edicion.otroProdId) {
                 const nuevoSnapOtro = {
-                    dispositivoId: datos.dispositivoId || '',
-                    descripcion: datos.descripcion || '',
-                    ip: datos.ip || '',
-                    puerto: datos.puerto || '',
-                    edificio: datos.edificio || '',
-                    piso: datos.piso || '',
-                    rack: datos.rack || '',
-                    comentarios: datos.comentarios || '',
+                    dispositivoId: datos.dispositivoId || '', descripcion: datos.descripcion || '', ip: datos.ip || '', puerto: datos.puerto || '', edificio: datos.edificio || '', piso: datos.piso || '', rack: datos.rack || '', comentarios: datos.comentarios || '',
                 };
                 if (JSON.stringify(nuevoSnapOtro) === JSON.stringify(_edicion.snapshotOtroProd)) {
-                    toast('Sin cambios', 'info'); MM.cerrar('modal-otro-prod'); _edicion.otroProdId = null; _edicion.snapshotOtroProd = null; return;
+                    toast('Sin cambios', 'info'); MM.cerrar('modal-editar-otro-prod'); _edicion.otroProdId = null; _edicion.snapshotOtroProd = null; return;
                 }
                 const idx = _data.otros_prod.findIndex(x => x.id === _edicion.otroProdId);
                 if (idx !== -1) _data.otros_prod[idx] = S.sanitizarOtroProd(datos);
                 toast('Actualizado', 'success');
+                MM.cerrar('modal-editar-otro-prod');
             } else {
                 _data.otros_prod.push(S.sanitizarOtroProd(datos));
                 toast('Agregado a producción', 'success');
+                MM.cerrar('modal-nuevo-otro-prod');
             }
 
-            guardar(); render(); MM.cerrar('modal-otro-prod');
+            guardar(); render();
         },
 
         async eliminarOtroProd() {
@@ -4439,15 +4458,14 @@
             historial.empujar('Quitar dispositivo de producción');
             _data.otros_prod = _data.otros_prod.filter(x => x.id !== _edicion.otroProdId);
 
-            guardar(); render(); MM.cerrar('modal-otro-prod');
+            guardar(); render(); MM.cerrar('modal-editar-otro-prod');
             toast('Quitado de producción', 'success');
         },
 
-        _otroProdDispFiltrar() {
-
-            const input = document.getElementById('otro-prod-disp-input');
-            const hidden = document.getElementById('sel-otro-prod-dispositivo');
-            const dd = document.getElementById('otro-prod-disp-dropdown');
+        _otroProdDispFiltrar(prefijo) {
+            const input = document.getElementById(`${prefijo}-disp-input`);
+            const hidden = document.getElementById(`sel-${prefijo}-dispositivo`);
+            const dd = document.getElementById(`${prefijo}-disp-dropdown`);
             input.classList.remove('error');
 
             const query = input.value.trim().toLowerCase();
@@ -4486,37 +4504,33 @@
                     hidden.value = el.dataset.id;
                     input.value = el.dataset.mac || el.dataset.id;
                     dd.style.display = 'none';
-                    document.getElementById('btn-ver-activo-otro-prod').style.display = '';
+                    if(prefijo === 'editar-otro-prod') document.getElementById('btn-ver-activo-otro-prod').style.display = '';
                 });
             });
         },
 
-        _otroProdDispKeydown(e) {
-            const dd = document.getElementById('otro-prod-disp-dropdown');
+        _otroProdDispKeydown(e, prefijo) {
+            const dd = document.getElementById(`${prefijo}-disp-dropdown`);
             if (dd.style.display === 'none') return;
             const items = [...dd.querySelectorAll('.canal-disp-item:not(.ocupado)')];
             if (!items.length) return;
 
             if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                _edicion.canalDispHighlight = Math.min(_edicion.canalDispHighlight + 1, items.length - 1);
+                e.preventDefault(); _edicion.canalDispHighlight = Math.min(_edicion.canalDispHighlight + 1, items.length - 1);
             } else if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                _edicion.canalDispHighlight = Math.max(_edicion.canalDispHighlight - 1, 0);
+                e.preventDefault(); _edicion.canalDispHighlight = Math.max(_edicion.canalDispHighlight - 1, 0);
             } else if (e.key === 'Enter') {
                 e.preventDefault();
                 if (_edicion.canalDispHighlight >= 0) {
                     const el = items[_edicion.canalDispHighlight];
-                    document.getElementById('sel-otro-prod-dispositivo').value = el.dataset.id;
-                    document.getElementById('otro-prod-disp-input').value = el.dataset.mac || el.dataset.id;
+                    document.getElementById(`sel-${prefijo}-dispositivo`).value = el.dataset.id;
+                    document.getElementById(`${prefijo}-disp-input`).value = el.dataset.mac || el.dataset.id;
                     dd.style.display = 'none';
-                    document.getElementById('btn-ver-activo-otro-prod').style.display = '';
+                    if(prefijo === 'editar-otro-prod') document.getElementById('btn-ver-activo-otro-prod').style.display = '';
                 }
                 return;
             } else if (e.key === 'Escape') {
-                dd.style.display = 'none';
-                _edicion.canalDispHighlight = -1;
-                return;
+                dd.style.display = 'none'; _edicion.canalDispHighlight = -1; return;
             } else { return; }
 
             items.forEach((el, i) => el.classList.toggle('highlighted', i === _edicion.canalDispHighlight));
@@ -4524,12 +4538,12 @@
         },
 
         verActivoDesdeOtroProd() {
-            const dispId = document.getElementById('sel-otro-prod-dispositivo').value;
+            const dispId = document.getElementById('sel-editar-otro-prod-dispositivo').value;
             if (!dispId) return;
             _edicion.volverDesdeCanal = true;
             _edicion.canalGrabId = 'OTRO_PROD';
             _edicion.canalN = _edicion.otroProdId;
-            MM.cerrar('modal-otro-prod');
+            MM.cerrar('modal-editar-otro-prod');
             setTimeout(() => UI.abrirEditarDispositivo(dispId), 180);
         },
 
@@ -4737,6 +4751,9 @@
         function _validarEstadoPiso() {
             if (!inputPiso) return;
 
+            // Si el modal está bloqueado (edificio select disabled), no alterar el estado del piso
+            if (sel.disabled) return;
+
             const sinEdificio = !sel.value || sel.value === '__agregar__';
             inputPiso.disabled = sinEdificio;
 
@@ -4786,7 +4803,8 @@
                 let origen = 'canal';
                 if (selectId.startsWith('nuevo-grab')) origen = 'nuevo-grab';
                 else if (selectId.startsWith('editar-grab')) origen = 'editar-grab';
-                else if (selectId.startsWith('otro-prod')) origen = 'otro-prod';
+                else if (selectId.startsWith('nuevo-otro-prod')) origen = 'nuevo-otro-prod';
+                    else if (selectId.startsWith('editar-otro-prod')) origen = 'editar-otro-prod';
                 UI.abrirEdificios(origen);
             } else {
                 seleccionado = sel.value;
@@ -4860,10 +4878,17 @@
             _edicion.canalDispHighlight = -1;
         }
 
-        const cbOtro = document.getElementById('otro-prod-disp-combobox');
-        if (cbOtro && !cbOtro.contains(e.target)) {
-            const ddOtro = document.getElementById('otro-prod-disp-dropdown');
-            if (ddOtro) ddOtro.style.display = 'none';
+        const cbNuevoOtro = document.querySelector('#modal-nuevo-otro-prod .combobox-wrap');
+        if (cbNuevoOtro && !cbNuevoOtro.contains(e.target)) {
+            const ddNuevoOtro = document.getElementById('nuevo-otro-prod-disp-dropdown');
+            if (ddNuevoOtro) ddNuevoOtro.style.display = 'none';
+            _edicion.canalDispHighlight = -1;
+        }
+
+        const cbEditarOtro = document.querySelector('#modal-editar-otro-prod .combobox-wrap');
+        if (cbEditarOtro && !cbEditarOtro.contains(e.target)) {
+            const ddEditarOtro = document.getElementById('editar-otro-prod-disp-dropdown');
+            if (ddEditarOtro) ddEditarOtro.style.display = 'none';
             _edicion.canalDispHighlight = -1;
         }
 
@@ -4912,7 +4937,8 @@
                     'modal-nuevo-grab': () => UI.guardarNuevoGrabador(),
                     'modal-editar-grab': () => UI.guardarEdicionGrabador(),
                     'modal-canal': () => UI.guardarAsignacionCanal(),
-                    'modal-otro-prod': () => UI.guardarOtroProd(),
+                    'modal-nuevo-otro-prod': () => UI.guardarOtroProd('nuevo-otro-prod'),
+                    'modal-editar-otro-prod': () => UI.guardarOtroProd('editar-otro-prod'),
                     'modal-tipos-dispositivo': () => UI.agregarTipoCustom(),
                     'modal-edificios': () => UI.agregarEdificio(),
                     'modal-confirmar': () => document.getElementById('modal-confirmar-ok')?.click(),
@@ -5252,17 +5278,28 @@
         // Scroll top
         on('btn-scroll-top', 'click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
-        // Modal otro-prod
-        on('otro-prod-disp-input', 'input', () => UI._otroProdDispFiltrar());
-        on('otro-prod-disp-input', 'focus', () => UI._otroProdDispFiltrar());
-        on('otro-prod-disp-input', 'keydown', (e) => UI._otroProdDispKeydown(e));
+        // Modal nuevo otro-prod
+        on('nuevo-otro-prod-disp-input', 'input', () => UI._otroProdDispFiltrar('nuevo-otro-prod'));
+        on('nuevo-otro-prod-disp-input', 'focus', () => UI._otroProdDispFiltrar('nuevo-otro-prod'));
+        on('nuevo-otro-prod-disp-input', 'keydown', (e) => UI._otroProdDispKeydown(e, 'nuevo-otro-prod'));
+        on('nuevo-otro-prod-piso', 'input', () => UI._pisoFiltrar(document.getElementById('nuevo-otro-prod-piso')));
+        document.querySelector('#modal-nuevo-otro-prod .btn-edit')
+            ?.addEventListener('click', () => UI.guardarOtroProd('nuevo-otro-prod'));
+        document.querySelector('#modal-nuevo-otro-prod .btn-cancel')
+            ?.addEventListener('click', () => UI.cerrarNuevoOtroProd());
+
+        // Modal editar otro-prod
+        on('editar-otro-prod-disp-input', 'input', () => UI._otroProdDispFiltrar('editar-otro-prod'));
+        on('editar-otro-prod-disp-input', 'focus', () => UI._otroProdDispFiltrar('editar-otro-prod'));
+        on('editar-otro-prod-disp-input', 'keydown', (e) => UI._otroProdDispKeydown(e, 'editar-otro-prod'));
         on('btn-ver-activo-otro-prod', 'click', () => UI.verActivoDesdeOtroProd());
-        on('otro-prod-piso', 'input', () => UI._pisoFiltrar(document.getElementById('otro-prod-piso')));
-        document.querySelector('#modal-otro-prod .btn-edit')
-            ?.addEventListener('click', () => UI.guardarOtroProd());
-        on('btn-eliminar-otro-prod', 'click', () => UI.eliminarOtroProd());
-        document.querySelector('#btn-cancelar-otro-prod')
-            ?.addEventListener('click', () => UI.cerrarOtroProd());
+        on('editar-otro-prod-piso', 'input', () => UI._pisoFiltrar(document.getElementById('editar-otro-prod-piso')));
+        document.querySelector('#modal-editar-otro-prod .btn-edit')
+            ?.addEventListener('click', () => UI.guardarOtroProd('editar-otro-prod'));
+        document.querySelector('#modal-editar-otro-prod .btn-delete')
+            ?.addEventListener('click', () => UI.eliminarOtroProd());
+        document.querySelector('#modal-editar-otro-prod .btn-cancel')
+            ?.addEventListener('click', () => UI.cerrarEditarOtroProd());
 
         // Modal nuevo dispositivo
         on('nuevo-disp-tipo', 'change', () => UI.onDispTipoChange('nuevo-disp'));
@@ -5355,6 +5392,114 @@
     }
 
     // ════════════════════════════════════════════════════════════════════════════
+    // § MODAL LOCK — bloqueo de edición en modales de editar
+    // ════════════════════════════════════════════════════════════════════════════
+    const ModalLock = (() => {
+        // Campos y botones bloqueables por modal
+        const LOCK_CFG = {
+            'modal-editar-disp': {
+                inputs: ['editar-disp-tipo', 'editar-disp-forma', 'editar-disp-canales', 'editar-disp-marca',
+                    'editar-disp-modelo', 'editar-disp-mac', 'editar-disp-serial', 'editar-disp-patrimonio', 'editar-disp-firmware'],
+                btns: [
+                    () => document.querySelector('#modal-editar-disp .btn-edit'),
+                    () => document.querySelector('#modal-editar-disp .btn-delete'),
+                    () => document.getElementById('btn-estado-averiado'),
+                    () => document.getElementById('btn-estado-revisar'),
+                    () => document.getElementById('btn-estado-desafectado'),
+                ],
+                lockBtn: 'btn-lock-editar-disp',
+            },
+            'modal-editar-grab': {
+                inputs: ['editar-grab-nombre', 'editar-grab-dispositivo-id', 'editar-grab-rack',
+                    'editar-grab-puerto', 'editar-grab-edificio', 'editar-grab-piso', 'editar-grab-ip', 'editar-grab-comentarios'],
+                btns: [
+                    () => document.querySelector('#modal-editar-grab .btn-edit'),
+                    () => document.querySelector('#modal-editar-grab .btn-delete'),
+                ],
+                lockBtn: 'btn-lock-editar-grab',
+            },
+            'modal-canal': {
+                inputs: ['canal-disp-input', 'canal-descripcion', 'canal-ip', 'canal-puerto',
+                    'canal-edificio', 'canal-piso', 'canal-rack', 'canal-comentarios'],
+                btns: [
+                    () => document.querySelector('#modal-canal .btn-edit'),
+                    () => document.querySelector('#modal-canal .btn-delete'),
+                ],
+                lockBtn: 'btn-lock-canal',
+            },            
+            'modal-editar-otro-prod': {
+                inputs: ['editar-otro-prod-descripcion', 'editar-otro-prod-disp-input', 'editar-otro-prod-ip', 'editar-otro-prod-puerto',
+                    'editar-otro-prod-edificio', 'editar-otro-prod-piso', 'editar-otro-prod-rack', 'editar-otro-prod-comentarios'],
+                btns: [
+                    () => document.querySelector('#modal-editar-otro-prod .btn-edit'),
+                    () => document.querySelector('#modal-editar-otro-prod .btn-delete'),
+                ],
+                lockBtn: 'btn-lock-editar-otro-prod',
+            },
+        };
+
+        const _locked = {
+            'modal-editar-disp': true,
+            'modal-editar-grab': true,
+            'modal-canal': true,
+            'modal-editar-otro-prod': true, // Actualizado
+        };
+
+        function _aplicar(modalId) {
+            const cfg = LOCK_CFG[modalId];
+            if (!cfg) return;
+            const bloqueado = _locked[modalId];
+
+            cfg.inputs.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.disabled = bloqueado;
+            });
+            cfg.btns.forEach(getFn => {
+                const el = getFn();
+                if (el) el.disabled = bloqueado;
+            });
+
+            const btnLock = document.getElementById(cfg.lockBtn);
+            if (btnLock) {
+                btnLock.title = bloqueado ? 'Desbloquear edición' : 'Bloquear edición';
+                btnLock.classList.toggle('btn-lock--open', !bloqueado);
+                // rota el arco del candado via CSS cuando está abierto
+                const shackle = btnLock.querySelector('.icon-lock-shackle');
+                if (shackle) shackle.style.transform = bloqueado ? '' : 'translateY(-3px)';
+            }
+        }
+
+        function toggle(modalId) {
+            if (!(_locked[modalId] !== undefined)) return;
+            _locked[modalId] = !_locked[modalId];
+            _aplicar(modalId);
+        }
+
+        // Resetea a bloqueado y aplica — llamar al abrir cada modal
+        function reset(modalId) {
+            if (_locked[modalId] !== undefined) {
+                _locked[modalId] = true;
+                _aplicar(modalId);
+            }
+        }
+
+        function bindBtn(modalId) {
+            const cfg = LOCK_CFG[modalId];
+            if (!cfg) return;
+            const btn = document.getElementById(cfg.lockBtn);
+            if (btn) btn.addEventListener('click', (e) => { e.stopPropagation(); toggle(modalId); });
+        }
+
+        function init() {
+            Object.keys(LOCK_CFG).forEach(modalId => {
+                bindBtn(modalId);
+            });
+        }
+
+        return { reset, init };
+    })();
+
+    // ════════════════════════════════════════════════════════════════════════════
     // § INIT — arranque de la aplicación
     // ════════════════════════════════════════════════════════════════════════════
     TABS.forEach(t => {
@@ -5372,6 +5517,7 @@
     cargar();
     render();
 
+    ModalLock.init();
     GistSync.init();
     GistSync.verificarAlAbrir();
 
