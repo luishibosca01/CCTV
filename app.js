@@ -1,17 +1,22 @@
-(function () {
-    try {
-
-        var t = localStorage.getItem('cctv_tema');
-        if (t === 'true' || t === null) document.body.classList.add('dark-mode');
-
-        var saved = JSON.parse(localStorage.getItem('cctv_tab') || 'null');
-        var tab = (saved && saved.tab && (Date.now() - saved.ts) < 3600000) ? saved.tab : 'dashboard';
-        document.body.setAttribute('data-tab-inicial', tab);
-    } catch (e) { }
-})();
 (() => {
     'use strict';
 
+    // ════════════════════════════════════════════════════════════════════════════
+    // § BOOT — dark-mode y tab inicial (síncrono, antes del parse completo)
+    // ════════════════════════════════════════════════════════════════════════════
+    ;(() => {
+        try {
+            const t = localStorage.getItem('cctv_tema');
+            if (t === 'true' || t === null) document.body.classList.add('dark-mode');
+            const saved = JSON.parse(localStorage.getItem('cctv_tab') || 'null');
+            const tab = (saved && saved.tab && (Date.now() - saved.ts) < 3600000) ? saved.tab : 'dashboard';
+            document.body.setAttribute('data-tab-inicial', tab);
+        } catch (_) { }
+    })();
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // § UTILIDADES / SCHEMA (S) — sanitización, validación, tipos, edificios
+    // ════════════════════════════════════════════════════════════════════════════
     const S = (() => {
         const MAX_JSON = 4 * 1024 * 1024;
         const SCHEMA_V = 1;
@@ -329,6 +334,10 @@
         };
     })();
 
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // § MODAL MANAGER (MM) — apertura/cierre de modales, Escape, click-fuera
+    // ════════════════════════════════════════════════════════════════════════════
     const MM = (() => {
         let _mdDown = false;
         const _onCerrar = {};
@@ -400,6 +409,10 @@
         return { abrir, cerrar, cerrarTodos, cerrarTop };
     })();
 
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // § NOTIFICACIONES — toast queue y modal de confirmación
+    // ════════════════════════════════════════════════════════════════════════════
     function confirmarModal(texto, labelOk = 'Eliminar') {
         return new Promise(resolve => {
             document.getElementById('modal-confirmar-texto').textContent = texto;
@@ -455,6 +468,10 @@
         }, 3000);
     }
 
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // § STORE — datos en memoria, persistencia localStorage
+    // ════════════════════════════════════════════════════════════════════════════
     const KEY = 'cctv_data_v1';
     let _data = { dispositivos: [], grabadores: [], otros_prod: [] };
 
@@ -478,14 +495,9 @@
         catch { toast('Error al guardar (almacenamiento lleno)', 'error'); return false; }
     }
 
-    function _sanDisp(d, extraTipos = {}) {
-        return S.sanitizarDisp(d, extraTipos);
-    }
-
-    function _sanGrab(g) {
-        return S.sanitizarGrab(g);
-    }
-
+    // ════════════════════════════════════════════════════════════════════════════
+    // § HISTORIAL — undo/redo stack
+    // ════════════════════════════════════════════════════════════════════════════
     const historial = (() => {
         const MAX = 30;
         let _pasado = [];
@@ -582,6 +594,10 @@
         }
     });
 
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // § HELPERS — esc, validación de campos, utilidades de render
+    // ════════════════════════════════════════════════════════════════════════════
     function esc(s) {
         return s == null ? '' : String(s)
             .replace(/&/g, '&amp;').replace(/</g, '&lt;')
@@ -620,6 +636,10 @@
         return true;
     }
 
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // § GIST SYNC — sincronización con GitHub Gist
+    // ════════════════════════════════════════════════════════════════════════════
     const GistSync = (() => {
         const CFG_KEY = 'cctv_gist_cfg';
         const FILENAME = 'cctv_data.json';
@@ -775,8 +795,8 @@
         }
 
         async function _generarPayload() {
-            const disps = _data.dispositivos.map(_sanDisp).filter(Boolean);
-            const grabs = _data.grabadores.map(_sanGrab).filter(Boolean);
+            const disps = _data.dispositivos.map(d => S.sanitizarDisp(d)).filter(Boolean);
+            const grabs = _data.grabadores.map(g => S.sanitizarGrab(g)).filter(Boolean);
             const otros = (_data.otros_prod || []).map(S.sanitizarOtroProd).filter(Boolean);
             const tiposCustom = {};
             Object.entries(S.TIPOS).forEach(([k, v]) => {
@@ -875,7 +895,7 @@
             const mapO = new Map((_data.otros_prod || []).map(o => [o.id, o]));
 
             (remoto.dispositivos || []).forEach(d => {
-                const san = d._sanitized ? d : _sanDisp(d, remoto.tiposCustom || {});
+                const san = d._sanitized ? d : S.sanitizarDisp(d, remoto.tiposCustom || {});
                 if (!san) return;
                 if (!mapD.has(san.id)) {
                     _data.dispositivos.push(san); mapD.set(san.id, san); cDispsAdd++;
@@ -890,7 +910,7 @@
             });
 
             (remoto.grabadores || []).forEach(g => {
-                const san = g._sanitized ? g : _sanGrab(g);
+                const san = g._sanitized ? g : S.sanitizarGrab(g);
                 if (!san) return;
                 if (!mapG.has(san.id)) {
                     _data.grabadores.push(san); mapG.set(san.id, san); cGrabsAdd++;
@@ -1211,6 +1231,23 @@
         return { subir, bajar, subirAuto, verificarAlAbrir, toggleToken, toggleAuto, guardarConfig, poblarModal, init, actualizarBotonesAjustes: _actualizarBotonesAjustes, _generarPayload, _combinarEntidades };
     })();
 
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // § RENDER — funciones de renderizado (dashboard, activos, producción)
+    // ════════════════════════════════════════════════════════════════════════════
+    let _filtrosPrevios        = null;
+    let _estadoColapsadoPrevio = null;
+    let _estadoPisosPrevio     = null;
+
+    function _calcIdsEnProd() {
+        const { grabadores: grabs, otros_prod: otros = [] } = _data;
+        return new Set([
+            ...grabs.flatMap(g => g.canales_data.filter(c => c.dispositivoId).map(c => c.dispositivoId)),
+            ...grabs.filter(g => g.dispositivoId).map(g => g.dispositivoId),
+            ...otros.filter(o => o.dispositivoId).map(o => o.dispositivoId),
+        ]);
+    }
+
     function render() {
         renderDashboard();
         renderActivos();
@@ -1223,17 +1260,13 @@
     let _dashEstadoAbiertoPrevio = null;
     let _dashCamarasVista = 'edificio';
 
-    window._setCamarasVista = function (vista) {
+    function _setCamarasVista(vista) {
         if (_dashCamarasVista === vista) return;
         _dashCamarasVista = vista;
 
         const disps = _data.dispositivos;
         const grabs = _data.grabadores;
-        const idsEnProd = new Set([
-            ...grabs.flatMap(g => g.canales_data.filter(c => c.dispositivoId).map(c => c.dispositivoId)),
-            ...grabs.filter(g => g.dispositivoId).map(g => g.dispositivoId),
-            ...(_data.otros_prod || []).filter(o => o.dispositivoId).map(o => o.dispositivoId)
-        ]);
+        const idsEnProd = _calcIdsEnProd();
 
         _renderResumenCamaras(disps, grabs, idsEnProd);
     };
@@ -1248,9 +1281,9 @@
 
     let _activosRecordarEstado = (() => { try { return localStorage.getItem('cctv_activos_recordar') === 'true'; } catch { return false; } })();
 
-    window.UI = window.UI || {};
+    // (UI state props se añaden directamente al objeto UI abajo)
 
-    window.UI._activosCollapsed = (() => {
+    let _activosCollapsed = (() => {
         if (_activosRecordarEstado) {
             try {
                 const saved = JSON.parse(localStorage.getItem('cctv_act_collapsed'));
@@ -1260,7 +1293,7 @@
         return new Set();
     })();
 
-    window.UI._pisosCollapsed = (() => {
+    let _pisosCollapsed = (() => {
         if (_activosRecordarEstado) {
             try {
                 const saved = JSON.parse(localStorage.getItem('cctv_pisos_collapsed'));
@@ -1270,17 +1303,17 @@
         return new Set();
     })();
 
-    window.UI._guardarColapsados = function () {
+    function _guardarColapsados() {
         if (_activosRecordarEstado) {
             try {
-                localStorage.setItem('cctv_act_collapsed', JSON.stringify([...window.UI._activosCollapsed]));
-                localStorage.setItem('cctv_pisos_collapsed', JSON.stringify([...window.UI._pisosCollapsed]));
+                localStorage.setItem('cctv_act_collapsed', JSON.stringify([..._activosCollapsed]));
+                localStorage.setItem('cctv_pisos_collapsed', JSON.stringify([..._pisosCollapsed]));
             } catch { }
         }
     };
 
-    window.UI._togglePisoActivos = function (floorKey) {
-        const col = window.UI._pisosCollapsed;
+    function _togglePisoActivos(floorKey) {
+        const col = _pisosCollapsed;
         const floorContainer = document.querySelector(`.sub-grupo-piso[data-floor-key="${CSS.escape(floorKey)}"]`);
         if (!floorContainer) return;
 
@@ -1301,7 +1334,7 @@
             if (chevron) chevron.style.transform = 'rotate(-90deg)';
             grid.style.maxHeight = '';
         }
-        if (window.UI._guardarColapsados) window.UI._guardarColapsados();
+        if (_guardarColapsados) _guardarColapsados();
     };
 
     function _estadosDeDisps(dispsDelTipo, idsEnProd) {
@@ -1316,32 +1349,24 @@
         return res;
     }
 
-    window._toggleTipoDetalle = function (tipoKey) {
+    function _toggleTipoDetalle(tipoKey) {
         if (_dashTipoAbierto !== tipoKey) _dashEstadoAbierto = null;
         _dashTipoAbierto = _dashTipoAbierto === tipoKey ? null : tipoKey;
 
         const disps = _data.dispositivos;
         const grabs = _data.grabadores;
-        const idsEnProd = new Set([
-            ...grabs.flatMap(g => g.canales_data.filter(c => c.dispositivoId).map(c => c.dispositivoId)),
-            ...grabs.filter(g => g.dispositivoId).map(g => g.dispositivoId),
-            ...(_data.otros_prod || []).filter(o => o.dispositivoId).map(o => o.dispositivoId)
-        ]);
+        const idsEnProd = _calcIdsEnProd();
         _renderResumenGeneral(disps, idsEnProd);
     };
 
-    window._toggleEstadoDetalle = function (estadoKey) {
+    function _toggleEstadoDetalle(estadoKey) {
         if (_dashTipoAbierto !== 'camara') return;
 
         _dashEstadoAbierto = _dashEstadoAbierto === estadoKey ? null : estadoKey;
 
         const disps = _data.dispositivos;
         const grabs = _data.grabadores;
-        const idsEnProd = new Set([
-            ...grabs.flatMap(g => g.canales_data.filter(c => c.dispositivoId).map(c => c.dispositivoId)),
-            ...grabs.filter(g => g.dispositivoId).map(g => g.dispositivoId),
-            ...(_data.otros_prod || []).filter(o => o.dispositivoId).map(o => o.dispositivoId)
-        ]);
+        const idsEnProd = _calcIdsEnProd();
         _renderResumenGeneral(disps, idsEnProd);
     };
 
@@ -1872,11 +1897,7 @@
         _inyectarStaggerChips();
         const disps = _data.dispositivos;
         const grabs = [..._data.grabadores].sort((a, b) => (a.descripcion || '').localeCompare(b.descripcion || ''));
-        const idsEnProd = new Set([
-            ...grabs.flatMap(g => g.canales_data.filter(c => c.dispositivoId).map(c => c.dispositivoId)),
-            ...grabs.filter(g => g.dispositivoId).map(g => g.dispositivoId),
-            ...(_data.otros_prod || []).filter(o => o.dispositivoId).map(o => o.dispositivoId)
-        ]);
+        const idsEnProd = _calcIdsEnProd();
         _renderResumenGeneral(disps, idsEnProd);
         _renderResumenGrabadores(grabs);
         _renderResumenCamaras(disps, grabs, idsEnProd);
@@ -2007,7 +2028,7 @@
 
         return `<div class="dispositivo-item tipo-${esc(d.tipo)} estado-${estadoEfectivo} anim-in" data-disp-id="${esc(d.id)}">
                     <div class="dispositivo-info">
-                        <div class="dispositivo-nombre">${tc.emoji} ${esc(titulo)} <span class="sep-muted">-</span> ${tipoBadgeLabel}</div>
+                        <div class="dispositivo-nombre">${tc.emoji} ${tipoBadgeLabel}<span class="sep-muted">-</span>${esc(titulo)} </div>
                         <div class="dispositivo-meta">${d.modelo ? `<span>${esc(d.modelo)}</span>` : ''}</div>
                         ${linea3Parts.length ? `<div class="disp-linea3">${linea3Parts.join(' · ')}</div>` : ''}
                     </div>${derechaHtml}</div>`;
@@ -2030,7 +2051,7 @@
 
         return sortedPisos.map(p => {
             const floorKey = `${gLabel}|${p}`;
-            const isFloorCollapsed = window.UI._pisosCollapsed.has(floorKey);
+            const isFloorCollapsed = _pisosCollapsed.has(floorKey);
             return `<div class="sub-grupo-piso" data-floor-key="${esc(floorKey)}" style="margin-bottom: 0.5rem;">
                         <div class="grupo-piso-header" data-toggle-piso="${esc(floorKey)}" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:0.4rem 0.5rem;border-radius:var(--radius-sm);margin-bottom:0.25rem;">
                             <span class="section-label" style="margin:0;opacity:0.8;font-size:0.7rem;border-left:2px solid var(--c-orange);padding-left:0.5rem;">
@@ -2045,9 +2066,8 @@
         }).join('');
     }
 
-    if (!window.UI._toggleGrupoActivos) {
-        window.UI._toggleGrupoActivos = function (groupId) {
-            const col = window.UI._activosCollapsed;
+    function _toggleGrupoActivos(groupId) {
+            const col = _activosCollapsed;
             const card = document.querySelector(`.grupo-activos-card[data-grupo="${CSS.escape(groupId)}"]`);
             if (!card) return;
             const grid = card.querySelector('.activos-grid-transition');
@@ -2066,8 +2086,7 @@
                 chevron.style.transform = 'rotate(-90deg)';
                 grid.style.maxHeight = '';
             }
-            if (window.UI._guardarColapsados) window.UI._guardarColapsados();
-        };
+            if (_guardarColapsados) _guardarColapsados();
     }
 
     function renderActivos() {
@@ -2141,7 +2160,7 @@
         let html = ``;
 
         Object.entries(grupos).forEach(([gLabel, items]) => {
-            const isCollapsed = window.UI._activosCollapsed.has(gLabel);
+            const isCollapsed = _activosCollapsed.has(gLabel);
             const itemsHtml = _activosOrden === 'edificio-piso'
                 ? _renderSubgruposPiso(items, gLabel, asignaciones, colClass, renderItem)
                 : `<div class="${colClass}">${items.map(renderItem).join('')}</div>`;
@@ -2164,9 +2183,9 @@
                 const item = e.target.closest('.dispositivo-item[data-disp-id]');
                 if (item) { UI.abrirEditarDispositivo(item.dataset.dispId); return; }
                 const headerGrupo = e.target.closest('.grupo-activos-header[data-toggle-grupo]');
-                if (headerGrupo) { UI._toggleGrupoActivos(headerGrupo.dataset.toggleGrupo); return; }
+                if (headerGrupo) { _toggleGrupoActivos(headerGrupo.dataset.toggleGrupo); return; }
                 const headerPiso = e.target.closest('.grupo-piso-header[data-toggle-piso]');
-                if (headerPiso) { UI._togglePisoActivos(headerPiso.dataset.togglePiso); }
+                if (headerPiso) { _togglePisoActivos(headerPiso.dataset.togglePiso); }
             });
         }
     }
@@ -2489,7 +2508,7 @@
     }
 
     function _forzarFiltros(...ids) {
-        if (!window.UI._filtrosPrevios) window.UI._filtrosPrevios = new Set(_busqActivos);
+        if (!_filtrosPrevios) _filtrosPrevios = new Set(_busqActivos);
         _busqActivos.clear();
         ids.forEach(id => _busqActivos.add(id));
         _guardarBusqActivos();
@@ -2497,27 +2516,27 @@
     }
 
     function _restaurarColapsos() {
-        if (window.UI._estadoColapsadoPrevio) {
-            window.UI._activosCollapsed = new Set(window.UI._estadoColapsadoPrevio);
-            window.UI._estadoColapsadoPrevio = null;
+        if (_estadoColapsadoPrevio) {
+            _activosCollapsed = new Set(_estadoColapsadoPrevio);
+            _estadoColapsadoPrevio = null;
         }
-        if (window.UI._estadoPisosPrevio) {
-            window.UI._pisosCollapsed = new Set(window.UI._estadoPisosPrevio);
-            window.UI._estadoPisosPrevio = null;
+        if (_estadoPisosPrevio) {
+            _pisosCollapsed = new Set(_estadoPisosPrevio);
+            _estadoPisosPrevio = null;
         }
     }
 
     function _expandirTodosLosGrupos() {
-        if (!window.UI._activosCollapsed) window.UI._activosCollapsed = new Set();
-        if (!window.UI._pisosCollapsed) window.UI._pisosCollapsed = new Set();
-        if (!window.UI._estadoColapsadoPrevio) {
-            window.UI._estadoColapsadoPrevio = new Set(window.UI._activosCollapsed);
+        if (!_activosCollapsed) _activosCollapsed = new Set();
+        if (!_pisosCollapsed) _pisosCollapsed = new Set();
+        if (!_estadoColapsadoPrevio) {
+            _estadoColapsadoPrevio = new Set(_activosCollapsed);
         }
-        if (!window.UI._estadoPisosPrevio) {
-            window.UI._estadoPisosPrevio = new Set(window.UI._pisosCollapsed);
+        if (!_estadoPisosPrevio) {
+            _estadoPisosPrevio = new Set(_pisosCollapsed);
         }
-        window.UI._activosCollapsed.clear();
-        window.UI._pisosCollapsed.clear();
+        _activosCollapsed.clear();
+        _pisosCollapsed.clear();
     }
 
     function _sincFiltrosUI() {
@@ -2530,6 +2549,10 @@
         });
     }
 
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // § UI — controlador de interfaz (modales, tabs, acciones del usuario)
+    // ════════════════════════════════════════════════════════════════════════════
     const UI = {
 
         alternarTema() {
@@ -2606,7 +2629,7 @@
                 try { localStorage.removeItem('cctv_act_collapsed'); } catch { }
                 toast('Ya no se recordarán los grupos colapsados', 'info');
             } else {
-                if (window.UI._guardarColapsados) window.UI._guardarColapsados();
+                if (_guardarColapsados) _guardarColapsados();
                 toast('Se recordarán los grupos colapsados al reiniciar', 'success');
             }
         },
@@ -2663,7 +2686,7 @@
             if (activo) _busqActivos.add(id);
             else _busqActivos.delete(id);
             _guardarBusqActivos();
-            window.UI._filtrosPrevios = null;
+            _filtrosPrevios = null;
             _sincFiltrosUI();
             renderActivos();
         },
@@ -2679,16 +2702,16 @@
             }
 
             _guardarBusqActivos();
-            window.UI._filtrosPrevios = null;
+            _filtrosPrevios = null;
             _sincFiltrosUI();
             renderActivos();
         },
 
         _restaurarFiltrosPrevios() {
-            if (window.UI._filtrosPrevios) {
+            if (_filtrosPrevios) {
                 _busqActivos.clear();
-                window.UI._filtrosPrevios.forEach(f => _busqActivos.add(f));
-                window.UI._filtrosPrevios = null;
+                _filtrosPrevios.forEach(f => _busqActivos.add(f));
+                _filtrosPrevios = null;
                 _guardarBusqActivos();
 
                 _sincFiltrosUI();
@@ -2712,8 +2735,8 @@
         },
 
         generarReporte() {
-            const disps = _data.dispositivos.map(_sanDisp).filter(Boolean);
-            const grabs = _data.grabadores.map(_sanGrab).filter(Boolean);
+            const disps = _data.dispositivos.map(d => S.sanitizarDisp(d)).filter(Boolean);
+            const grabs = _data.grabadores.map(g => S.sanitizarGrab(g)).filter(Boolean);
             const edifs = S.edificios;
             const TIPOS = S.TIPOS;
             const FORMAS = ['domo', 'bullet', 'turret', 'minidomo', 'minibullet', 'domo-ptz'];
@@ -2727,11 +2750,7 @@
             });
             (_data.otros_prod || []).forEach(o => { if (o.dispositivoId) pushAsig(o.dispositivoId, { tipo: 'otro_prod', item: o }); });
 
-            const idsEnProd = new Set([
-                ..._data.grabadores.flatMap(g => (g.canales_data || []).filter(c => c.dispositivoId).map(c => c.dispositivoId)),
-                ..._data.grabadores.filter(g => g.dispositivoId).map(g => g.dispositivoId),
-                ...(_data.otros_prod || []).filter(o => o.dispositivoId).map(o => o.dispositivoId)
-            ]);
+            const idsEnProd = _calcIdsEnProd();
 
             function getUbicacion(d) {
                 const asig = (asignaciones[d.id] || [])[0];
@@ -3153,11 +3172,10 @@
                 return;
             }
             cont.innerHTML = lista.map((nombre, idx) => `
-                        <div class="tipo-custom-row">
-                            <span class="tipo-custom-emoji">🏢</span>
+                        <div class="tipo-custom-row">                            
                             <span class="tipo-custom-label">${esc(nombre)}</span>
                             <button data-action="eliminar-edificio" data-idx="${idx}" class="icon-btn btn-delete btn-delete--sm" title="Eliminar edificio">
-                                <svg class="icon icon-line icon--sm"><use href="#icon-trash"/></svg>
+                                <svg class="icon icon-line "><use href="#icon-trash"/></svg>
                             </button>
                         </div>`).join('');
         },
@@ -3232,7 +3250,7 @@
 
             const inputBusq = document.getElementById('input-busqueda');
             const tieneBusqueda = inputBusq && inputBusq.value.trim() !== '';
-            const tieneSnapshot = window.UI._estadoColapsadoPrevio || window.UI._estadoPisosPrevio;
+            const tieneSnapshot = _estadoColapsadoPrevio || _estadoPisosPrevio;
 
             if (!mantenerBusqueda && (tieneBusqueda || tieneSnapshot)) {
                 if (inputBusq) inputBusq.value = '';
@@ -3461,10 +3479,10 @@
             };
 
             if (macs.length > 1) {
-                macs.forEach(mac => _data.dispositivos.push(_sanDisp({ ...base, mac })));
+                macs.forEach(mac => _data.dispositivos.push(S.sanitizarDisp({ ...base, mac })));
                 toast(`${macs.length} dispositivos agregados`, 'success');
             } else {
-                _data.dispositivos.push(_sanDisp({ ...base, mac: macs[0] || '' }));
+                _data.dispositivos.push(S.sanitizarDisp({ ...base, mac: macs[0] || '' }));
                 toast('Dispositivo agregado', 'success');
             }
 
@@ -3671,7 +3689,7 @@
                 firmware: document.getElementById(`${prefijo}-firmware`).value.trim(),
             };
 
-            const obj = _sanDisp({ ...base, id: _editandoDispId, mac: macs[0] || '' });
+            const obj = S.sanitizarDisp({ ...base, id: _editandoDispId, mac: macs[0] || '' });
             const nuevoSnap = {
                 tipo: obj.tipo,
                 estado: obj.estado || '',
@@ -3811,7 +3829,7 @@
                 dispositivoId: disp.id,
             };
 
-            _data.grabadores.push(_sanGrab(datos));
+            _data.grabadores.push(S.sanitizarGrab(datos));
             toast('Grabador agregado', 'success');
             guardar(); render(); MM.cerrar('modal-nuevo-grab');
         },
@@ -3926,7 +3944,7 @@
 
             if (idx !== -1) {
                 datos.canales_data = _data.grabadores[idx].canales_data;
-                _data.grabadores[idx] = _sanGrab(datos);
+                _data.grabadores[idx] = S.sanitizarGrab(datos);
             }
             toast('Grabador actualizado', 'success');
             guardar(); render(); MM.cerrar('modal-editar-grab'); _editandoGrabId = null; _snapshotGrab = null;
@@ -4517,8 +4535,8 @@
                     const data = S.safeParse(contenido);
                     if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('Estructura inválida');
 
-                    const newDisps = Array.isArray(data.dispositivos) ? data.dispositivos.map(d => _sanDisp(d, data.tiposCustom || {})).filter(Boolean) : [];
-                    const newGrabs = Array.isArray(data.grabadores) ? data.grabadores.map(_sanGrab).filter(Boolean) : [];
+                    const newDisps = Array.isArray(data.dispositivos) ? data.dispositivos.map(d => S.sanitizarDisp(d, data.tiposCustom || {})).filter(Boolean) : [];
+                    const newGrabs = Array.isArray(data.grabadores) ? data.grabadores.map(g => S.sanitizarGrab(g)).filter(Boolean) : [];
 
                     let esValida = true;
                     if (data.hash) {
@@ -4634,6 +4652,10 @@
         },
     };
 
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // § DOM HELPERS — populadores de selects, limpieza de formularios
+    // ════════════════════════════════════════════════════════════════════════════
     function _sincronizarGrabadores(dispId) {
         const disp = _data.dispositivos.find(d => d.id === dispId);
         if (!disp) return;
@@ -4648,7 +4670,7 @@
                 canales: disp.canales || g.canales_n,
                 canales_data: g.canales_data,
             };
-            _data.grabadores[i] = _sanGrab(datos);
+            _data.grabadores[i] = S.sanitizarGrab(datos);
         });
     }
 
@@ -4952,15 +4974,15 @@
                         if (!grupos.length) return;
 
                         const groupId = headerActivos.dataset.toggleGrupo;
-                        const estabaCerrado = window.UI._activosCollapsed.has(groupId);
+                        const estabaCerrado = _activosCollapsed.has(groupId);
                         const abrirTodos = estabaCerrado;
 
                         grupos.forEach(g => {
-                            if (abrirTodos) window.UI._activosCollapsed.delete(g.dataset.grupo);
-                            else window.UI._activosCollapsed.add(g.dataset.grupo);
+                            if (abrirTodos) _activosCollapsed.delete(g.dataset.grupo);
+                            else _activosCollapsed.add(g.dataset.grupo);
                         });
 
-                        if (window.UI._guardarColapsados) window.UI._guardarColapsados();
+                        if (_guardarColapsados) _guardarColapsados();
                         toast(abrirTodos ? 'Todos los grupos expandidos' : 'Todos los grupos colapsados', 'info');
                         renderActivos();
                     }
@@ -4971,15 +4993,15 @@
                         if (!pisos.length) return;
 
                         const floorKey = headerPiso.dataset.togglePiso;
-                        const estabaCerrado = window.UI._pisosCollapsed.has(floorKey);
+                        const estabaCerrado = _pisosCollapsed.has(floorKey);
                         const abrirTodos = estabaCerrado;
 
                         pisos.forEach(p => {
-                            if (abrirTodos) window.UI._pisosCollapsed.delete(p.dataset.floorKey);
-                            else window.UI._pisosCollapsed.add(p.dataset.floorKey);
+                            if (abrirTodos) _pisosCollapsed.delete(p.dataset.floorKey);
+                            else _pisosCollapsed.add(p.dataset.floorKey);
                         });
 
-                        if (window.UI._guardarColapsados) window.UI._guardarColapsados();
+                        if (_guardarColapsados) _guardarColapsados();
                         toast(abrirTodos ? 'Todos los pisos expandidos' : 'Todos los pisos colapsados', 'info');
                         renderActivos();
                     }
@@ -5075,6 +5097,10 @@
 
 
     // ── Eventos estáticos del HTML + delegación en contenedores dinámicos ──
+
+    // ════════════════════════════════════════════════════════════════════════════
+    // § EVENTOS — binding de eventos estáticos del DOM
+    // ════════════════════════════════════════════════════════════════════════════
     function _bindStaticEvents() {
         const on = (id, evt, fn) => { const el = document.getElementById(id); if (el) el.addEventListener(evt, fn); };
 
@@ -5287,14 +5313,9 @@
         });
     }
 
-    Object.assign(UI, window.UI);
-    window.UI = UI;
-
-    window.historial = historial;
-    window.GistSync = GistSync;
-    window.MM = MM
-    window._toggleTipoDetalle = _toggleTipoDetalle;
-
+    // ════════════════════════════════════════════════════════════════════════════
+    // § INIT — arranque de la aplicación
+    // ════════════════════════════════════════════════════════════════════════════
     ['dashboard', 'activos', 'produccion'].forEach(t => {
         const btn = document.getElementById('tab-' + t);
         const panel = document.getElementById('panel-' + t);
