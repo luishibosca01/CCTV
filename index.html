@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self';
         script-src 'self';
-        style-src 'self';
+        style-src 'self' 'unsafe-inline';
         img-src 'self' data: blob:;
         font-src 'self' data:;
         connect-src 'self' https://api.github.com; 
@@ -221,24 +221,24 @@
         </h1>
         <span id="header-tab-titulo"></span>
         <div class="header-buttons">
-            <button class="icon-btn" id="btn-install-app" title="Instalar Aplicación">
+            <button class="icon-btn" id="btn-install-app" title="Instalar Aplicación" style="display: none;">
                 <svg class="icon icon-line">
                     <use href="#icon-download" />
                 </svg>
             </button>
 
-            <button class="icon-btn" id="btn-undo" title="Deshacer (Ctrl+Z)" disabled>
+            <button class="icon-btn icon-trans" id="btn-undo" title="Deshacer (Ctrl+Z)" disabled>
                 <svg class="icon icon-line">
                     <use href="#icon-undo" />
                 </svg>
             </button>
-            <button class="icon-btn" id="btn-redo" title="Rehacer (Ctrl+Y)" disabled>
+            <button class="icon-btn icon-trans" id="btn-redo" title="Rehacer (Ctrl+Y)" disabled>
                 <svg class="icon icon-line">
                     <use href="#icon-redo" />
                 </svg>
             </button>
 
-            <button class="icon-btn" title="Ajustes">
+            <button class="icon-btn icon-trans" title="Ajustes">
                 <svg class="icon icon-line">
                     <use href="#icon-settings" />
                 </svg>
@@ -275,7 +275,7 @@
                 <svg class="icon icon-line icon-search-lupa">
                     <use href="#icon-search" />
                 </svg>
-                <button id="btn-limpiar-busqueda">
+                <button id="btn-limpiar-busqueda" style="display: none;">
                     <svg class="icon icon-line">
                         <use href="#icon-cancelar" />
                     </svg>
@@ -341,14 +341,12 @@
                     <span id="contador-dispositivos" class="contador-badge"></span>
 
                     <div id="btn-vista-activos-wrap">
-                        <button class="icon-btn btn-inline"
-                            title="Opciones de vista">
+                        <button class="icon-btn btn-inline" title="Opciones de vista">
                             <svg class="icon icon-line">
                                 <use href="#icon-sliders" />
                             </svg>
                         </button>
-                        <div id="dropdown-vista-activos" class="combobox-dropdown"
-                           >
+                        <div id="dropdown-vista-activos" class="combobox-dropdown">
                             <div class="canal-disp-item" data-orden="edificio-piso">Edificio /
                                 Piso</div>
                             <div class="canal-disp-item" data-orden="estado">Estado</div>
@@ -357,8 +355,7 @@
                         </div>
                     </div>
 
-                    <button class="icon-btn btn-edit btn-inline"
-                        title="Agregar dispositivo">
+                    <button class="icon-btn btn-edit btn-inline" title="Agregar dispositivo">
                         <svg class="icon icon-line">
                             <use href="#icon-plus" />
                         </svg>
@@ -375,8 +372,7 @@
                         <use href="#icon-server" />
                     </svg>
                     Grabadores (NVR / DVR)
-                    <button class="icon-btn btn-edit btn-inline"
-                        title="Agregar grabador">
+                    <button class="icon-btn btn-edit btn-inline" title="Agregar grabador">
                         <svg class="icon icon-line">
                             <use href="#icon-plus" />
                         </svg>
@@ -390,8 +386,7 @@
                     <svg class="icon icon-line">
                         <use href="#icon-grid" />
                     </svg> Otros dispositivos
-                    <button class="icon-btn btn-edit btn-inline"
-                        title="Agregar dispositivo">
+                    <button class="icon-btn btn-edit btn-inline" title="Agregar dispositivo">
                         <svg class="icon icon-line">
                             <use href="#icon-plus" />
                         </svg>
@@ -451,8 +446,7 @@
                 </div>
                 <div class="ajustes-section">
                     <div class="section-label">Interfaz</div>
-                    <label class="gist-autosync-row gist-autosync-row--inline" id="label-recordar-grupos"
-                       >
+                    <label class="gist-autosync-row gist-autosync-row--inline" id="label-recordar-grupos">
                         <span class="gist-autosync-text">
                             <span class="gist-autosync-title">Recordar grupos colapsados</span>
                         </span>
@@ -474,14 +468,14 @@
                                 <use href="#icon-chevron-right" />
                             </svg>
                         </button>
-                        <button id="btn-ajustes-gist-subir" class="icon-btn btn-gist-action"
-                            title="Subir a Gist">
+                        <button id="btn-ajustes-gist-subir" class="icon-btn btn-gist-action" title="Subir a Gist"
+                            style="display: none;">
                             <svg class="icon icon-line">
                                 <use href="#icon-cloud-up" />
                             </svg>
                         </button>
-                        <button id="btn-ajustes-gist-bajar" class="icon-btn btn-gist-action"
-                            title="Bajar de Gist">
+                        <button id="btn-ajustes-gist-bajar" class="icon-btn btn-gist-action" title="Bajar de Gist"
+                            style="display: none;">
                             <svg class="icon icon-line">
                                 <use href="#icon-cloud-down" />
                             </svg>
@@ -722,8 +716,7 @@
                     <div class="gist-input-row">
                         <input type="password" id="gist-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off"
                             spellcheck="false">
-                        <button class="icon-btn gist-eye-btn" id="gist-token-eye"
-                            title="Mostrar/ocultar">
+                        <button class="icon-btn gist-eye-btn" id="gist-token-eye" title="Mostrar/ocultar">
                             <svg class="icon icon-line icon--md">
                                 <use href="#icon-eye" id="gist-eye-icon" />
                             </svg>
@@ -744,7 +737,7 @@
                         <input type="text" id="gist-id" placeholder="Dejar vacío para crear uno nuevo"
                             autocomplete="off" spellcheck="false">
                         <a id="gist-link-btn" class="icon-btn gist-eye-btn icon-link" target="_blank"
-                            title="Abrir en GitHub">
+                            title="Abrir en GitHub" style="display: none;">
                             <svg class="icon icon-line icon--md">
                                 <use href="#icon-external-link" />
                             </svg>
@@ -825,8 +818,7 @@
         </div>
     </div>
 
-    <button id="btn-scroll-top" title="Ir arriba"
-       >
+    <button id="btn-scroll-top" title="Ir arriba" style="display: none;">
         <svg class="icon icon-line icon--scroll-top">
             <use href="#icon-chevron-up" />
         </svg>
@@ -862,7 +854,8 @@
                                 <div id="otro-prod-disp-dropdown" class="combobox-dropdown"></div>
                             </div>
                         </div>
-                        <button id="btn-ver-activo-otro-prod" class="icon-btn btn-backup btn-ver-activo" title="Ver activo">
+                        <button id="btn-ver-activo-otro-prod" class="icon-btn btn-backup btn-ver-activo"
+                            title="Ver activo" style="display: none;">
                             <svg class="icon icon-line">
                                 <use href="#icon-external-link" />
                             </svg>
@@ -939,7 +932,7 @@
                             <option value="">Seleccionar…</option>
                         </select>
                     </div>
-                    <div class="form-group" id="nuevo-disp-forma-group">
+                    <div class="form-group" id="nuevo-disp-forma-group" style="display: none;">
                         <label>Forma</label>
                         <select id="nuevo-disp-forma">
                             <option value="">Seleccionar…</option>
@@ -951,7 +944,7 @@
                             <option value="domo-ptz">Domo PTZ</option>
                         </select>
                     </div>
-                    <div class="form-group" id="nuevo-disp-canales-group">
+                    <div class="form-group" id="nuevo-disp-canales-group" style="display: none;">
                         <label>Cantidad de canales *</label>
                         <input type="number" id="nuevo-disp-canales" placeholder="Ej: 16" min="1" max="256" value="16">
                     </div>
@@ -1026,7 +1019,7 @@
                             <option value="">Seleccionar…</option>
                         </select>
                     </div>
-                    <div class="form-group" id="editar-disp-forma-group">
+                    <div class="form-group" id="editar-disp-forma-group" style="display: none;">
                         <label>Forma</label>
                         <select id="editar-disp-forma">
                             <option value="">Seleccionar…</option>
@@ -1038,7 +1031,7 @@
                             <option value="domo-ptz">Domo PTZ</option>
                         </select>
                     </div>
-                    <div class="form-group" id="editar-disp-canales-group">
+                    <div class="form-group" id="editar-disp-canales-group" style="display: none;">
                         <label>Cantidad de canales *</label>
                         <input type="number" id="editar-disp-canales" placeholder="Ej: 16" min="1" max="256" value="16">
                     </div>
@@ -1061,7 +1054,8 @@
                             <label>MAC</label>
                             <input type="text" id="editar-disp-mac" placeholder="Ej: AA:BB:CC:DD:EE:FF" maxlength="17">
                         </div>
-                        <button id="btn-editar-asignacion" class="icon-btn btn-backup btn-ver-activo" title="Ver asignación">
+                        <button id="btn-editar-asignacion" class="icon-btn btn-backup btn-ver-activo"
+                            title="Ver asignación" style="display: none;">
                             <svg class="icon icon-line">
                                 <use href="#icon-external-link" />
                             </svg>
@@ -1088,19 +1082,22 @@
 
             <div class="modal-sticky-footer modal-sticky-footer--col">
                 <div class="btn-group btn-group--no-mt">
-                    <button id="btn-estado-averiado" class="icon-btn btn-estado-disp btn-estado-averiado" title="Averiado">
+                    <button id="btn-estado-averiado" class="icon-btn btn-estado-disp btn-estado-averiado"
+                        title="Averiado">
                         <svg class="icon icon-line">
                             <use href="#icon-alert" />
                         </svg>
                         Averiado
                     </button>
-                    <button id="btn-estado-revisar" class="icon-btn btn-estado-disp btn-estado-revisar" title="A revisar">
+                    <button id="btn-estado-revisar" class="icon-btn btn-estado-disp btn-estado-revisar"
+                        title="A revisar">
                         <svg class="icon icon-line">
                             <use href="#icon-trash" />
                         </svg>
                         A revisar
                     </button>
-                    <button id="btn-estado-desafectado" class="icon-btn btn-estado-disp btn-estado-desafectado" title="Desafectado">
+                    <button id="btn-estado-desafectado" class="icon-btn btn-estado-disp btn-estado-desafectado"
+                        title="Desafectado">
                         <svg class="icon icon-line">
                             <use href="#icon-cancelar" />
                         </svg>
@@ -1210,7 +1207,8 @@
                             <option value="">Seleccionar…</option>
                         </select>
                     </div>
-                    <button id="btn-ver-activo-grab" class="icon-btn btn-backup btn-ver-activo" title="Ver activo">
+                    <button id="btn-ver-activo-grab" class="icon-btn btn-backup btn-ver-activo" title="Ver activo"
+                        style="display: none;">
                         <svg class="icon icon-line">
                             <use href="#icon-external-link" />
                         </svg>
@@ -1294,7 +1292,8 @@
                                 <div id="canal-disp-dropdown" class="combobox-dropdown"></div>
                             </div>
                         </div>
-                        <button id="btn-ver-activo-canal" class="icon-btn btn-backup btn-ver-activo" title="Ver activo">
+                        <button id="btn-ver-activo-canal" class="icon-btn btn-backup btn-ver-activo" title="Ver activo"
+                            style="display: none;">
                             <svg class="icon icon-line">
                                 <use href="#icon-external-link" />
                             </svg>
@@ -1367,12 +1366,11 @@
                 </svg>
                 <p id="importar-dropzone-label" class="dropzone-label">Seleccioná o arrastrá un archivo .json</p>
             </div>
-            <input type="file" id="file-import" accept=".json,application/json">
+            <input type="file" id="file-import" accept=".json,application/json" style="display: none;">
 
             <div class="importar-actions">
                 <div class="btn-group btn-group--no-mt">
-                    <button id="btn-reemplazar" class="btn-edit btn-flex"
-                        disabled>
+                    <button id="btn-reemplazar" class="btn-edit btn-flex" disabled>
                         <svg class="icon icon-line">
                             <use href="#icon-alert" />
                         </svg> Reemplazar
@@ -1438,9 +1436,13 @@
 </html>
 
 <!--// ====================================================================
-    //                 NOTAS SISTEMA LUSHIBOSCA VERSION 306
+    //              NOTAS SISTEMA LUSHIBOSCA CCTVS VERSION 302
     // ====================================================================
+    
+      - CAMBIOS:
+    1)
 
-     - CAMBIOS 
-     - 
-     - BUGS
+     - BUGS CONOCIDOS:
+    1)
+
+    -->
