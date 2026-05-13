@@ -483,6 +483,44 @@
         });
     }
 
+    // Muestra un picker modal con opciones tipo botón.
+    // onElegir(idx): se llama con el índice elegido.
+    // onCancelar(): se llama al cancelar (Escape o botón) — debe reabrir el modal padre.
+    function pickerModal(titulo, opciones, onElegir, onCancelar) {
+        document.getElementById('modal-picker-titulo').textContent = titulo;
+        const contenedor = document.getElementById('modal-picker-opciones');
+        const can = document.getElementById('modal-picker-cancel');
+
+        function _cerrarYCancelar() {
+            MM.cerrar('modal-picker');
+            setTimeout(() => onCancelar(), 150);
+        }
+
+        contenedor.innerHTML = opciones.map((op, i) => `
+            <button class="btn-picker-opcion" data-picker-idx="${i}">
+                <div class="btn-picker-label">
+                    <span class="btn-picker-titulo">${esc(op.titulo)}</span>
+                    ${op.sub ? `<span class="btn-picker-sub">${esc(op.sub)}</span>` : ''}
+                </div>
+                <svg class="icon icon-line" style="margin-left:auto;flex-shrink:0;stroke:var(--text-muted)">
+                    <use href="#icon-chevron-right"/>
+                </svg>
+            </button>`).join('');
+
+        contenedor.onclick = e => {
+            const btn = e.target.closest('[data-picker-idx]');
+            if (!btn) return;
+            contenedor.onclick = null;
+            can.onclick = null;
+            MM.cerrar('modal-picker');
+            onElegir(Number(btn.dataset.pickerIdx));
+        };
+
+        can.onclick = () => _cerrarYCancelar();
+
+        MM.abrir('modal-picker', { onEscape: () => _cerrarYCancelar() });
+    }
+
     const _toastQueue = [];
     let _toastActivo = false;
     let _toastUltimo = null;
@@ -1857,7 +1895,7 @@
                 const rows = filasRaw.map((f, i) => {
                     const esCopiable = esModoModelo && f.label !== 'Sin modelo';
                     const labelSpan = esCopiable
-                        ? `<span class="dash-cam-row-label text-truncate ip-copiable" data-copy="${esc(f.label)}" title="Copiar modelo">${esc(f.label)}</span>`
+                        ? `<span class="dash-cam-row-label text-truncate ip-copiable" data-copy="${esc(f.label)}" data-copy-label="Modelo copiado" title="Copiar modelo">${esc(f.label)}</span>`
                         : `<span class="dash-cam-row-label text-truncate" title="${esc(f.label)}">${esc(f.label)}</span>`;
                     return `
                         <div class="dash-cam-row anim-in${i < filasRaw.length - 1 ? ' dash-cam-row--border' : ''}" style="animation-delay: ${(i + 1) * 0.03}s; animation-fill-mode: both;">
@@ -2572,7 +2610,9 @@
         if (!_filtrosPrevios) _filtrosPrevios = new Set(_busqActivos);
         _busqActivos.clear();
         ids.forEach(id => _busqActivos.add(id));
-        _guardarBusqActivos();
+        // No persistir: el estado forzado por chip es transitorio.
+        // _guardarBusqActivos() se llama al restaurar (_restaurarFiltrosPrevios),
+        // evitando que una recarga pierda los filtros previos del usuario.
         _sincFiltrosUI();
     }
 
@@ -2623,7 +2663,7 @@
             if (use) use.setAttribute('href', oscuro ? '#icon-sun' : '#icon-moon');
         },
 
-        copiarAlPortapapeles(texto, event) {
+        copiarAlPortapapeles(texto, event, label) {
             if (event) {
                 event.preventDefault();
                 event.stopPropagation();
@@ -2640,7 +2680,7 @@
                 textArea.select();
                 try {
                     document.execCommand('copy');
-                    toast(`IP copiada: ${texto}`, 'success');
+                    toast(`${label || 'IP copiada'}: ${texto}`, 'success');
                 } catch (err) {
                     toast('No se pudo copiar al portapapeles', 'error');
                 }
@@ -2649,7 +2689,7 @@
             }
 
             navigator.clipboard.writeText(texto).then(() => {
-                toast(`IP copiada: ${texto}`, 'success');
+                toast(`${label || 'IP copiada'}: ${texto}`, 'success');
             }).catch(() => {
                 toast('No se pudo copiar al portapapeles', 'error');
             });
@@ -3771,19 +3811,27 @@
             const estadoCambioAInactivo = estadosConDesasignacion.includes(_edicion.estado) &&
                 !estadosConDesasignacion.includes(_edicion.snapshotDisp?.estado || '');
             if (esCamara && estadoCambioAInactivo) {
-                let grabConCanal = null, slotConCanal = null;
+                // Recolectar TODOS los slots en TODOS los grabadores que referencian este dispositivo
+                const slotsAsignados = [];
                 for (const g of _data.grabadores) {
-                    const slot = g.canales_data.find(c => c.dispositivoId === _edicion.dispId);
-                    if (slot) { grabConCanal = g; slotConCanal = slot; break; }
+                    g.canales_data.forEach(slot => {
+                        if (slot.dispositivoId === _edicion.dispId) {
+                            slotsAsignados.push({ grab: g, slot });
+                        }
+                    });
                 }
-                if (grabConCanal && slotConCanal) {
+                if (slotsAsignados.length > 0) {
                     const LABELS = { averiado: 'Averiado', revisar: 'A revisar', desafectado: 'Desafectado' };
-                    const msg = `Marcar como "${LABELS[_edicion.estado]}" quitará este dispositivo del Canal ${slotConCanal.canal} del ${grabConCanal.descripcion}\n ¿Confirmar?`;
+                    const detalleCanales = slotsAsignados
+                        .map(({ grab, slot }) => `Canal ${slot.canal} de ${grab.descripcion}`)
+                        .join(', ');
+                    const msg = `Marcar como "${LABELS[_edicion.estado]}" quitará este dispositivo de: ${detalleCanales}. ¿Confirmar?`;
                     const ok = await confirmarModal(msg, 'Guardar');
                     if (!ok) return;
 
-                    historial.empujar('Actualizar estado dispositivo y liberar canal');
-                    slotConCanal.dispositivoId = '';
+                    historial.empujar('Actualizar estado dispositivo y liberar canales');
+                    // Limpiar TODOS los slots encontrados
+                    slotsAsignados.forEach(({ slot }) => { slot.dispositivoId = ''; });
                 } else {
                     historial.empujar('Editar dispositivo');
                 }
@@ -3801,15 +3849,46 @@
 
         editarAsignacionCamara() {
             if (!_edicion.dispId) return;
-            let grabId = null, nCanal = null;
+
+            // Recolectar todos los canales donde está asignado este dispositivo
+            const asignaciones = [];
             for (const g of _data.grabadores) {
-                const slot = g.canales_data.find(c => c.dispositivoId === _edicion.dispId);
-                if (slot) { grabId = g.id; nCanal = slot.canal; break; }
+                g.canales_data.forEach(slot => {
+                    if (slot.dispositivoId === _edicion.dispId) {
+                        asignaciones.push({ grabId: g.id, grabNombre: g.descripcion, canal: slot.canal });
+                    }
+                });
             }
-            if (!grabId) return;
+            if (!asignaciones.length) return;
+
             const dispId = _edicion.dispId;
+
+            if (asignaciones.length === 1) {
+                // Caso original: navegar directo
+                MM.cerrar('modal-editar-disp');
+                setTimeout(() => UI.abrirAsignarCanal(asignaciones[0].grabId, asignaciones[0].canal, dispId), 180);
+                return;
+            }
+
+            // Múltiples asignaciones: cerrar padre → abrir picker con retorno al padre si cancela
+            const opciones = asignaciones.map(a => ({ titulo: `Canal ${a.canal} — ${a.grabNombre}`, sub: null }));
+
             MM.cerrar('modal-editar-disp');
-            setTimeout(() => UI.abrirAsignarCanal(grabId, nCanal, dispId), 180);
+            setTimeout(() => {
+                pickerModal(
+                    'Ver asignación en canal',
+                    opciones,
+                    (idx) => {
+                        // Eligió una opción: ir al canal
+                        const elegida = asignaciones[idx];
+                        setTimeout(() => UI.abrirAsignarCanal(elegida.grabId, elegida.canal, dispId), 150);
+                    },
+                    () => {
+                        // Canceló: volver al modal de dispositivo
+                        UI.abrirEditarDispositivo(dispId);
+                    }
+                );
+            }, 150);
         },
 
         verGrabadorDesdeDispositivo() {
@@ -4901,10 +4980,15 @@
 
     document.getElementById('card-resumen-general').addEventListener('mousedown', e => {
         if (!_dash.tipoAbierto) return;
-        if (!e.target.closest('#dash-disp-tree')) {
+        // Si el click es sobre un chip interactivo, dejarlo pasar
+        if (e.target.closest('[data-action]:not([data-action="stop"])')) return;
+        // Click en cualquier zona de la card sin acción → retroceder un nivel
+        if (_dash.estadoAbierto) {
+            _dash.estadoAbierto = null;
+        } else {
             _dash.tipoAbierto = null;
-            renderDashboard();
         }
+        renderDashboard();
     });
 
     const dz = document.getElementById('importar-dropzone');
@@ -5366,7 +5450,7 @@
         // Delegación: data-copy (IPs y modelos generados dinámicamente)
         document.addEventListener('click', (e) => {
             const el = e.target.closest('[data-copy]');
-            if (el) { e.stopPropagation(); UI.copiarAlPortapapeles(el.dataset.copy, e); }
+            if (el) { e.stopPropagation(); UI.copiarAlPortapapeles(el.dataset.copy, e, el.dataset.copyLabel); }
         });
 
         // Delegación: data-action (botones en listas dinámicas)

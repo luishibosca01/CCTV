@@ -344,6 +344,24 @@ select:disabled {
     cursor: not-allowed;
 }
 
+input::placeholder,
+textarea.textarea-modal::placeholder {
+    color: var(--text-muted);
+    opacity: 0.45;
+}
+
+input:disabled::placeholder,
+textarea.textarea-modal:disabled::placeholder {
+    color: transparent;
+}
+
+textarea.textarea-modal:disabled {
+    background-color: var(--bg-card);
+    color: var(--text-disabled);
+    cursor: not-allowed;
+    resize: none;
+}
+
 input.error {
     border-color: var(--c-red);
 }
@@ -519,6 +537,45 @@ button:disabled {
 
 .btn-group--mb {
     margin-bottom: 0.75rem;
+}
+
+.btn-group--col {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--sp-2);
+    margin-top: 0;
+}
+
+.btn-picker-opcion {
+    justify-content: flex-start;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    gap: var(--sp-4);
+    text-align: left;
+}
+
+.btn-picker-opcion:hover:not(:disabled) {
+    border-color: var(--c-blue);
+    filter: var(--hover);
+}
+
+.btn-picker-label {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-1);
+    text-align: left;
+}
+
+.btn-picker-titulo {
+    font-weight: 600;
+    font-size: var(--fs-md);
+    color: var(--text-main);
+}
+
+.btn-picker-sub {
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+    font-weight: 400;
 }
 
 .btn-flex {
