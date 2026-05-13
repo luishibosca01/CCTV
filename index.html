@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self';
         script-src 'self';
-        style-src 'self' 'unsafe-inline';
+        style-src 'self';
         img-src 'self' data: blob:;
         font-src 'self' data:;
         connect-src 'self' https://api.github.com; 
@@ -226,7 +226,7 @@
         </h1>
         <span id="header-tab-titulo"></span>
         <div class="header-buttons">
-            <button class="icon-btn" id="btn-install-app" title="Instalar Aplicación" style="display: none;">
+            <button class="icon-btn hidden" id="btn-install-app" title="Instalar Aplicación">
                 <svg class="icon icon-line">
                     <use href="#icon-download" />
                 </svg>
@@ -280,7 +280,7 @@
                 <svg class="icon icon-line icon-search-lupa">
                     <use href="#icon-search" />
                 </svg>
-                <button id="btn-limpiar-busqueda" style="display: none;">
+                <button id="btn-limpiar-busqueda" class="hidden">
                     <svg class="icon icon-line">
                         <use href="#icon-cancelar" />
                     </svg>
@@ -473,13 +473,13 @@
                             </svg>
                         </button>
                         <button id="btn-ajustes-gist-subir" class="icon-btn btn-gist-action" title="Subir a Gist"
-                            style="display: none;">
+                            class="hidden">
                             <svg class="icon icon-line">
                                 <use href="#icon-cloud-up" />
                             </svg>
                         </button>
                         <button id="btn-ajustes-gist-bajar" class="icon-btn btn-gist-action" title="Bajar de Gist"
-                            style="display: none;">
+                            class="hidden">
                             <svg class="icon icon-line">
                                 <use href="#icon-cloud-down" />
                             </svg>
@@ -738,8 +738,8 @@
                     <div class="gist-input-row">
                         <input type="text" id="gist-id" placeholder="Dejar vacío para crear uno nuevo"
                             autocomplete="off" spellcheck="false">
-                        <a id="gist-link-btn" class="icon-btn gist-eye-btn icon-link" target="_blank"
-                            title="Abrir en GitHub" style="display: none;">
+                        <a id="gist-link-btn" class="icon-btn gist-eye-btn icon-link hidden" target="_blank"
+                            title="Abrir en GitHub">
                             <svg class="icon icon-line icon--md">
                                 <use href="#icon-external-link" />
                             </svg>
@@ -820,7 +820,7 @@
         </div>
     </div>
 
-    <button id="btn-scroll-top" title="Ir arriba" style="display: none;">
+    <button id="btn-scroll-top" title="Ir arriba" class="hidden">
         <svg class="icon icon-line icon--scroll-top">
             <use href="#icon-chevron-up" />
         </svg>
@@ -920,8 +920,8 @@
                                 <div id="editar-otro-prod-disp-dropdown" class="combobox-dropdown"></div>
                             </div>
                         </div>
-                        <button id="btn-ver-activo-otro-prod" class="icon-btn btn-backup btn-ver-activo"
-                            title="Ver activo" style="display: none;">
+                        <button id="btn-ver-activo-otro-prod" class="icon-btn btn-backup btn-ver-activo hidden"
+                            title="Ver activo">
                             <svg class="icon icon-line">
                                 <use href="#icon-external-link" />
                             </svg>
@@ -993,7 +993,7 @@
                             <option value="">Seleccionar…</option>
                         </select>
                     </div>
-                    <div class="form-group" id="nuevo-disp-forma-group" style="display: none;">
+                    <div class="form-group hidden" id="nuevo-disp-forma-group">
                         <label>Forma</label>
                         <select id="nuevo-disp-forma">
                             <option value="">Seleccionar…</option>
@@ -1005,7 +1005,7 @@
                             <option value="domo-ptz">Domo PTZ</option>
                         </select>
                     </div>
-                    <div class="form-group" id="nuevo-disp-canales-group" style="display: none;">
+                    <div class="form-group hidden" id="nuevo-disp-canales-group">
                         <label>Cantidad de canales *</label>
                         <input type="number" id="nuevo-disp-canales" placeholder="Ej: 16" min="1" max="256" value="16">
                     </div>
@@ -1080,7 +1080,7 @@
                             <option value="">Seleccionar…</option>
                         </select>
                     </div>
-                    <div class="form-group" id="editar-disp-forma-group" style="display: none;">
+                    <div class="form-group hidden" id="editar-disp-forma-group">
                         <label>Forma</label>
                         <select id="editar-disp-forma">
                             <option value="">Seleccionar…</option>
@@ -1092,7 +1092,7 @@
                             <option value="domo-ptz">Domo PTZ</option>
                         </select>
                     </div>
-                    <div class="form-group" id="editar-disp-canales-group" style="display: none;">
+                    <div class="form-group hidden" id="editar-disp-canales-group">
                         <label>Cantidad de canales *</label>
                         <input type="number" id="editar-disp-canales" placeholder="Ej: 16" min="1" max="256" value="16">
                     </div>
@@ -1115,8 +1115,8 @@
                             <label>MAC</label>
                             <input type="text" id="editar-disp-mac" placeholder="Ej: AA:BB:CC:DD:EE:FF" maxlength="17">
                         </div>
-                        <button id="btn-editar-asignacion" class="icon-btn btn-backup btn-ver-activo"
-                            title="Ver asignación" style="display: none;">
+                        <button id="btn-editar-asignacion" class="icon-btn btn-backup btn-ver-activo hidden"
+                            title="Ver asignación">
                             <svg class="icon icon-line">
                                 <use href="#icon-external-link" />
                             </svg>
@@ -1270,7 +1270,7 @@
                         </select>
                     </div>
                     <button id="btn-ver-activo-grab" class="icon-btn btn-backup btn-ver-activo" title="Ver activo"
-                        style="display: none;">
+                        class="hidden">
                         <svg class="icon icon-line">
                             <use href="#icon-external-link" />
                         </svg>
@@ -1360,7 +1360,7 @@
                             </div>
                         </div>
                         <button id="btn-ver-activo-canal" class="icon-btn btn-backup btn-ver-activo" title="Ver activo"
-                            style="display: none;">
+                            class="hidden">
                             <svg class="icon icon-line">
                                 <use href="#icon-external-link" />
                             </svg>
@@ -1438,7 +1438,7 @@
                 </svg>
                 <p id="importar-dropzone-label" class="dropzone-label">Seleccioná o arrastrá un archivo .json</p>
             </div>
-            <input type="file" id="file-import" accept=".json,application/json" style="display: none;">
+            <input type="file" id="file-import" accept=".json,application/json" class="hidden">
 
             <div class="importar-actions">
                 <div class="btn-group btn-group--no-mt">
@@ -1507,7 +1507,7 @@
         <div class="modal-content sm">
             <h3 id="modal-picker-titulo"></h3>
             <div id="modal-picker-opciones" class="btn-group btn-group--col"></div>
-            <div class="btn-group" style="margin-top: var(--sp-3);">
+            <div class="btn-group mt-sp3">
                 <button class="btn-cancel" id="modal-picker-cancel">Cancelar</button>
             </div>
         </div>

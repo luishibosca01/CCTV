@@ -502,7 +502,7 @@
                     <span class="btn-picker-titulo">${esc(op.titulo)}</span>
                     ${op.sub ? `<span class="btn-picker-sub">${esc(op.sub)}</span>` : ''}
                 </div>
-                <svg class="icon icon-line" style="margin-left:auto;flex-shrink:0;stroke:var(--text-muted)">
+                <svg class="icon icon-line btn-picker-chevron">
                     <use href="#icon-chevron-right"/>
                 </svg>
             </button>`).join('');
@@ -789,9 +789,9 @@
             if (!btn) return;
             if (id) {
                 btn.href = `https://gist.github.com/${id}`;
-                btn.style.display = 'flex';
+                btn.classList.remove('hidden');
             } else {
-                btn.style.display = 'none';
+                btn.classList.add('hidden');
             }
         }
 
@@ -802,11 +802,10 @@
 
         function _actualizarBotonesAjustes() {
             const visible = !!((_cfg.token || '').trim()) && !!((_cfg.gistId || '').trim());
-            const display = visible ? 'flex' : 'none';
             const btnUp = document.getElementById('btn-ajustes-gist-subir');
             const btnDn = document.getElementById('btn-ajustes-gist-bajar');
-            if (btnUp) btnUp.style.display = display;
-            if (btnDn) btnDn.style.display = display;
+            if (btnUp) btnUp.classList.toggle('hidden', !visible);
+            if (btnDn) btnDn.classList.toggle('hidden', !visible);
         }
 
         async function _validarScopeToken(token) {
@@ -1204,12 +1203,12 @@
             if (_cfg.lastSync) _setStatusSync(); else _setStatus('');
 
             const scopeWarn = document.getElementById('gist-scope-warning');
-            if (scopeWarn) scopeWarn.style.display = 'none';
+            if (scopeWarn) scopeWarn.classList.add('hidden');
             if (_cfg.token) {
                 _validarScopeToken(_cfg.token).then(r => {
                     if (!r.ok || !scopeWarn) return;
                     if (r.peligrosos && r.peligrosos.length > 0) {
-                        scopeWarn.style.display = '';
+                        scopeWarn.classList.remove('hidden');
                         scopeWarn.innerHTML = `⚠️ <strong>Permisos excesivos detectados:</strong> Este token tiene los scopes <code>${r.peligrosos.join(', ')}</code> además de <code>gist</code>. Recomendamos crear un token nuevo con solo el scope <code>gist</code>.`;
                     }
                 });
@@ -1474,20 +1473,7 @@
         _renderResumenGeneral(disps, idsEnProd);
     };
 
-    function _inyectarStaggerChips() {
-        if (document.getElementById('stagger-chips-css')) return;
-        const A = '.dash-slide-wrap.en-detalle .dash-slide-panel:last-child';
-        const B = '.dash-slide-wrap:not(.en-detalle) .dash-slide-panel:first-child';
-        let css = '';
-        for (let i = 1; i <= 20; i++) {
-            css += `${A} .stat-chip:nth-child(${i}){transition-delay:${(i * 0.04).toFixed(2)}s}`;
-            css += `${B} .stat-chip:nth-child(${i}){transition-delay:${(0.04 + (i - 1) * 0.03).toFixed(2)}s}`;
-        }
-        const el = document.createElement('style');
-        el.id = 'stagger-chips-css';
-        el.textContent = css;
-        document.head.appendChild(el);
-    }
+    function _inyectarStaggerChips() { /* CSS movido a styles.css (CSP: sin unsafe-inline) */ }
 
     function _renderResumenGeneral(disps, idsEnProd) {
         const tiposConDisps = new Set(disps.map(d => d.tipo));
@@ -1783,7 +1769,7 @@
                         <span class="dash-grab-row-pct" data-pct-target="${pct}">0%</span>
                     </div>
                     <div class="dash-grab-barra">
-                        <div class="dash-grab-barra-fill" style="width:0%;background:${colorBarra}" data-pct-target="${pct}"></div>
+                        <div class="dash-grab-barra-fill" data-color="${colorBarra}" data-pct-target="${pct}"></div>
                     </div>
                 </div>`;
         }).join('');
@@ -1796,6 +1782,7 @@
                 dashGrabadores.querySelectorAll('.dash-grab-barra-fill').forEach(fill => {
                     const target = parseInt(fill.dataset.pctTarget, 10) || 0;
                     fill.style.width = target + '%';
+                    if (fill.dataset.color) fill.style.background = fill.dataset.color;
                 });
 
                 dashGrabadores.querySelectorAll('.dash-grab-row-pct').forEach(span => {
@@ -1879,17 +1866,17 @@
             if (filasRaw.length === 0) {
                 vistaHtml = `<div class="dash-empty-text anim-in">Sin cámaras registradas</div>`;
             } else {
-                const col = (txt, color) => `<span class="dash-cam-label-small" style="color:${color}">${txt}</span>`;
-                const val = (n, color) => `<span class="dash-cam-val" style="color:${color}">${n}</span>`;
+                const col = (txt, cls) => `<span class="dash-cam-label-small ${cls}">${txt}</span>`;
+                const val = (n, cls) => `<span class="dash-cam-val ${cls}">${n}</span>`;
                 const header = `
                         <div class="dash-cam-header dash-cam-header--border anim-in">
                             <span class="dash-cam-row-label"></span>
-                            ${col('TOTAL', 'var(--text-disabled)')}
-                            ${col('PROD.', 'var(--c-blue)')}
-                            ${col('DISP.', 'var(--c-green)')}
-                            ${col('AVER.', 'var(--c-red)')}
-                            ${col('REVIS.', 'var(--c-purple)')}
-                            ${col('DESAF.', 'var(--text-muted)')}
+                            ${col('TOTAL', 'dash-cam-label-small--total')}
+                            ${col('PROD.', 'dash-cam-label-small--prod')}
+                            ${col('DISP.', 'dash-cam-label-small--disp')}
+                            ${col('AVER.', 'dash-cam-label-small--aver')}
+                            ${col('REVIS.', 'dash-cam-label-small--revis')}
+                            ${col('DESAF.', 'dash-cam-label-small--desaf')}
                         </div>`;
                 const esModoModelo = _dash.camarasVista === 'modelo';
                 const rows = filasRaw.map((f, i) => {
@@ -1898,14 +1885,14 @@
                         ? `<span class="dash-cam-row-label text-truncate ip-copiable" data-copy="${esc(f.label)}" data-copy-label="Modelo copiado" title="Copiar modelo">${esc(f.label)}</span>`
                         : `<span class="dash-cam-row-label text-truncate" title="${esc(f.label)}">${esc(f.label)}</span>`;
                     return `
-                        <div class="dash-cam-row anim-in${i < filasRaw.length - 1 ? ' dash-cam-row--border' : ''}" style="animation-delay: ${(i + 1) * 0.03}s; animation-fill-mode: both;">
+                        <div class="dash-cam-row anim-in${i < filasRaw.length - 1 ? ' dash-cam-row--border' : ''} anim-delay-\${Math.min(i + 1, 15)}">
                             ${labelSpan}
-                            ${val(f.total, 'var(--text-main)')}
-                            ${val(f.prod, 'var(--c-blue)')}
-                            ${val(f.total - f.prod - f.averiado - f.revisar - f.desafectado, 'var(--c-green)')}
-                            ${val(f.averiado, 'var(--c-red)')}
-                            ${val(f.revisar, 'var(--c-purple)')}
-                            ${val(f.desafectado, 'var(--text-muted)')}
+                            ${val(f.total, 'dash-cam-val--main')}
+                            ${val(f.prod, 'dash-cam-val--blue')}
+                            ${val(f.total - f.prod - f.averiado - f.revisar - f.desafectado, 'dash-cam-val--green')}
+                            ${val(f.averiado, 'dash-cam-val--red')}
+                            ${val(f.revisar, 'dash-cam-val--purple')}
+                            ${val(f.desafectado, 'dash-cam-val--muted')}
                         </div>`;
                 }).join('');
                 vistaHtml = header + rows;
@@ -1958,18 +1945,18 @@
                         const label = piso === '__sin_piso__' ? 'Sin piso' : piso;
                         return `
                                 <div class="dash-edif-piso-row">
-                                    <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
+                                    <div class="d-flex-between">
                                         <span class="dash-edif-piso-label">${esc(label)}</span>
-                                        <span class="dash-cam-val" style="color:var(--c-orange);font-size:var(--fs-base)">${pd.ids.size}</span>
+                                        <span class="dash-cam-val dash-cam-val--orange">${pd.ids.size}</span>
                                     </div>
                                 </div>`;
                     }).join('');
                     return `
                             <div>
-                                <div class="dash-edif-row anim-in" style="animation-delay:${i * 0.03}s;animation-fill-mode:both"
+                                <div class="dash-edif-row anim-in anim-delay-\${Math.min(i, 15)}"
                                     data-action="toggle-edificio">
                                     <span class="dash-edif-label">${chevron}${esc(f.label)}</span>
-                                    <span class="dash-cam-val" style="color:var(--text-main)">${f.total}</span>
+                                    <span class="dash-cam-val dash-cam-val--main">${f.total}</span>
                                 </div>
                                 <div class="dash-edif-pisos">
                                     ${pisosHtml}
@@ -2142,12 +2129,12 @@
         return sortedPisos.map(p => {
             const floorKey = `${gLabel}|${p}`;
             const isFloorCollapsed = _activos.pisosCollapsed.has(floorKey);
-            return `<div class="sub-grupo-piso" data-floor-key="${esc(floorKey)}" style="margin-bottom: 0.5rem;">
-                        <div class="grupo-piso-header" data-toggle-piso="${esc(floorKey)}" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:0.4rem 0.5rem;border-radius:var(--radius-sm);margin-bottom:0.25rem;">
-                            <span class="section-label" style="margin:0;opacity:0.8;font-size:0.7rem;border-left:2px solid var(--c-orange);padding-left:0.5rem;">
-                                PISO: ${esc(p)} <span style="font-weight:normal;margin-left:0.3rem;">(${pisos[p].length})</span>
+            return `<div class="sub-grupo-piso" data-floor-key="${esc(floorKey)}">
+                        <div class="grupo-piso-header" data-toggle-piso="${esc(floorKey)}">
+                            <span class="section-label section-label--piso">
+                                PISO: ${esc(p)} <span class="piso-count">(${pisos[p].length})</span>
                             </span>
-                            <svg class="nvr-chevron" style="${isFloorCollapsed ? 'transform:rotate(-90deg);' : ''}width:14px;height:14px;stroke:var(--text-muted);" viewBox="0 0 24 24"><use href="#icon-chevron-down"/></svg>
+                            <svg class="nvr-chevron nvr-chevron--piso${isFloorCollapsed ? ' nvr-chevron--collapsed' : ''}" viewBox="0 0 24 24"><use href="#icon-chevron-down"/></svg>
                         </div>
                         <div class="activos-grid-transition ${colClass}${isFloorCollapsed ? ' collapsed' : ''}">
                             ${pisos[p].map(renderItem).join('')}
@@ -2241,12 +2228,7 @@
             (grupos[gLabel] || (grupos[gLabel] = [])).push(d);
         });
 
-        if (!document.getElementById('activos-grid-transition-css')) {
-            const el = document.createElement('style');
-            el.id = 'activos-grid-transition-css';
-            el.textContent = '.activos-grid-transition{transition:max-height 0.3s ease,opacity 0.25s ease;overflow:hidden}.activos-grid-transition.collapsed{max-height:0!important;opacity:0!important}';
-            document.head.appendChild(el);
-        }
+        // activos-grid-transition CSS movido a styles.css (CSP: sin unsafe-inline)
         let html = ``;
 
         Object.entries(grupos).forEach(([gLabel, items]) => {
@@ -2258,7 +2240,7 @@
             html += `<div class="grupo-activos-card" data-grupo="${esc(gLabel)}">
         <div class="grupo-activos-header" data-toggle-grupo="${esc(gLabel)}">
             <span class="grupo-activos-header-label">${esc(gLabel)} <span class="badge badge-otro badge--grupo-count">${items.length}</span></span>
-            <svg class="nvr-chevron" style="${isCollapsed ? 'transform:rotate(-90deg);' : ''}stroke:var(--c-orange);" viewBox="0 0 24 24"><use href="#icon-chevron-down"/></svg>
+            <svg class="nvr-chevron${isCollapsed ? ' nvr-chevron--collapsed' : ''}" viewBox="0 0 24 24"><use href="#icon-chevron-down"/></svg>
         </div>
         <div class="activos-grid-transition${isCollapsed ? ' collapsed' : ''}">${itemsHtml}</div>
     </div>`;
@@ -2301,11 +2283,11 @@
                 if (disp) {
                     const tituloCanal = c.descripcion || disp.mac || disp.serial || '—';
                     const isDup = tieneMacDuplicada(disp);
-                    const badgeStyle = isDup ? 'background: var(--c-purple);' : '';
+                    const badgeClass = isDup ? ' canal-numero--dup' : '';
                     const tituloHover = isDup ? `[MAC DUPLICADA] ${esc(tituloCanal)}` : esc(tituloCanal);
 
                     return `<div class="canal-slot-lista ocupado" data-canal="${c.canal}">
-                                <div class="canal-numero" style="${badgeStyle}">CH ${c.canal}</div>
+                                <div class="canal-numero${badgeClass}">CH ${c.canal}</div>
                                 <div class="canal-dispositivo-nombre" title="${tituloHover}">${esc(tituloCanal)}</div>
                                 <div class="canal-dispositivo-ip ${c.ip ? 'ip-copiable' : ''}" ${c.ip ? `data-copy="${esc(c.ip)}" title="Copiar IP"` : ''}>${c.ip ? esc(c.ip) : ''}</div>
                             </div>`;
@@ -2419,6 +2401,8 @@
         snapshotOtroProd: null,
         canalDesdeDispId: null,
         volverDesdeCanal: false,
+        volverDesdeGrabador: false,
+        volverDesdeDispositivo: false,
         canalDispOcupados: new Set(),
         canalDispHighlight: -1,
         edificiosOrigen: 'ajustes',
@@ -2739,8 +2723,8 @@
             if (e) e.stopPropagation();
             const dd = document.getElementById('dropdown-vista-activos');
             if (!dd) return;
-            const abriendo = dd.style.display === 'none';
-            dd.style.display = abriendo ? 'block' : 'none';
+            const abriendo = dd.classList.contains('hidden');
+            dd.classList.toggle('hidden', !abriendo);
             if (abriendo) {
                 dd.querySelectorAll('.canal-disp-item[data-orden]').forEach(el => {
                     el.classList.toggle('activo-vista', el.dataset.orden === _activos.orden);
@@ -3211,7 +3195,7 @@
                         document.getElementById('canal-comentarios').value = snap.comentarios;
                         _poblarSelectEdificio('canal-edificio', snap.edificio);
                         const btnVerActivo = document.getElementById('btn-ver-activo-canal');
-                        if (btnVerActivo) btnVerActivo.style.display = snap.dispositivoId ? '' : 'none';
+                        if (btnVerActivo) btnVerActivo.classList.toggle('hidden', !snap.dispositivoId);
                         _edicion.edificiosSnapForm = null;
                     }, 220);
                 }, 150);
@@ -3252,7 +3236,7 @@
                         
                         if (prefijo === 'editar-otro-prod') {
                             const btnVerActivo = document.getElementById('btn-ver-activo-otro-prod');
-                            if (btnVerActivo) btnVerActivo.style.display = snap.dispositivoId ? '' : 'none';
+                            if (btnVerActivo) btnVerActivo.classList.toggle('hidden', !snap.dispositivoId);
                         }
                         _edicion.edificiosSnapForm = null;
                     }, 220);
@@ -3355,7 +3339,7 @@
             if (!mantenerBusqueda && (tieneBusqueda || tieneSnapshot)) {
                 if (inputBusq) inputBusq.value = '';
                 const btnX = document.getElementById('btn-limpiar-busqueda');
-                if (btnX) btnX.style.display = 'none';
+                if (btnX) btnX.classList.add('hidden');
 
                 _restaurarColapsos();
 
@@ -3381,8 +3365,8 @@
                 panelSaliente.classList.add('tab-saliendo');
                 setTimeout(() => {
                     panelSaliente.classList.remove('tab-saliendo');
-                    panelSaliente.style.display = 'none';
-                    panelEntrante.style.display = '';
+                    panelSaliente.classList.add('hidden');
+                    panelEntrante.classList.remove('hidden');
                     panelEntrante.getBoundingClientRect();
                     panelEntrante.classList.add('tab-entrando');
                     panelEntrante.addEventListener('animationend', () => {
@@ -3390,7 +3374,7 @@
                     }, { once: true });
                 }, 180);
             } else {
-                if (panelEntrante) panelEntrante.style.display = '';
+                if (panelEntrante) panelEntrante.classList.remove('hidden');
             }
         },
 
@@ -3417,7 +3401,7 @@
 
             const input = document.getElementById('input-busqueda');
             const btnX = document.getElementById('btn-limpiar-busqueda');
-            if (input) { input.value = query; if (btnX) btnX.style.display = query ? '' : 'none'; }
+            if (input) { input.value = query; if (btnX) btnX.classList.toggle('hidden', !query); }
 
             _expandirTodosLosGrupos();
 
@@ -3425,8 +3409,8 @@
                 panelSaliente.classList.add('tab-saliendo');
                 setTimeout(() => {
                     panelSaliente.classList.remove('tab-saliendo');
-                    panelSaliente.style.display = 'none';
-                    panelEntrante.style.display = '';
+                    panelSaliente.classList.add('hidden');
+                    panelEntrante.classList.remove('hidden');
                     panelEntrante.getBoundingClientRect();
                     panelEntrante.classList.add('tab-entrando');
                     panelEntrante.addEventListener('animationend', () => {
@@ -3435,7 +3419,7 @@
                     renderActivos();
                 }, 180);
             } else {
-                panelEntrante.style.display = '';
+                panelEntrante.classList.remove('hidden');
                 renderActivos();
             }
             setTimeout(() => input?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 250);
@@ -3446,7 +3430,7 @@
             const btnX = document.getElementById('btn-limpiar-busqueda');
             const query = input.value;
 
-            if (btnX) btnX.style.display = query ? '' : 'none';
+            if (btnX) btnX.classList.toggle('hidden', !query);
 
             if (query && _tabActual !== 'activos') {
                 UI.cambiarTab('activos', true);
@@ -3472,7 +3456,7 @@
 
             const input = document.getElementById('input-busqueda');
             input.value = '';
-            document.getElementById('btn-limpiar-busqueda').style.display = 'none';
+            document.getElementById('btn-limpiar-busqueda').classList.add('hidden');
             input.focus();
 
             _restaurarColapsos();
@@ -3510,8 +3494,8 @@
 
         onDispTipoChange(prefijo) {
             const tipo = document.getElementById(`${prefijo}-tipo`).value;
-            document.getElementById(`${prefijo}-forma-group`).style.display = tipo === 'camara' ? '' : 'none';
-            document.getElementById(`${prefijo}-canales-group`).style.display = ['nvr', 'dvr'].includes(tipo) ? '' : 'none';
+            document.getElementById(`${prefijo}-forma-group`).classList.toggle('hidden', tipo !== 'camara');
+            document.getElementById(`${prefijo}-canales-group`).classList.toggle('hidden', !['nvr', 'dvr'].includes(tipo));
             if (tipo !== 'camara') document.getElementById(`${prefijo}-forma`).value = '';
         },
 
@@ -3601,10 +3585,10 @@
             document.getElementById(`${prefijo}-patrimonio`).value = d.patrimonio || '';
             document.getElementById(`${prefijo}-firmware`).value = d.firmware || '';
             const esCamara = d.tipo === 'camara';
-            document.getElementById(`${prefijo}-forma-group`).style.display = esCamara ? '' : 'none';
+            document.getElementById(`${prefijo}-forma-group`).classList.toggle('hidden', !esCamara);
             document.getElementById(`${prefijo}-forma`).value = d.forma || '';
             const esGrab = ['nvr', 'dvr'].includes(d.tipo);
-            document.getElementById(`${prefijo}-canales-group`).style.display = esGrab ? '' : 'none';
+            document.getElementById(`${prefijo}-canales-group`).classList.toggle('hidden', !esGrab);
             document.getElementById(`${prefijo}-canales`).value = d.canales || 16;
 
             const grabAsociado = esGrab ? _data.grabadores.find(g => g.dispositivoId === id) : null;
@@ -3653,15 +3637,15 @@
 
             const btnAsig = document.getElementById('btn-editar-asignacion');
             if (esCamara) {
-                btnAsig.style.display = enProduccionComoCanal ? '' : 'none';
+                btnAsig.classList.toggle('hidden', !enProduccionComoCanal);
                 btnAsig.title = 'Ver asignación';
                 btnAsig.onclick = () => UI.editarAsignacionCamara();
             } else if (esGrab && enProduccionComoGrab) {
-                btnAsig.style.display = '';
+                btnAsig.classList.remove('hidden');
                 btnAsig.title = 'Ver grabador';
                 btnAsig.onclick = () => UI.verGrabadorDesdeDispositivo();
             } else {
-                btnAsig.style.display = 'none';
+                btnAsig.classList.add('hidden');
             }
             _edicion.snapshotDisp = {
                 tipo: d.tipo,
@@ -3689,7 +3673,7 @@
             ModalLock.reset('modal-editar-disp');
             MM.abrir('modal-editar-disp', { onEscape: () => UI.cerrarModalEditarDispositivo() });
             const btnCerrarDisp = document.querySelector('#modal-editar-disp .btn-cancel');
-            if (btnCerrarDisp) btnCerrarDisp.innerHTML = _edicion.volverDesdeCanal
+            if (btnCerrarDisp) btnCerrarDisp.innerHTML = (_edicion.volverDesdeCanal || _edicion.volverDesdeGrabador)
                 ? '<svg class="icon icon-line"><use href="#icon-undo"/></svg>Volver'
                 : '<svg class="icon icon-line"><use href="#icon-cancelar"/></svg>Cancelar';
         },
@@ -3697,15 +3681,20 @@
         cerrarModalEditarDispositivo() {
             MM.cerrar('modal-editar-disp');
             _edicion.estado = '';
-            const volver = _edicion.volverDesdeCanal;
+            const volverCanal = _edicion.volverDesdeCanal;
+            const volverGrab = _edicion.volverDesdeGrabador;
             const grabId = _edicion.canalGrabId;
             const canalN = _edicion.canalN;
+            const grabIdOrigen = _edicion.grabId;
             _edicion.dispId = null;
             _edicion.volverDesdeCanal = false;
-            if (volver && grabId === 'OTRO_PROD') {
+            _edicion.volverDesdeGrabador = false;
+            if (volverCanal && grabId === 'OTRO_PROD') {
                 setTimeout(() => canalN ? UI.abrirEditarOtroProd(canalN) : UI.abrirNuevoOtroProd(), 180);
-            } else if (volver && grabId != null && canalN != null) {
+            } else if (volverCanal && grabId != null && canalN != null) {
                 setTimeout(() => UI.abrirAsignarCanal(grabId, canalN), 180);
+            } else if (volverGrab && grabIdOrigen != null) {
+                setTimeout(() => UI.abrirEditarGrabador(grabIdOrigen), 180);
             }
         },
 
@@ -3895,6 +3884,9 @@
             if (!_edicion.dispId) return;
             const grab = _data.grabadores.find(g => g.dispositivoId === _edicion.dispId);
             if (!grab) return;
+            const dispIdOrigen = _edicion.dispId;
+            _edicion.volverDesdeDispositivo = true;
+            _edicion.dispIdOrigenGrab = dispIdOrigen;
             MM.cerrar('modal-editar-disp');
             setTimeout(() => UI.abrirEditarGrabador(grab.id), 180);
         },
@@ -4002,25 +3994,37 @@
             };
 
             ModalLock.reset('modal-editar-grab');
-            MM.abrir('modal-editar-grab');
+            MM.abrir('modal-editar-grab', { onEscape: () => UI.cerrarModalEditarGrabador() });
             const btnVerActivo = document.getElementById('btn-ver-activo-grab');
-            if (btnVerActivo) btnVerActivo.style.display = g.dispositivoId ? '' : 'none';
+            if (btnVerActivo) btnVerActivo.classList.toggle('hidden', !g.dispositivoId);
+            const btnCerrarGrab = document.querySelector('#modal-editar-grab .btn-cancel');
+            if (btnCerrarGrab) btnCerrarGrab.innerHTML = _edicion.volverDesdeDispositivo
+                ? '<svg class="icon icon-line"><use href="#icon-undo"/></svg>Volver'
+                : '<svg class="icon icon-line"><use href="#icon-cancelar"/></svg>Cancelar';
         },
 
         cerrarModalEditarGrabador() {
             MM.cerrar('modal-editar-grab');
             _edicion.grabId = null;
+            const volver = _edicion.volverDesdeDispositivo;
+            const dispIdOrigen = _edicion.dispIdOrigenGrab;
+            _edicion.volverDesdeDispositivo = false;
+            _edicion.dispIdOrigenGrab = null;
+            if (volver && dispIdOrigen) {
+                setTimeout(() => UI.abrirEditarDispositivo(dispIdOrigen), 180);
+            }
         },
 
         onGrabDispositivoChange() {
             const dispId = document.getElementById('editar-grab-dispositivo-id').value;
             const btn = document.getElementById('btn-ver-activo-grab');
-            if (btn) btn.style.display = dispId ? '' : 'none';
+            if (btn) btn.classList.toggle('hidden', !dispId);
         },
 
         verActivoDesdeGrabador() {
             const dispId = document.getElementById('editar-grab-dispositivo-id').value;
             if (!dispId) return;
+            _edicion.volverDesdeGrabador = true;
             MM.cerrar('modal-editar-grab');
             setTimeout(() => UI.abrirEditarDispositivo(dispId), 180);
         },
@@ -4079,7 +4083,7 @@
             };
 
             const huboCambiosGrab = JSON.stringify(nuevoSnapGrab) !== JSON.stringify(_edicion.snapshotGrab);
-            if (!huboCambiosGrab) { toast('Sin cambios', 'info'); MM.cerrar('modal-editar-grab'); _edicion.grabId = null; _edicion.snapshotGrab = null; return; }
+            if (!huboCambiosGrab) { toast('Sin cambios', 'info'); MM.cerrar('modal-editar-grab'); _edicion.grabId = null; _edicion.snapshotGrab = null; _edicion.volverDesdeDispositivo = false; _edicion.dispIdOrigenGrab = null; return; }
 
             historial.empujar('Editar grabador');
 
@@ -4088,7 +4092,7 @@
                 _data.grabadores[idx] = S.sanitizarGrab(datos);
             }
             toast('Grabador actualizado', 'success');
-            guardar(); render(); MM.cerrar('modal-editar-grab'); _edicion.grabId = null; _edicion.snapshotGrab = null;
+            guardar(); render(); MM.cerrar('modal-editar-grab'); _edicion.grabId = null; _edicion.volverDesdeDispositivo = false; _edicion.dispIdOrigenGrab = null; _edicion.snapshotGrab = null; _edicion.volverDesdeDispositivo = false; _edicion.dispIdOrigenGrab = null;
         },
 
         async eliminarGrabador() {
@@ -4105,7 +4109,7 @@
             historial.empujar('Eliminar grabador');
 
             _data.grabadores = _data.grabadores.filter(x => x.id !== _edicion.grabId);
-            guardar(); render(); MM.cerrar('modal-editar-grab'); _edicion.grabId = null;
+            guardar(); render(); MM.cerrar('modal-editar-grab'); _edicion.grabId = null; _edicion.volverDesdeDispositivo = false; _edicion.dispIdOrigenGrab = null;
             toast('Grabador eliminado', 'success');
         },
 
@@ -4142,7 +4146,7 @@
             } else {
                 input.value = '';
             }
-            document.getElementById('canal-disp-dropdown').style.display = 'none';
+            document.getElementById('canal-disp-dropdown').classList.add('hidden');
             _edicion.canalDispHighlight = -1;
 
             ModalLock.reset('modal-canal');
@@ -4167,7 +4171,7 @@
             document.getElementById('canal-rack').value = slot?.rack || '';
             document.getElementById('canal-comentarios').value = slot?.comentarios || '';
             const btnVerActivo = document.getElementById('btn-ver-activo-canal');
-            btnVerActivo.style.display = slot?.dispositivoId ? '' : 'none';
+            btnVerActivo.classList.toggle('hidden', !slot?.dispositivoId);
         },
 
         _canalDispFiltrar() {
@@ -4192,7 +4196,7 @@
 
             if (!filtrados.length && query) {
                 dd.innerHTML = `<div class="canal-disp-item canal-disp-item-vaciobtn">Sin resultados</div>`;
-                dd.style.display = '';
+                dd.classList.remove('hidden');
                 _edicion.canalDispHighlight = -1;
                 return;
             }
@@ -4226,7 +4230,7 @@
             });
 
             dd.innerHTML = items.join('');
-            dd.style.display = '';
+            dd.classList.remove('hidden');
             _edicion.canalDispHighlight = -1;
 
             dd.querySelectorAll('.canal-disp-item:not(.ocupado)').forEach(el => {
@@ -4240,15 +4244,15 @@
         _canalDispSeleccionar(id, mac) {
             document.getElementById('sel-canal-dispositivo').value = id || '';
             document.getElementById('canal-disp-input').value = id ? (mac || id) : '';
-            document.getElementById('canal-disp-dropdown').style.display = 'none';
+            document.getElementById('canal-disp-dropdown').classList.add('hidden');
             _edicion.canalDispHighlight = -1;
             const btn = document.getElementById('btn-ver-activo-canal');
-            if (btn) btn.style.display = id ? '' : 'none';
+            if (btn) btn.classList.toggle('hidden', !id);
         },
 
         _canalDispKeydown(e) {
             const dd = document.getElementById('canal-disp-dropdown');
-            if (dd.style.display === 'none') return;
+            if (dd.classList.contains('hidden')) return;
             const items = [...dd.querySelectorAll('.canal-disp-item:not(.ocupado)')];
             if (!items.length) return;
 
@@ -4266,7 +4270,7 @@
                 }
                 return;
             } else if (e.key === 'Escape') {
-                dd.style.display = 'none';
+                dd.classList.add('hidden');
                 _edicion.canalDispHighlight = -1;
                 return;
             } else { return; }
@@ -4310,7 +4314,7 @@
             document.getElementById('canal-piso').value = '';
             document.getElementById('canal-rack').value = '';
             document.getElementById('canal-comentarios').value = '';
-            document.getElementById('btn-ver-activo-canal').style.display = 'none';
+            document.getElementById('btn-ver-activo-canal').classList.add('hidden');
         },
 
         guardarAsignacionCanal() {
@@ -4402,7 +4406,7 @@
             document.getElementById(`sel-${prefijo}-dispositivo`).value = '';
             document.getElementById(`${prefijo}-disp-input`).value = '';
             document.getElementById(`${prefijo}-disp-input`).classList.remove('error');
-            document.getElementById(`${prefijo}-disp-dropdown`).style.display = 'none';
+            document.getElementById(`${prefijo}-disp-dropdown`).classList.add('hidden');
         },
 
         abrirNuevoOtroProd() {
@@ -4449,8 +4453,8 @@
             } else {
                 input.value = '';
             }
-            document.getElementById(`${prefijo}-disp-dropdown`).style.display = 'none';
-            document.getElementById('btn-ver-activo-otro-prod').style.display = o.dispositivoId ? '' : 'none';
+            document.getElementById(`${prefijo}-disp-dropdown`).classList.add('hidden');
+            document.getElementById('btn-ver-activo-otro-prod').classList.toggle('hidden', !o.dispositivoId);
 
             const grabs = _data.grabadores;
             const idsOcupados = [
@@ -4557,7 +4561,7 @@
 
             if (!filtrados.length && query) {
                 dd.innerHTML = `<div class="canal-disp-item canal-disp-item-vaciobtn">Sin resultados</div>`;
-                dd.style.display = ''; return;
+                dd.classList.remove('hidden'); return;
             }
 
             const ESTADO_LABELS_DISP = { averiado: 'averiado', revisar: 'a revisar', desafectado: 'desafectado' };
@@ -4575,22 +4579,22 @@
             });
 
             dd.innerHTML = items.join('');
-            dd.style.display = '';
+            dd.classList.remove('hidden');
 
             dd.querySelectorAll('.canal-disp-item:not(.ocupado)').forEach(el => {
                 el.addEventListener('mousedown', e => {
                     e.preventDefault();
                     hidden.value = el.dataset.id;
                     input.value = el.dataset.mac || el.dataset.id;
-                    dd.style.display = 'none';
-                    if(prefijo === 'editar-otro-prod') document.getElementById('btn-ver-activo-otro-prod').style.display = '';
+                    dd.classList.add('hidden');
+                    if(prefijo === 'editar-otro-prod') document.getElementById('btn-ver-activo-otro-prod').classList.remove('hidden');
                 });
             });
         },
 
         _otroProdDispKeydown(e, prefijo) {
             const dd = document.getElementById(`${prefijo}-disp-dropdown`);
-            if (dd.style.display === 'none') return;
+            if (dd.classList.contains('hidden')) return;
             const items = [...dd.querySelectorAll('.canal-disp-item:not(.ocupado)')];
             if (!items.length) return;
 
@@ -4604,12 +4608,12 @@
                     const el = items[_edicion.canalDispHighlight];
                     document.getElementById(`sel-${prefijo}-dispositivo`).value = el.dataset.id;
                     document.getElementById(`${prefijo}-disp-input`).value = el.dataset.mac || el.dataset.id;
-                    dd.style.display = 'none';
-                    if(prefijo === 'editar-otro-prod') document.getElementById('btn-ver-activo-otro-prod').style.display = '';
+                    dd.classList.add('hidden');
+                    if(prefijo === 'editar-otro-prod') document.getElementById('btn-ver-activo-otro-prod').classList.remove('hidden');
                 }
                 return;
             } else if (e.key === 'Escape') {
-                dd.style.display = 'none'; _edicion.canalDispHighlight = -1; return;
+                dd.classList.add('hidden'); _edicion.canalDispHighlight = -1; return;
             } else { return; }
 
             items.forEach((el, i) => el.classList.toggle('highlighted', i === _edicion.canalDispHighlight));
@@ -4935,9 +4939,9 @@
         const tipoEl = document.getElementById(`${prefijo}-tipo`);
         tipoEl.value = ''; tipoEl.classList.remove('error');
         document.getElementById(`${prefijo}-forma`).value = '';
-        document.getElementById(`${prefijo}-forma-group`).style.display = 'none';
+        document.getElementById(`${prefijo}-forma-group`).classList.add('hidden');
         document.getElementById(`${prefijo}-canales`).value = '16';
-        document.getElementById(`${prefijo}-canales-group`).style.display = 'none';
+        document.getElementById(`${prefijo}-canales-group`).classList.add('hidden');
     }
 
     function _limpiarFormGrab(prefijo) {
@@ -4953,28 +4957,28 @@
 
         const cbCanal = document.getElementById('canal-disp-combobox');
         if (cbCanal && !cbCanal.contains(e.target)) {
-            document.getElementById('canal-disp-dropdown').style.display = 'none';
+            document.getElementById('canal-disp-dropdown').classList.add('hidden');
             _edicion.canalDispHighlight = -1;
         }
 
         const cbNuevoOtro = document.querySelector('#modal-nuevo-otro-prod .combobox-wrap');
         if (cbNuevoOtro && !cbNuevoOtro.contains(e.target)) {
             const ddNuevoOtro = document.getElementById('nuevo-otro-prod-disp-dropdown');
-            if (ddNuevoOtro) ddNuevoOtro.style.display = 'none';
+            if (ddNuevoOtro) ddNuevoOtro.classList.add('hidden');
             _edicion.canalDispHighlight = -1;
         }
 
         const cbEditarOtro = document.querySelector('#modal-editar-otro-prod .combobox-wrap');
         if (cbEditarOtro && !cbEditarOtro.contains(e.target)) {
             const ddEditarOtro = document.getElementById('editar-otro-prod-disp-dropdown');
-            if (ddEditarOtro) ddEditarOtro.style.display = 'none';
+            if (ddEditarOtro) ddEditarOtro.classList.add('hidden');
             _edicion.canalDispHighlight = -1;
         }
 
         const wrapActivos = document.getElementById('btn-vista-activos-wrap');
         const ddActivos = document.getElementById('dropdown-vista-activos');
         if (wrapActivos && ddActivos && !wrapActivos.contains(e.target)) {
-            ddActivos.style.display = 'none';
+            ddActivos.classList.add('hidden');
         }
     });
 
@@ -5090,7 +5094,7 @@
         if (!input) return;
         input.value = texto;
         const btnX = document.getElementById('btn-limpiar-busqueda');
-        if (btnX) btnX.style.display = '';
+        if (btnX) btnX.classList.remove('hidden');
 
         if (_tabActual !== 'activos') UI.cambiarTab('activos', true);
 
@@ -5218,7 +5222,7 @@
             const scrollSuficiente = window.scrollY > window.innerHeight * 0.85;
             if (btn) {
                 if (enPanel && scrollSuficiente) {
-                    btn.style.display = '';
+                    btn.classList.remove('hidden');
                     requestAnimationFrame(() => {
                         btn.style.opacity = '1';
                         btn.style.transform = 'translateY(0)';
@@ -5227,7 +5231,7 @@
                     btn.style.opacity = '0';
                     btn.style.transform = 'translateY(8px)';
                     setTimeout(() => {
-                        if (btn.style.opacity === '0') btn.style.display = 'none';
+                        if (btn.style.opacity === '0') btn.classList.add('hidden');
                     }, 260);
                 }
             }
@@ -5276,7 +5280,7 @@
                 setTimeout(() => {
                     const inp = document.getElementById('input-busqueda');
                     inp.value = t;
-                    document.getElementById('btn-limpiar-busqueda').style.display = '';
+                    document.getElementById('btn-limpiar-busqueda').classList.remove('hidden');
                     inp.focus();
                     UI.filtrarActivos();
                 }, 220);
@@ -5590,7 +5594,7 @@
         const btn = document.getElementById('tab-' + t);
         const panel = document.getElementById('panel-' + t);
         if (btn) btn.classList.toggle('activa', t === _tabActual);
-        if (panel) panel.style.display = t === _tabActual ? '' : 'none';
+        if (panel) panel.classList.toggle('hidden', t !== _tabActual);
     });
 
     requestAnimationFrame(() => {
@@ -5615,7 +5619,7 @@
 
             deferredPrompt = e;
 
-            if (btnInstallApp) btnInstallApp.style.display = 'flex';
+            if (btnInstallApp) btnInstallApp.classList.remove('hidden');
         });
 
         if (btnInstallApp) {
@@ -5629,12 +5633,12 @@
 
                 deferredPrompt = null;
 
-                btnInstallApp.style.display = 'none';
+                btnInstallApp.classList.add('hidden');
             });
         }
 
         window.addEventListener('appinstalled', () => {
-            if (btnInstallApp) btnInstallApp.style.display = 'none';
+            if (btnInstallApp) btnInstallApp.classList.add('hidden');
             deferredPrompt = null;
             toast('Aplicación instalada con éxito', 'success');
         });
