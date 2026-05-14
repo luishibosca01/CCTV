@@ -801,11 +801,14 @@
         }
 
         function _actualizarBotonesAjustes() {
-            const visible = !!((_cfg.token || '').trim()) && !!((_cfg.gistId || '').trim());
+            const tieneToken = !!((_cfg.token || '').trim());
+            const tieneGistId = !!((_cfg.gistId || '').trim());
+            
             const btnUp = document.getElementById('btn-ajustes-gist-subir');
             const btnDn = document.getElementById('btn-ajustes-gist-bajar');
-            if (btnUp) btnUp.classList.toggle('hidden', !visible);
-            if (btnDn) btnDn.classList.toggle('hidden', !visible);
+            
+            if (btnUp) btnUp.classList.toggle('hidden', !(tieneToken && tieneGistId));
+            if (btnDn) btnDn.classList.toggle('hidden', !tieneGistId);
         }
 
         async function _validarScopeToken(token) {
@@ -1088,7 +1091,8 @@
         async function bajar() {
             const token = document.getElementById('gist-token')?.value.trim() || _cfg.token;
             const gistId = document.getElementById('gist-id')?.value.trim() || _cfg.gistId;
-            if (!token) { toast('Ingresá el token primero', 'error'); return; }
+            
+            // ELIMINAMOS LA LÍNEA DEL TOKEN: if (!token) { toast('Ingresá el token primero', 'error'); return; }
             if (!gistId) { toast('Ingresá el Gist ID primero', 'error'); return; }
             if (!RE_GIST_ID.test(gistId)) { toast('Gist ID inválido', 'error'); return; }
 
@@ -1096,9 +1100,15 @@
             _setStatus('Bajando…');
 
             try {
-                const res = await fetch(`https://api.github.com/gists/${gistId}`, {
-                    headers: { Authorization: `token ${token}` },
-                });
+                // ARMAMOS LOS HEADERS DINÁMICAMENTE
+                const headers = {};
+                if (token) {
+                    headers['Authorization'] = `token ${token}`;
+                }
+
+                // EVADIMOS CACHÉ EN LA PETICIÓN PRINCIPAL
+                const url = `https://api.github.com/gists/${gistId}?_ts=${Date.now()}`;
+                const res = await fetch(url, { headers, cache: 'no-store' });
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const data = await res.json();
 
@@ -1109,7 +1119,9 @@
                 if (file.truncated) {
                     const rawOrigin = new URL(file.raw_url).hostname;
                     if (!rawOrigin.endsWith('.githubusercontent.com')) throw new Error('raw_url inválida');
-                    const r2 = await fetch(file.raw_url);
+                    
+                    // EVADIMOS CACHÉ EN LA PETICIÓN RAW
+                    const r2 = await fetch(`${file.raw_url}?_ts=${Date.now()}`, { cache: 'no-store' });
                     contenido = await r2.text();
                 }
 
@@ -1223,13 +1235,18 @@
         }
 
         async function verificarAlAbrir() {
-            if (!_cfg.auto || !_cfg.token || !_cfg.gistId) return;
+            // QUITAMOS LA VALIDACIÓN DEL TOKEN !_cfg.token
+            if (!_cfg.auto || !_cfg.gistId) return;
 
             _spinStart();
             try {
-                const res = await fetch(`https://api.github.com/gists/${_cfg.gistId}`, {
-                    headers: { Authorization: `token ${_cfg.token}` },
-                });
+                const headers = {};
+                if (_cfg.token) {
+                    headers['Authorization'] = `token ${_cfg.token}`;
+                }
+
+                const url = `https://api.github.com/gists/${_cfg.gistId}?_ts=${Date.now()}`;
+                const res = await fetch(url, { headers, cache: 'no-store' });
                 if (!res.ok) return;
 
                 const data = await res.json();
@@ -1240,7 +1257,8 @@
                 if (file.truncated) {
                     const rawOrigin = new URL(file.raw_url).hostname;
                     if (!rawOrigin.endsWith('.githubusercontent.com')) return;
-                    const r2 = await fetch(file.raw_url);
+                    
+                    const r2 = await fetch(`${file.raw_url}?_ts=${Date.now()}`, { cache: 'no-store' });
                     contenido = await r2.text();
                 }
 
