@@ -1305,11 +1305,11 @@
                 if (detalle) {
                     const chips = [];
                     if (resMerge.cDispsAdd) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Dispositivos nuevos</span><span class="gist-novedades-chip-count">+${resMerge.cDispsAdd}</span></div>`);
-                    if (resMerge.cDispsUpd) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Dispositivos a enriquecer</span><span class="gist-novedades-chip-count gist-novedades-chip-count--purple">~${resMerge.cDispsUpd}</span></div>`);
+                    if (resMerge.cDispsUpd) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Dispositivos a actualizar</span><span class="gist-novedades-chip-count gist-novedades-chip-count--purple">~${resMerge.cDispsUpd}</span></div>`);
                     if (resMerge.cGrabsAdd) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Grabadores nuevos</span><span class="gist-novedades-chip-count">+${resMerge.cGrabsAdd}</span></div>`);
-                    if (resMerge.cGrabsUpd) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Grabadores a enriquecer</span><span class="gist-novedades-chip-count gist-novedades-chip-count--purple">~${resMerge.cGrabsUpd}</span></div>`);
+                    if (resMerge.cGrabsUpd) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Grabadores a actualizar</span><span class="gist-novedades-chip-count gist-novedades-chip-count--purple">~${resMerge.cGrabsUpd}</span></div>`);
                     if (resMerge.cOtrosAdd) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Otros disp. nuevos</span><span class="gist-novedades-chip-count">+${resMerge.cOtrosAdd}</span></div>`);
-                    if (resMerge.cOtrosUpd) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Otros a enriquecer</span><span class="gist-novedades-chip-count gist-novedades-chip-count--purple">~${resMerge.cOtrosUpd}</span></div>`);
+                    if (resMerge.cOtrosUpd) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Otros a actualizar</span><span class=" gist-novedades-chip-count gist-novedades-chip-count--purple">~${resMerge.cOtrosUpd}</span></div>`);
                     if (resMerge.cTipos) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Tipos Custom</span><span class="gist-novedades-chip-count">+${resMerge.cTipos}</span></div>`);
                     if (resMerge.cEdif) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Edificios</span><span class="gist-novedades-chip-count">+${resMerge.cEdif}</span></div>`);
                     detalle.innerHTML = chips.join('');
