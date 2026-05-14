@@ -2359,7 +2359,6 @@ button:disabled {
     border-radius: var(--radius);
     padding: var(--sp-3) var(--sp-4);
     margin-bottom: var(--sp-3);
-    cursor: pointer;
 }
 
 .gist-autosync-row--inline {
@@ -2390,6 +2389,7 @@ button:disabled {
     border-radius: var(--radius-pill);
     position: relative;
     transition: background 0.2s;
+    cursor: pointer;
 }
 
 .toggle-thumb {
