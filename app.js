@@ -2547,8 +2547,9 @@
             estadoTextos = ESTADO_ALIAS[estadoEfectivo] || [estadoEfectivo];
         }
 
-        if (campos.some(c => c.includes(query)) || (hayCanal && hayCanal.includes(query))) return 0;
         if (formaKey && query === formaKey) return 0;
+        const formaMatchParcial = formaKey && (formaKey.includes(query) || query.includes(formaKey));
+        if (!formaMatchParcial && (campos.some(c => c.includes(query)) || (hayCanal && hayCanal.includes(query)))) return 0;
 
         let total = 0;
         for (let ti = 0; ti < tokens.length; ti++) {
