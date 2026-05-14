@@ -1795,12 +1795,17 @@
         dashGrabadores.innerHTML = htmlTotales + htmlLista;
 
         requestAnimationFrame(() => {
+            // Primer frame: fijar width:0% y color para que la transición CSS tenga punto de partida
+            dashGrabadores.querySelectorAll('.dash-grab-barra-fill').forEach(fill => {
+                fill.style.width = '0%';
+                if (fill.dataset.color) fill.style.background = fill.dataset.color;
+            });
+
             requestAnimationFrame(() => {
 
                 dashGrabadores.querySelectorAll('.dash-grab-barra-fill').forEach(fill => {
                     const target = parseInt(fill.dataset.pctTarget, 10) || 0;
                     fill.style.width = target + '%';
-                    if (fill.dataset.color) fill.style.background = fill.dataset.color;
                 });
 
                 dashGrabadores.querySelectorAll('.dash-grab-row-pct').forEach(span => {
@@ -2236,6 +2241,7 @@
 
         const contador = document.getElementById('contador-dispositivos');
         if (contador) contador.textContent = query ? `${sorted.length} / ${disps.length}` : sorted.length;
+        _actualizarBtnExpandir();
 
         const colClass = 'lista-2col';
         const renderItem = d => _renderItemActivo(d, asignaciones, tieneMacDuplicada, dupPatrimonios);
@@ -2285,6 +2291,7 @@
         const grabs = [..._data.grabadores].sort((a, b) => (a.descripcion || '').localeCompare(b.descripcion || ''));
 
         const tieneMacDuplicada = _calcDupMacs();
+        const estaEnMultiCanal = _calcDispMultiCanal();
 
         if (grabs.length === 0) {
             lista.innerHTML = `<div class="empty-state">
@@ -2300,9 +2307,13 @@
 
                 if (disp) {
                     const tituloCanal = c.descripcion || disp.mac || disp.serial || '—';
-                    const isDup = tieneMacDuplicada(disp);
+                    const isDupMac = tieneMacDuplicada(disp);
+                    const isDupCanal = estaEnMultiCanal(c.dispositivoId);
+                    const isDup = isDupMac || isDupCanal;
                     const badgeClass = isDup ? ' canal-numero--dup' : '';
-                    const tituloHover = isDup ? `[MAC DUPLICADA] ${esc(tituloCanal)}` : esc(tituloCanal);
+                    const tituloHover = isDupCanal
+                        ? `[EN MÚLTIPLES GRABADORES] ${esc(tituloCanal)}`
+                        : isDupMac ? `[MAC DUPLICADA] ${esc(tituloCanal)}` : esc(tituloCanal);
 
                     return `<div class="canal-slot-lista ocupado" data-canal="${c.canal}">
                                 <div class="canal-numero${badgeClass}">CH ${c.canal}</div>
@@ -2547,9 +2558,8 @@
             estadoTextos = ESTADO_ALIAS[estadoEfectivo] || [estadoEfectivo];
         }
 
+        if (campos.some(c => c.includes(query)) || (hayCanal && hayCanal.includes(query))) return 0;
         if (formaKey && query === formaKey) return 0;
-        const formaMatchParcial = formaKey && (formaKey.includes(query) || query.includes(formaKey));
-        if (!formaMatchParcial && (campos.some(c => c.includes(query)) || (hayCanal && hayCanal.includes(query)))) return 0;
 
         let total = 0;
         for (let ti = 0; ti < tokens.length; ti++) {
@@ -2594,6 +2604,20 @@
         const dupMacs = new Set(Object.keys(macCounts).filter(k => macCounts[k] > 1));
         return (_cacheDupMacs = (d) => d?.mac?.split(',').some(m => dupMacs.has(m.trim().toUpperCase())) ?? false);
     }
+    function _calcDispMultiCanal() {
+        const dispCounts = {};
+        _data.grabadores.forEach(g => {
+            g.canales_data.forEach(c => {
+                if (c.dispositivoId != null) {
+                    const k = String(c.dispositivoId);
+                    dispCounts[k] = (dispCounts[k] || 0) + 1;
+                }
+            });
+        });
+        const multiCanal = new Set(Object.keys(dispCounts).filter(id => dispCounts[id] > 1));
+        return (dispId) => dispId != null && multiCanal.has(String(dispId));
+    }
+
     const _busqActivos = (() => {
         try {
             const saved = JSON.parse(localStorage.getItem(KEY_BUSQ) || 'null');
@@ -2641,6 +2665,79 @@
         }
         _activos.collapsed.clear();
         _activos.pisosCollapsed.clear();
+    }
+
+    function _toggleExpandirTodo() {
+        if (!_activos.collapsed) _activos.collapsed = new Set();
+        if (!_activos.pisosCollapsed) _activos.pisosCollapsed = new Set();
+
+        // Determinar si hay algo colapsado (grupos o pisos)
+        const hayColapsados = _activos.collapsed.size > 0 || _activos.pisosCollapsed.size > 0;
+
+        if (hayColapsados) {
+            // EXPANDIR TODO
+            _activos.collapsed.clear();
+            _activos.pisosCollapsed.clear();
+            // Actualizar DOM: grupos principales
+            document.querySelectorAll('.grupo-activos-card[data-grupo]').forEach(card => {
+                const grid = card.querySelector('.activos-grid-transition');
+                const chevron = card.querySelector(':scope > .grupo-piso-header .nvr-chevron, :scope > .nvr-chevron');
+                if (!grid) return;
+                grid.classList.remove('collapsed');
+                if (chevron) chevron.classList.remove('nvr-chevron--collapsed');
+                grid.style.maxHeight = grid.scrollHeight + 'px';
+                grid.addEventListener('transitionend', () => { grid.style.maxHeight = ''; }, { once: true });
+            });
+            // Actualizar DOM: subgrupos de piso
+            document.querySelectorAll('.sub-grupo-piso[data-floor-key]').forEach(fp => {
+                const grid = fp.querySelector('.activos-grid-transition');
+                const chevron = fp.querySelector('.nvr-chevron');
+                if (!grid) return;
+                grid.classList.remove('collapsed');
+                if (chevron) chevron.classList.remove('nvr-chevron--collapsed');
+                grid.style.maxHeight = grid.scrollHeight + 'px';
+                grid.addEventListener('transitionend', () => { grid.style.maxHeight = ''; }, { once: true });
+            });
+        } else {
+            // COLAPSAR TODO
+            document.querySelectorAll('.grupo-activos-card[data-grupo]').forEach(card => {
+                const groupId = card.dataset.grupo;
+                const grid = card.querySelector('.activos-grid-transition');
+                const chevron = card.querySelector(':scope > .grupo-piso-header .nvr-chevron, :scope > .nvr-chevron');
+                if (!grid) return;
+                _activos.collapsed.add(groupId);
+                grid.style.maxHeight = grid.scrollHeight + 'px';
+                grid.getBoundingClientRect();
+                grid.classList.add('collapsed');
+                if (chevron) chevron.classList.add('nvr-chevron--collapsed');
+                grid.style.maxHeight = '';
+            });
+            document.querySelectorAll('.sub-grupo-piso[data-floor-key]').forEach(fp => {
+                const floorKey = fp.dataset.floorKey;
+                const grid = fp.querySelector('.activos-grid-transition');
+                const chevron = fp.querySelector('.nvr-chevron');
+                if (!grid) return;
+                _activos.pisosCollapsed.add(floorKey);
+                grid.style.maxHeight = grid.scrollHeight + 'px';
+                grid.getBoundingClientRect();
+                grid.classList.add('collapsed');
+                if (chevron) chevron.classList.add('nvr-chevron--collapsed');
+                grid.style.maxHeight = '';
+            });
+        }
+
+        if (_guardarColapsados) _guardarColapsados();
+        _actualizarBtnExpandir();
+    }
+
+    function _actualizarBtnExpandir() {
+        const btn = document.getElementById('btn-expandir-todo');
+        if (!btn) return;
+        const hayColapsados = (_activos.collapsed && _activos.collapsed.size > 0)
+            || (_activos.pisosCollapsed && _activos.pisosCollapsed.size > 0);
+        const use = btn.querySelector('use');
+        if (use) use.setAttribute('href', hayColapsados ? '#icon-expand-all' : '#icon-collapse-all');
+        btn.title = hayColapsados ? 'Expandir todo' : 'Colapsar todo';
     }
 
     function _sincFiltrosUI() {
@@ -5318,6 +5415,8 @@
         // Dropdown activos
         document.querySelector('#btn-vista-activos-wrap > .icon-btn')
             ?.addEventListener('click', (e) => UI.toggleDropdownActivos(e));
+        document.getElementById('btn-expandir-todo')
+            ?.addEventListener('click', () => _toggleExpandirTodo());
         document.querySelectorAll('#dropdown-vista-activos .canal-disp-item').forEach(item => {
             const orden = item.dataset.orden;
             if (orden) item.addEventListener('click', () => { UI.setActivosOrden(orden); UI.toggleDropdownActivos(); });

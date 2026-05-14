@@ -484,6 +484,14 @@ button:disabled {
     margin-left: 0;
 }
 
+#btn-expandir-todo {
+    margin-left: auto;
+}
+
+#btn-expandir-todo + #btn-vista-activos-wrap {
+    margin-left: 0;
+}
+
 .btn-ver-activo {
     flex-shrink: 0;
     margin-bottom: 1px;
@@ -2947,7 +2955,8 @@ button:disabled {
     animation-fill-mode: both;
 }
 
-.canal-numero--dup {
+.canal-numero--dup,
+.canal-slot-lista.ocupado .canal-numero--dup {
     background: var(--c-purple);
 }
 
