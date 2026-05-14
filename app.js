@@ -1297,7 +1297,7 @@
                 const desc = document.querySelector('.gist-novedades-desc');
                 if (desc) {
                     desc.innerHTML = esValida
-                        ? 'Se encontraron mejoras o registros en GitHub que no están en este dispositivo:'
+                        ? 'Se encontraron campos o registros en GitHub que no están en este dispositivo:'
                         : 'Se encontraron registros en GitHub.<br><strong class="gist-warn-altered">⚠️ Atención: Los datos fueron alterados manualmente.</strong>';
                 }
 
