@@ -805,10 +805,10 @@
         function _actualizarBotonesAjustes() {
             const tieneToken = !!((_cfg.token || '').trim());
             const tieneGistId = !!((_cfg.gistId || '').trim());
-            
+
             const btnUp = document.getElementById('btn-ajustes-gist-subir');
             const btnDn = document.getElementById('btn-ajustes-gist-bajar');
-            
+
             if (btnUp) btnUp.classList.toggle('hidden', !(tieneToken && tieneGistId));
             if (btnDn) btnDn.classList.toggle('hidden', !tieneGistId);
         }
@@ -1093,7 +1093,7 @@
         async function bajar() {
             const token = document.getElementById('gist-token')?.value.trim() || _cfg.token;
             const gistId = document.getElementById('gist-id')?.value.trim() || _cfg.gistId;
-            
+
             // ELIMINAMOS LA LÍNEA DEL TOKEN: if (!token) { toast('Ingresá el token primero', 'error'); return; }
             if (!gistId) { toast('Ingresá el Gist ID primero', 'error'); return; }
             if (!RE_GIST_ID.test(gistId)) { toast('Gist ID inválido', 'error'); return; }
@@ -1121,7 +1121,7 @@
                 if (file.truncated) {
                     const rawOrigin = new URL(file.raw_url).hostname;
                     if (!rawOrigin.endsWith('.githubusercontent.com')) throw new Error('raw_url inválida');
-                    
+
                     // EVADIMOS CACHÉ EN LA PETICIÓN RAW
                     const r2 = await fetch(`${file.raw_url}?_ts=${Date.now()}`, { cache: 'no-store' });
                     contenido = await r2.text();
@@ -1259,7 +1259,7 @@
                 if (file.truncated) {
                     const rawOrigin = new URL(file.raw_url).hostname;
                     if (!rawOrigin.endsWith('.githubusercontent.com')) return;
-                    
+
                     const r2 = await fetch(`${file.raw_url}?_ts=${Date.now()}`, { cache: 'no-store' });
                     contenido = await r2.text();
                 }
@@ -1372,7 +1372,6 @@
         renderProduccion();
     }
 
-    // ── Estado del dashboard ──────────────────────────────────────────────────
     const _dash = {
         tipoAbierto: null,
         tipoAbiertoPrevio: null,
@@ -1483,7 +1482,7 @@
     };
 
     function _toggleEstadoDetalle(estadoKey) {
-        if (_dash.tipoAbierto !== 'camara') return;
+        if (!_dash.tipoAbierto) return;
 
         _dash.estadoAbierto = _dash.estadoAbierto === estadoKey ? null : estadoKey;
 
@@ -1493,143 +1492,179 @@
         _renderResumenGeneral(disps, idsEnProd);
     };
 
-    function _inyectarStaggerChips() { /* CSS movido a styles.css (CSP: sin unsafe-inline) */ }
+    function _inyectarStaggerChips() { }
 
     function _renderResumenGeneral(disps, idsEnProd) {
-        const tiposConDisps = new Set(disps.map(d => d.tipo));
-        const tiposBuitin = Object.keys(S.TIPOS_BUILTIN);
-        const tiposCustom = Object.keys(S.TIPOS).filter(k => !S.TIPOS_BUILTIN[k] && tiposConDisps.has(k)).sort();
-        const tiposOrden = [...tiposBuitin, ...tiposCustom];
-
-
+        const tiposServidores = ['nvr', 'dvr', 'analitica', 'encoder'];
         const depth = (!_dash.tipoAbierto) ? 0 : (!_dash.estadoAbierto ? 1 : 2);
 
+        // NIVEL 0: Grilla Principal
         const getTiposHtml = () => {
-            const chipTotal = `
-                    <div class="dash-chip-main">
-                        <div class="stat-chip-valor">${disps.length}</div>
-                        <div class="stat-chip-label">Dispositivos en total</div>
-                    </div>`;
+            const chipTotal = `<div class="dash-chip-main">
+                <div class="stat-chip-valor">${disps.length}</div>
+                <div class="stat-chip-label">Dispositivos en total</div>
+            </div>`;
 
-            const chipsTipo = tiposOrden.map(tipoKey => {
+            let chipsHtml = '';
+
+            // 1. CÁMARAS (y cualquier otro tipo nativo que no sea servidor)
+            Object.keys(S.TIPOS_BUILTIN).filter(k => !tiposServidores.includes(k)).forEach(tipoKey => {
                 const tc = S.TIPOS[tipoKey];
-                if (!tc) return '';
                 const n = disps.filter(d => d.tipo === tipoKey).length;
-                return `
-                        <div class="stat-chip stat-chip-tipo" data-action="toggle-tipo" data-tipo="${tipoKey}">
-                            <div class="stat-chip-valor">${n}</div>
-                            <div class="stat-chip-label">${tc.emoji} ${(tc.label + (tipoKey === 'camara' ? 's' : '')).toUpperCase()}</div>
-                            <span class="stat-chip-arrow">▶</span>
-                        </div>`;
-            }).join('');
-
-            return `
-                    <div class="dash-resumen-grid">
-                        <div class="dash-resumen-col-info">${chipTotal}</div>
-                        <div class="dash-resumen-col-data"><div class="dashboard-grid">${chipsTipo}</div></div>
+                chipsHtml += `
+                    <div class="stat-chip stat-chip-tipo" data-action="toggle-tipo" data-tipo="${tipoKey}">
+                        <div class="stat-chip-valor">${n}</div>
+                        <div class="stat-chip-label">${tc.emoji} ${(tc.label + (tipoKey === 'camara' ? 's' : '')).toUpperCase()}</div>
+                        <span class="stat-chip-arrow">▶</span>
                     </div>`;
+            });
+
+            // 2. SERVIDORES (Chip agrupador)
+            const nServ = disps.filter(d => tiposServidores.includes(d.tipo)).length;
+            chipsHtml += `
+                <div class="stat-chip stat-chip-tipo" data-action="toggle-tipo" data-tipo="servidores">
+                    <div class="stat-chip-valor">${nServ}</div>
+                    <div class="stat-chip-label">🖥️ SERVIDORES</div>
+                    <span class="stat-chip-arrow">▶</span>
+                </div>`;
+
+            // 3. PERSONALIZADOS (Filtrados y ordenados alfabéticamente por su nombre)
+            const tiposCustomKeys = Object.keys(S.TIPOS)
+                .filter(k => !S.TIPOS_BUILTIN[k] && disps.some(d => d.tipo === k))
+                .sort((a, b) => S.TIPOS[a].label.localeCompare(S.TIPOS[b].label));
+
+            tiposCustomKeys.forEach(tipoKey => {
+                const tc = S.TIPOS[tipoKey];
+                const n = disps.filter(d => d.tipo === tipoKey).length;
+                chipsHtml += `
+                    <div class="stat-chip stat-chip-tipo" data-action="toggle-tipo" data-tipo="${tipoKey}">
+                        <div class="stat-chip-valor">${n}</div>
+                        <div class="stat-chip-label">${tc.emoji} ${tc.label.toUpperCase()}</div>
+                        <span class="stat-chip-arrow">▶</span>
+                    </div>`;
+            });
+
+            return `<div class="dash-resumen-grid"><div class="dash-resumen-col-info">${chipTotal}</div><div class="dash-resumen-col-data"><div class="dashboard-grid">${chipsHtml}</div></div></div>`;
         };
 
-        const getEstadosHtml = (tipoOverride) => {
+        // NIVEL 1: Selección de Estado (para Cámaras o para el grupo Servidores)
+        const getL1Html = (tipoOverride) => {
             const tipo = tipoOverride || _dash.tipoAbierto;
-            if (!tipo || !S.TIPOS[tipo]) return '';
+            if (!tipo) return '';
 
-            const tc = S.TIPOS[tipo];
-            const dispsDelTipo = disps.filter(d => d.tipo === tipo);
-            const est = _estadosDeDisps(dispsDelTipo, idsEnProd);
+            const esGrupoServidores = tipo === 'servidores';
+            const dispsFiltrados = esGrupoServidores
+                ? disps.filter(d => tiposServidores.includes(d.tipo))
+                : disps.filter(d => d.tipo === tipo);
+
+            const est = _estadosDeDisps(dispsFiltrados, idsEnProd);
+            const tc = esGrupoServidores ? { emoji: '🖥️', label: 'Servidores' } : S.TIPOS[tipo];
 
             const chipSeleccionado = `
-                    <div class="dash-chip-main clickable" data-action="toggle-tipo" data-tipo="${tipo}">
-                        <div class="stat-chip-valor">${dispsDelTipo.length}</div>
-                        <div class="stat-chip-label">${tc.emoji} ${(tc.label + (tipo === 'camara' ? 's' : '')).toUpperCase()}</div>
-                        <div class="dash-chip-btn-group">
-                            <div class="stat-chip-volver dash-chip-btn">◀ VOLVER</div>
-                        </div>
-                    </div>`;
+                <div class="dash-chip-main clickable" data-action="toggle-tipo" data-tipo="${tipo}">
+                    <div class="stat-chip-valor">${dispsFiltrados.length}</div>
+                    <div class="stat-chip-label">${tc.emoji} ${tc.label.toUpperCase()}</div>
+                    <div class="dash-chip-btn-group"><div class="stat-chip-volver dash-chip-btn">◀ VOLVER</div></div>
+                </div>`;
+
+            const esCamara = tipo === 'camara';
+            const tieneNivel2 = esGrupoServidores || esCamara; // Solo Servidores y Cámaras tienen un nivel más adentro
 
             const chipsEstado = ESTADOS_DEF.map(e => {
                 const n = est[e.key];
-                const esCamara = tipo === 'camara';
-                const clickable = n > 0
-                    ? `class="stat-chip stat-chip-tipo" data-action="toggle-estado-o-ir" data-tipo="${tipo}" data-estado="${e.key}" data-es-camara="${esCamara}"`
-                    : `class="stat-chip" data-action="stop"`;
+                
+                // Si tiene Nivel 2, abre el detalle. Si no, va directo a la pestaña de activos.
+                const action = n > 0 
+                    ? (tieneNivel2 ? `data-action="toggle-estado" data-estado="${e.key}"` : `data-action="ir-activos" data-tipo="${tipo}" data-estado="${e.key}"`)
+                    : `data-action="stop"`;
+                    
+                const clase = n > 0 ? "stat-chip stat-chip-tipo" : "stat-chip";
+                
                 return `
-                        <div ${clickable}>
-                            <div class="stat-chip-valor stat-chip-val--${e.key}">${n}</div>
-                            <div class="stat-chip-label">${e.label}</div>
-                            ${(esCamara && n > 0) ? '<span class="stat-chip-arrow">▶</span>' : ''}
-                        </div>`;
+                    <div class="${clase}" ${action}>
+                        <div class="stat-chip-valor stat-chip-val--${e.key}">${n}</div>
+                        <div class="stat-chip-label">${e.label}</div>
+                        ${(tieneNivel2 && n > 0) ? '<span class="stat-chip-arrow">▶</span>' : ''}
+                    </div>`;
             }).join('');
 
-            return `
-                    <div class="dash-resumen-grid">
-                        <div class="dash-resumen-col-info">${chipSeleccionado}</div>
-                        <div class="dash-resumen-col-data"><div class="dashboard-grid">${chipsEstado}</div></div>
-                    </div>`;
+            return `<div class="dash-resumen-grid"><div class="dash-resumen-col-info">${chipSeleccionado}</div><div class="dash-resumen-col-data"><div class="dashboard-grid">${chipsEstado}</div></div></div>`;
         };
 
-        const getFormasHtml = (estadoOverride) => {
+        // NIVEL 2: Desglose final (Formas para Cámaras o Tipos para Servidores)
+        const getL2Html = (estadoOverride) => {
+            const tipo = _dash.tipoAbierto;
             const estado = estadoOverride || _dash.estadoAbierto;
-            if (!estado) return '';
+            if (!tipo || !estado) return '';
 
-            const camarasDelEstado = disps.filter(d => d.tipo === 'camara' && (d.estado || (idsEnProd.has(d.id) ? 'produccion' : 'disponible')) === estado);
+            const esGrupoServidores = tipo === 'servidores';
 
-            const conteo = {};
-            camarasDelEstado.forEach(d => { const k = d.forma || '__sin__'; conteo[k] = (conteo[k] || 0) + 1; });
-
+            // Título del estado seleccionado
             const chipEstado = `
-                    <div class="dash-chip-main clickable" data-action="toggle-estado" data-estado="${estado}">
-                        <div class="stat-chip-valor stat-chip-val--${estado}">${camarasDelEstado.length}</div>
-                        <div class="stat-chip-label stat-chip-val--${estado}">${(ESTADO_LABEL_PLURAL[estado] || estado).toUpperCase()}</div>
-                        <div class="dash-chip-btn-group">
-                            <div class="stat-chip-volver dash-chip-btn">◀ VOLVER</div>
-                            <div class="stat-chip-volver dash-chip-btn" data-action="ir-activos" data-tipo="camara" data-estado="${estado}">VER TODOS ▶</div>
-                        </div>
-                    </div>`;
+                <div class="dash-chip-main clickable dash-chip-main--${estado}" data-action="toggle-estado" data-estado="${estado}">
+                    <div class="stat-chip-valor stat-chip-val--${estado}">${disps.filter(d => (esGrupoServidores ? tiposServidores.includes(d.tipo) : d.tipo === tipo) && (d.estado || (idsEnProd.has(d.id) ? 'produccion' : 'disponible')) === estado).length}</div>
+                    <div class="stat-chip-label stat-chip-val--${estado}">${(ESTADO_LABEL_PLURAL[estado] || estado).toUpperCase()}</div>
+                    <div class="dash-chip-btn-group"><div class="stat-chip-volver dash-chip-btn">◀ VOLVER</div></div>
+                </div>`;
 
-            const filas = FORMAS_DEF.filter(f => conteo[f.key] > 0);
-            if (conteo['__sin__'] > 0) filas.push({ key: '', label: 'Sin forma' });
+            let chipsFinales = '';
 
-            const chipsForma = filas.map(f => `
-                        <div class="stat-chip stat-chip-tipo" data-action="ir-activos" data-tipo="camara" data-estado="${estado}" data-forma="${f.key}">
-                            <div class="stat-chip-valor">${conteo[f.key || '__sin__']}</div>
-                            <div class="stat-chip-label">${f.label.toUpperCase()}</div>
-                        </div>`).join('');
+            if (esGrupoServidores) {
+                // Mostrar chips de NVR, DVR, etc. que tengan ese estado
+                chipsFinales = tiposServidores.map(tKey => {
+                    const n = disps.filter(d => d.tipo === tKey && (d.estado || (idsEnProd.has(d.id) ? 'produccion' : 'disponible')) === estado).length;
+                    if (n === 0) return '';
+                    return `
+                        <div class="stat-chip stat-chip-tipo" data-action="ir-activos" data-tipo="${tKey}" data-estado="${estado}">
+                            <div class="stat-chip-valor">${n}</div>
+                            <div class="stat-chip-label">${S.TIPOS[tKey].emoji} ${S.TIPOS[tKey].label.toUpperCase()}</div>
+                        </div>`;
+                }).join('');
+            } else {
+                // Lógica original de formas para cámaras
+                const camarasDelEstado = disps.filter(d => d.tipo === 'camara' && (d.estado || (idsEnProd.has(d.id) ? 'produccion' : 'disponible')) === estado);
+                const conteo = {};
+                camarasDelEstado.forEach(d => { const k = d.forma || '__sin__'; conteo[k] = (conteo[k] || 0) + 1; });
+                const filas = FORMAS_DEF.filter(f => conteo[f.key] > 0);
+                if (conteo['__sin__'] > 0) filas.push({ key: '', label: 'Sin forma' });
 
-            return `
-                    <div class="dash-resumen-grid">
-                        <div class="dash-resumen-col-info">${chipEstado}</div>
-                        <div class="dash-resumen-col-data"><div class="dashboard-grid">${chipsForma}</div></div>
-                    </div>`;
+                chipsFinales = filas.map(f => `
+                    <div class="stat-chip stat-chip-tipo" data-action="ir-activos" data-tipo="camara" data-estado="${estado}" data-forma="${f.key}">
+                        <div class="stat-chip-valor">${conteo[f.key || '__sin__']}</div>
+                        <div class="stat-chip-label">${f.label.toUpperCase()}</div>
+                    </div>`).join('');
+            }
+
+            return `<div class="dash-resumen-grid"><div class="dash-resumen-col-info">${chipEstado}</div><div class="dash-resumen-col-data"><div class="dashboard-grid">${chipsFinales}</div></div></div>`;
         };
 
         let htmlIzq = '', htmlDer = '';
         let enDetalle = depth > 0;
         let isSlidingAtrasNivel2 = false;
 
-        const saltandoNivel = (_dash.estadoAbiertoPrevio !== _dash.estadoAbierto && _dash.tipoAbierto && _dash.tipoAbiertoPrevio === _dash.tipoAbierto);
+        // Limpiamos los rastros de subTipoAbierto de las variables de salto
+        const saltandoNivel = _dash.estadoAbiertoPrevio !== _dash.estadoAbierto && _dash.tipoAbierto && _dash.tipoAbiertoPrevio === _dash.tipoAbierto;
         const saltandoAdelante = saltandoNivel && _dash.estadoAbierto !== null;
         const saltandoAtras = saltandoNivel && _dash.estadoAbierto === null;
 
         if (depth === 0) {
             htmlIzq = getTiposHtml();
-            htmlDer = getEstadosHtml(_dash.tipoAbiertoPrevio);
+            htmlDer = getL1Html(_dash.tipoAbiertoPrevio);
         }
         else if (depth === 1) {
             htmlIzq = getTiposHtml();
-            htmlDer = getEstadosHtml();
+            htmlDer = getL1Html();
 
             if (saltandoAtras) {
-
-                htmlIzq = getEstadosHtml();
-                htmlDer = getFormasHtml(_dash.estadoAbiertoPrevio);
+                htmlIzq = getL1Html();
+                htmlDer = getL2Html(_dash.estadoAbiertoPrevio);
                 enDetalle = false;
                 isSlidingAtrasNivel2 = true;
             }
         }
         else if (depth === 2) {
-            htmlIzq = getEstadosHtml();
-            htmlDer = getFormasHtml();
+            htmlIzq = getL1Html();
+            htmlDer = getL2Html();
         }
 
         const contenedor = document.getElementById('dash-disp-tree');
@@ -1658,11 +1693,12 @@
         if (saltandoAdelante && !esPrimeraCarga) {
             wrap.style.transition = 'none';
             wrap.classList.remove('en-detalle');
-            panelIzq.innerHTML = getEstadosHtml();
+            panelIzq.innerHTML = getL1Html();
             void wrap.offsetWidth;
             wrap.style.transition = '';
         }
 
+        // Asignamos solo el tipo y el estado
         _dash.tipoAbiertoPrevio = _dash.tipoAbierto;
         _dash.estadoAbiertoPrevio = _dash.estadoAbierto;
 
@@ -1705,10 +1741,9 @@
                         contenedor.style.transition = '';
 
                         if (isSlidingAtrasNivel2) {
-
                             wrap.style.transition = 'none';
                             panelIzq.innerHTML = getTiposHtml();
-                            panelDer.innerHTML = getEstadosHtml();
+                            panelDer.innerHTML = getL1Html();
                             wrap.classList.add('en-detalle');
                             void wrap.offsetWidth;
                             wrap.style.transition = '';
@@ -3351,7 +3386,7 @@
                         document.getElementById(`${prefijo}-rack`).value = snap.rack;
                         document.getElementById(`${prefijo}-comentarios`).value = snap.comentarios;
                         _poblarSelectEdificio(`${prefijo}-edificio`, snap.edificio);
-                        
+
                         if (prefijo === 'editar-otro-prod') {
                             const btnVerActivo = document.getElementById('btn-ver-activo-otro-prod');
                             if (btnVerActivo) btnVerActivo.classList.toggle('hidden', !snap.dispositivoId);
@@ -4705,7 +4740,7 @@
                     hidden.value = el.dataset.id;
                     input.value = el.dataset.mac || el.dataset.id;
                     dd.classList.add('hidden');
-                    if(prefijo === 'editar-otro-prod') document.getElementById('btn-ver-activo-otro-prod').classList.remove('hidden');
+                    if (prefijo === 'editar-otro-prod') document.getElementById('btn-ver-activo-otro-prod').classList.remove('hidden');
                 });
             });
         },
@@ -4727,7 +4762,7 @@
                     document.getElementById(`sel-${prefijo}-dispositivo`).value = el.dataset.id;
                     document.getElementById(`${prefijo}-disp-input`).value = el.dataset.mac || el.dataset.id;
                     dd.classList.add('hidden');
-                    if(prefijo === 'editar-otro-prod') document.getElementById('btn-ver-activo-otro-prod').classList.remove('hidden');
+                    if (prefijo === 'editar-otro-prod') document.getElementById('btn-ver-activo-otro-prod').classList.remove('hidden');
                 }
                 return;
             } else if (e.key === 'Escape') {
@@ -5005,7 +5040,7 @@
                 if (selectId.startsWith('nuevo-grab')) origen = 'nuevo-grab';
                 else if (selectId.startsWith('editar-grab')) origen = 'editar-grab';
                 else if (selectId.startsWith('nuevo-otro-prod')) origen = 'nuevo-otro-prod';
-                    else if (selectId.startsWith('editar-otro-prod')) origen = 'editar-otro-prod';
+                else if (selectId.startsWith('editar-otro-prod')) origen = 'editar-otro-prod';
                 UI.abrirEdificios(origen);
             } else {
                 seleccionado = sel.value;
@@ -5102,9 +5137,8 @@
 
     document.getElementById('card-resumen-general').addEventListener('mousedown', e => {
         if (!_dash.tipoAbierto) return;
-        // Si el click es sobre un chip interactivo, dejarlo pasar
         if (e.target.closest('[data-action]:not([data-action="stop"])')) return;
-        // Click en cualquier zona de la card sin acción → retroceder un nivel
+        
         if (_dash.estadoAbierto) {
             _dash.estadoAbierto = null;
         } else {
@@ -5577,7 +5611,6 @@
             if (el) { e.stopPropagation(); UI.copiarAlPortapapeles(el.dataset.copy, e, el.dataset.copyLabel); }
         });
 
-        // Delegación: data-action (botones en listas dinámicas)
         document.addEventListener('click', (e) => {
             const btn = e.target.closest('[data-action]');
             if (!btn) return;
@@ -5585,13 +5618,19 @@
             const action = btn.dataset.action;
             if (action === 'eliminar-tipo') UI.eliminarTipoCustom(btn.dataset.key);
             if (action === 'eliminar-edificio') UI.eliminarEdificio(Number(btn.dataset.idx));
-            if (action === 'toggle-tipo') _toggleTipoDetalle(btn.dataset.tipo);
-            if (action === 'toggle-estado') _toggleEstadoDetalle(btn.dataset.estado);
-            if (action === 'ir-activos') UI.irAActivosConFiltro(btn.dataset.tipo, btn.dataset.estado, btn.dataset.forma);
-            if (action === 'toggle-estado-o-ir') {
-                if (btn.dataset.esCamara === 'true') _toggleEstadoDetalle(btn.dataset.estado);
-                else UI.irAActivosConFiltro(btn.dataset.tipo, btn.dataset.estado);
+            
+            // -- LÓGICA LIMPIA DE NAVEGACIÓN --
+            if (action === 'toggle-tipo') {
+                _dash.estadoAbierto = null;
+                _toggleTipoDetalle(btn.dataset.tipo);
             }
+            if (action === 'toggle-estado') {
+                _toggleEstadoDetalle(btn.dataset.estado);
+            }
+            if (action === 'ir-activos') {
+                UI.irAActivosConFiltro(btn.dataset.tipo, btn.dataset.estado, btn.dataset.forma);
+            }
+            
             if (action === 'toggle-edificio') {
                 const rowEl = e.target.closest('.dash-edif-row');
                 if (rowEl) _toggleEdificio(rowEl);
@@ -5634,7 +5673,7 @@
                     () => document.querySelector('#modal-canal .btn-delete'),
                 ],
                 lockBtn: 'btn-lock-canal',
-            },            
+            },
             'modal-editar-otro-prod': {
                 inputs: ['editar-otro-prod-descripcion', 'editar-otro-prod-disp-input', 'editar-otro-prod-ip', 'editar-otro-prod-puerto',
                     'editar-otro-prod-edificio', 'editar-otro-prod-piso', 'editar-otro-prod-rack', 'editar-otro-prod-comentarios'],
