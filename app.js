@@ -1356,6 +1356,7 @@
     let _filtrosPrevios = null;
     let _estadoColapsadoPrevio = null;
     let _estadoPisosPrevio = null;
+    let _pisosOcultosConEdificios = false; // true cuando los pisos están en pisosCollapsed solo por colapsar edificios (Estado 1)
 
     function _calcIdsEnProd() {
         const { grabadores: grabs, otros_prod: otros = [] } = _data;
@@ -1436,6 +1437,7 @@
 
     function _togglePisoActivos(floorKey) {
         const col = _activos.pisosCollapsed;
+        _pisosOcultosConEdificios = false;
         const floorContainer = document.querySelector(`.sub-grupo-piso[data-floor-key="${CSS.escape(floorKey)}"]`);
         if (!floorContainer) return;
 
@@ -1572,14 +1574,14 @@
 
             const chipsEstado = ESTADOS_DEF.map(e => {
                 const n = est[e.key];
-                
+
                 // Si tiene Nivel 2, abre el detalle. Si no, va directo a la pestaña de activos.
-                const action = n > 0 
+                const action = n > 0
                     ? (tieneNivel2 ? `data-action="toggle-estado" data-estado="${e.key}"` : `data-action="ir-activos" data-tipo="${tipo}" data-estado="${e.key}"`)
                     : `data-action="stop"`;
-                    
+
                 const clase = n > 0 ? "stat-chip stat-chip-tipo" : "stat-chip";
-                
+
                 return `
                     <div class="${clase}" ${action}>
                         <div class="stat-chip-valor stat-chip-val--${e.key}">${n}</div>
@@ -2708,59 +2710,122 @@
         if (!_activos.collapsed) _activos.collapsed = new Set();
         if (!_activos.pisosCollapsed) _activos.pisosCollapsed = new Set();
 
-        // Determinar si hay algo colapsado (grupos o pisos)
-        const hayColapsados = _activos.collapsed.size > 0 || _activos.pisosCollapsed.size > 0;
+        const esEdificioPiso = _activos.orden === 'edificio-piso';
 
-        if (hayColapsados) {
-            // EXPANDIR TODO
-            _activos.collapsed.clear();
-            _activos.pisosCollapsed.clear();
-            // Actualizar DOM: grupos principales
-            document.querySelectorAll('.grupo-activos-card[data-grupo]').forEach(card => {
-                const grid = card.querySelector('.activos-grid-transition');
-                const chevron = card.querySelector(':scope > .grupo-piso-header .nvr-chevron, :scope > .nvr-chevron');
-                if (!grid) return;
-                grid.classList.remove('collapsed');
-                if (chevron) chevron.classList.remove('nvr-chevron--collapsed');
-                grid.style.maxHeight = grid.scrollHeight + 'px';
-                grid.addEventListener('transitionend', () => { grid.style.maxHeight = ''; }, { once: true });
-            });
-            // Actualizar DOM: subgrupos de piso
-            document.querySelectorAll('.sub-grupo-piso[data-floor-key]').forEach(fp => {
-                const grid = fp.querySelector('.activos-grid-transition');
-                const chevron = fp.querySelector('.nvr-chevron');
-                if (!grid) return;
-                grid.classList.remove('collapsed');
-                if (chevron) chevron.classList.remove('nvr-chevron--collapsed');
-                grid.style.maxHeight = grid.scrollHeight + 'px';
-                grid.addEventListener('transitionend', () => { grid.style.maxHeight = ''; }, { once: true });
-            });
+        if (esEdificioPiso) {
+            // Triple toggle: 0=todo expandido → 1=edificios colapsados → 2=pisos colapsados → 0
+            const hayEdificiosColapsados = _activos.collapsed.size > 0;
+            const hayPisosColapsados = _activos.pisosCollapsed.size > 0;
+
+            if (!hayEdificiosColapsados && !hayPisosColapsados) {
+                // Estado 0 → Estado 1: colapsar edificios y pisos sin animación.
+                // Los pisos se registran en pisosCollapsed para que el toggle individual funcione,
+                // pero se marca el flag para que _actualizarBtnExpandir lo trate como Estado 1.
+                document.querySelectorAll('.sub-grupo-piso[data-floor-key]').forEach(fp => {
+                    const floorKey = fp.dataset.floorKey;
+                    const grid = fp.querySelector('.activos-grid-transition');
+                    const chevron = fp.querySelector('.nvr-chevron');
+                    if (!grid) return;
+                    _activos.pisosCollapsed.add(floorKey);
+                    grid.style.transition = 'none';
+                    grid.classList.add('collapsed');
+                    grid.style.maxHeight = '';
+                    if (chevron) chevron.classList.add('nvr-chevron--collapsed');
+                    requestAnimationFrame(() => { grid.style.transition = ''; });
+                });
+                _pisosOcultosConEdificios = true;
+                document.querySelectorAll('.grupo-activos-card[data-grupo]').forEach(card => {
+                    const groupId = card.dataset.grupo;
+                    const grid = card.querySelector('.activos-grid-transition');
+                    const chevron = card.querySelector(':scope > .grupo-piso-header .nvr-chevron, :scope > .nvr-chevron');
+                    if (!grid) return;
+                    _activos.collapsed.add(groupId);
+                    grid.style.maxHeight = grid.scrollHeight + 'px';
+                    grid.getBoundingClientRect();
+                    grid.classList.add('collapsed');
+                    if (chevron) chevron.classList.add('nvr-chevron--collapsed');
+                    grid.style.maxHeight = '';
+                });
+            } else if (hayEdificiosColapsados) {
+                // Estado 1 → Estado 2: expandir edificios, los pisos ya están en pisosCollapsed.
+                // Si el flag está activo, los pisos ya están registrados; si no, colapsar pisos ahora.
+                _pisosOcultosConEdificios = false;
+                _activos.collapsed.clear();
+                document.querySelectorAll('.grupo-activos-card[data-grupo]').forEach(card => {
+                    const grid = card.querySelector('.activos-grid-transition');
+                    const chevron = card.querySelector(':scope > .grupo-piso-header .nvr-chevron, :scope > .nvr-chevron');
+                    if (!grid) return;
+                    grid.classList.remove('collapsed');
+                    if (chevron) chevron.classList.remove('nvr-chevron--collapsed');
+                    grid.style.maxHeight = grid.scrollHeight + 'px';
+                    grid.addEventListener('transitionend', () => { grid.style.maxHeight = ''; }, { once: true });
+                });
+                if (!hayPisosColapsados) {
+                    document.querySelectorAll('.sub-grupo-piso[data-floor-key]').forEach(fp => {
+                        const floorKey = fp.dataset.floorKey;
+                        const grid = fp.querySelector('.activos-grid-transition');
+                        const chevron = fp.querySelector('.nvr-chevron');
+                        if (!grid) return;
+                        _activos.pisosCollapsed.add(floorKey);
+                        grid.style.maxHeight = grid.scrollHeight + 'px';
+                        grid.getBoundingClientRect();
+                        grid.classList.add('collapsed');
+                        if (chevron) chevron.classList.add('nvr-chevron--collapsed');
+                        grid.style.maxHeight = '';
+                    });
+                }
+            } else {
+                // Estado 2 → Estado 0: expandir todo
+                _pisosOcultosConEdificios = false;
+                _activos.collapsed.clear();
+                _activos.pisosCollapsed.clear();
+                document.querySelectorAll('.grupo-activos-card[data-grupo]').forEach(card => {
+                    const grid = card.querySelector('.activos-grid-transition');
+                    const chevron = card.querySelector(':scope > .grupo-piso-header .nvr-chevron, :scope > .nvr-chevron');
+                    if (!grid) return;
+                    grid.classList.remove('collapsed');
+                    if (chevron) chevron.classList.remove('nvr-chevron--collapsed');
+                    grid.style.maxHeight = grid.scrollHeight + 'px';
+                    grid.addEventListener('transitionend', () => { grid.style.maxHeight = ''; }, { once: true });
+                });
+                document.querySelectorAll('.sub-grupo-piso[data-floor-key]').forEach(fp => {
+                    const grid = fp.querySelector('.activos-grid-transition');
+                    const chevron = fp.querySelector('.nvr-chevron');
+                    if (!grid) return;
+                    grid.classList.remove('collapsed');
+                    if (chevron) chevron.classList.remove('nvr-chevron--collapsed');
+                    grid.style.maxHeight = grid.scrollHeight + 'px';
+                    grid.addEventListener('transitionend', () => { grid.style.maxHeight = ''; }, { once: true });
+                });
+            }
         } else {
-            // COLAPSAR TODO
-            document.querySelectorAll('.grupo-activos-card[data-grupo]').forEach(card => {
-                const groupId = card.dataset.grupo;
-                const grid = card.querySelector('.activos-grid-transition');
-                const chevron = card.querySelector(':scope > .grupo-piso-header .nvr-chevron, :scope > .nvr-chevron');
-                if (!grid) return;
-                _activos.collapsed.add(groupId);
-                grid.style.maxHeight = grid.scrollHeight + 'px';
-                grid.getBoundingClientRect();
-                grid.classList.add('collapsed');
-                if (chevron) chevron.classList.add('nvr-chevron--collapsed');
-                grid.style.maxHeight = '';
-            });
-            document.querySelectorAll('.sub-grupo-piso[data-floor-key]').forEach(fp => {
-                const floorKey = fp.dataset.floorKey;
-                const grid = fp.querySelector('.activos-grid-transition');
-                const chevron = fp.querySelector('.nvr-chevron');
-                if (!grid) return;
-                _activos.pisosCollapsed.add(floorKey);
-                grid.style.maxHeight = grid.scrollHeight + 'px';
-                grid.getBoundingClientRect();
-                grid.classList.add('collapsed');
-                if (chevron) chevron.classList.add('nvr-chevron--collapsed');
-                grid.style.maxHeight = '';
-            });
+            // Toggle binario para las otras vistas
+            const hayColapsados = _activos.collapsed.size > 0;
+            if (hayColapsados) {
+                _activos.collapsed.clear();
+                document.querySelectorAll('.grupo-activos-card[data-grupo]').forEach(card => {
+                    const grid = card.querySelector('.activos-grid-transition');
+                    const chevron = card.querySelector(':scope > .grupo-piso-header .nvr-chevron, :scope > .nvr-chevron');
+                    if (!grid) return;
+                    grid.classList.remove('collapsed');
+                    if (chevron) chevron.classList.remove('nvr-chevron--collapsed');
+                    grid.style.maxHeight = grid.scrollHeight + 'px';
+                    grid.addEventListener('transitionend', () => { grid.style.maxHeight = ''; }, { once: true });
+                });
+            } else {
+                document.querySelectorAll('.grupo-activos-card[data-grupo]').forEach(card => {
+                    const groupId = card.dataset.grupo;
+                    const grid = card.querySelector('.activos-grid-transition');
+                    const chevron = card.querySelector(':scope > .grupo-piso-header .nvr-chevron, :scope > .nvr-chevron');
+                    if (!grid) return;
+                    _activos.collapsed.add(groupId);
+                    grid.style.maxHeight = grid.scrollHeight + 'px';
+                    grid.getBoundingClientRect();
+                    grid.classList.add('collapsed');
+                    if (chevron) chevron.classList.add('nvr-chevron--collapsed');
+                    grid.style.maxHeight = '';
+                });
+            }
         }
 
         if (_guardarColapsados) _guardarColapsados();
@@ -2770,11 +2835,30 @@
     function _actualizarBtnExpandir() {
         const btn = document.getElementById('btn-expandir-todo');
         if (!btn) return;
-        const hayColapsados = (_activos.collapsed && _activos.collapsed.size > 0)
-            || (_activos.pisosCollapsed && _activos.pisosCollapsed.size > 0);
         const use = btn.querySelector('use');
-        if (use) use.setAttribute('href', hayColapsados ? '#icon-expand-all' : '#icon-collapse-all');
-        btn.title = hayColapsados ? 'Expandir todo' : 'Colapsar todo';
+        const esEdificioPiso = _activos.orden === 'edificio-piso';
+        const hayEdificiosColapsados = _activos.collapsed && _activos.collapsed.size > 0;
+        const hayPisosColapsados = _activos.pisosCollapsed && _activos.pisosCollapsed.size > 0;
+
+        if (esEdificioPiso) {
+            if (!hayEdificiosColapsados && !hayPisosColapsados) {
+                // Estado 0: todo expandido → próxima acción colapsa edificios
+                if (use) use.setAttribute('href', '#icon-collapse-all');
+                btn.title = 'Colapsar edificios';
+            } else if (hayEdificiosColapsados || _pisosOcultosConEdificios) {
+                // Estado 1: edificios colapsados (pisos pueden estar en pisosCollapsed por el flag)
+                if (use) use.setAttribute('href', '#icon-collapse-floors');
+                btn.title = 'Colapsar pisos';
+            } else {
+                // Estado 2: solo pisos colapsados → próxima acción expande todo
+                if (use) use.setAttribute('href', '#icon-expand-all');
+                btn.title = 'Expandir todo';
+            }
+        } else {
+            const hayColapsados = hayEdificiosColapsados || hayPisosColapsados;
+            if (use) use.setAttribute('href', hayColapsados ? '#icon-expand-all' : '#icon-collapse-all');
+            btn.title = hayColapsados ? 'Expandir todo' : 'Colapsar todo';
+        }
     }
 
     function _sincFiltrosUI() {
@@ -2782,8 +2866,10 @@
         if (btnAll) btnAll.textContent = _busqActivos.size > 0 ? 'Desactivar todo' : 'Activar todo';
         const btnFiltros = document.getElementById('btn-filtros-busqueda');
         if (btnFiltros) btnFiltros.classList.toggle('tiene-desactivados', _busqActivos.size < BUSQ_CAMPOS.length);
-        document.querySelectorAll('[id^="filtro-cb-"]').forEach(cb => {
-            cb.checked = _busqActivos.has(cb.id.replace('filtro-cb-', ''));
+
+        // Nueva lógica para pintar de azul los items del dropdown
+        document.querySelectorAll('.canal-disp-item[data-filtro]').forEach(item => {
+            item.classList.toggle('activo-vista', _busqActivos.has(item.dataset.filtro));
         });
     }
 
@@ -2892,32 +2978,28 @@
             renderActivos();
         },
 
-        abrirFiltrosBusqueda() {
-            const lista = document.getElementById('filtros-busqueda-lista');
-            const camposOrdenados = [...BUSQ_CAMPOS].sort((a, b) => a.label.localeCompare(b.label));
-            lista.innerHTML = camposOrdenados.map(f => `
-                        <label class="filtro-row">
-                            <span class="filtro-label">${f.label}</span>
-                            <span class="filtro-toggle">
-                                <input type="checkbox" id="filtro-cb-${f.id}"
-                                    data-filtro-id="${f.id}"
-                                    ${_busqActivos.has(f.id) ? 'checked' : ''}>
-                                <span class="filtro-toggle-track"></span>
-                            </span>
-                        </label>`).join('');
+        toggleDropdownFiltros(e) {
+            if (e) e.stopPropagation();
+            const dd = document.getElementById('dropdown-filtros');
+            if (!dd) return;
 
-            lista.querySelectorAll('input[data-filtro-id]').forEach(cb => {
-                cb.addEventListener('change', function () {
-                    UI._onFiltroChange(this.dataset.filtroId, this.checked);
-                });
-            });
+            const abriendo = dd.classList.contains('hidden');
 
+            if (abriendo) {
+                // Si lo estamos abriendo, generamos los items con el estilo nuevo
+                const lista = document.getElementById('filtros-busqueda-lista');
+                const camposOrdenados = [...BUSQ_CAMPOS].sort((a, b) => a.label.localeCompare(b.label));
+                lista.innerHTML = camposOrdenados.map(f => {
+                    const esActivo = _busqActivos.has(f.id);
+                    return `
+                        <div class="canal-disp-item ${esActivo ? 'activo-vista' : ''}" data-action="toggle-filtro-campo" data-filtro="${f.id}">
+                            ${f.label}
+                        </div>`;
+                }).join('');
+            }
+
+            dd.classList.toggle('hidden', !abriendo);
             _sincFiltrosUI();
-            MM.abrir('modal-filtros-busqueda');
-        },
-
-        cerrarFiltrosBusqueda() {
-            MM.cerrar('modal-filtros-busqueda');
         },
 
         _onFiltroChange(id, activo) {
@@ -5133,18 +5215,26 @@
         if (wrapActivos && ddActivos && !wrapActivos.contains(e.target)) {
             ddActivos.classList.add('hidden');
         }
+
+        const wrapFiltros = document.getElementById('btn-filtros-wrap');
+        const ddFiltros = document.getElementById('dropdown-filtros');
+        if (wrapFiltros && ddFiltros && !wrapFiltros.contains(e.target)) {
+            ddFiltros.classList.add('hidden');
+        }
     });
 
     document.getElementById('card-resumen-general').addEventListener('mousedown', e => {
         if (!_dash.tipoAbierto) return;
         if (e.target.closest('[data-action]:not([data-action="stop"])')) return;
-        
+
         if (_dash.estadoAbierto) {
             _dash.estadoAbierto = null;
         } else {
             _dash.tipoAbierto = null;
         }
-        renderDashboard();
+        const disps = _data.dispositivos;
+        const idsEnProd = _calcIdsEnProd();
+        _renderResumenGeneral(disps, idsEnProd);
     });
 
     const dz = document.getElementById('importar-dropzone');
@@ -5441,7 +5531,7 @@
             }
         });
         on('btn-limpiar-busqueda', 'click', () => UI.limpiarBusqueda());
-        on('btn-filtros-busqueda', 'click', () => UI.abrirFiltrosBusqueda());
+        on('btn-filtros-busqueda', 'click', (e) => UI.toggleDropdownFiltros(e));
 
         // Mini-tabs cámaras dashboard
         document.querySelectorAll('.mini-tab-btn[data-target]').forEach(btn => {
@@ -5618,7 +5708,7 @@
             const action = btn.dataset.action;
             if (action === 'eliminar-tipo') UI.eliminarTipoCustom(btn.dataset.key);
             if (action === 'eliminar-edificio') UI.eliminarEdificio(Number(btn.dataset.idx));
-            
+
             // -- LÓGICA LIMPIA DE NAVEGACIÓN --
             if (action === 'toggle-tipo') {
                 _dash.estadoAbierto = null;
@@ -5630,10 +5720,15 @@
             if (action === 'ir-activos') {
                 UI.irAActivosConFiltro(btn.dataset.tipo, btn.dataset.estado, btn.dataset.forma);
             }
-            
+
             if (action === 'toggle-edificio') {
                 const rowEl = e.target.closest('.dash-edif-row');
                 if (rowEl) _toggleEdificio(rowEl);
+            }
+
+            if (action === 'toggle-filtro-campo') {
+                const key = btn.dataset.filtro;
+                UI._onFiltroChange(key, !_busqActivos.has(key));
             }
         });
     }

@@ -229,6 +229,13 @@
             <polyline points="4 15 4 20 9 20"></polyline>
             <polyline points="20 15 20 20 15 20"></polyline>
         </symbol>
+        <symbol id="icon-collapse-floors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="4 9 4 4 9 4"></polyline>
+            <polyline points="20 9 20 4 15 4"></polyline>
+            <line x1="4" y1="20" x2="20" y2="20"></line>
+            <line x1="4" y1="15" x2="20" y2="15"></line>
+        </symbol>
     </svg>
 
     <header class="header">
@@ -299,11 +306,22 @@
                         <use href="#icon-cancelar" />
                     </svg>
                 </button>
-                <button id="btn-filtros-busqueda" title="Personalizar búsqueda">
-                    <svg class="icon icon-line">
-                        <use href="#icon-filter" />
-                    </svg>
-                </button>
+
+                <div id="btn-filtros-wrap" class="filtros-wrap">
+                    <button id="btn-filtros-busqueda" title="Personalizar búsqueda">
+                        <svg class="icon icon-line">
+                            <use href="#icon-filter" />
+                        </svg>
+                    </button>
+                    <div id="dropdown-filtros" class="combobox-dropdown hidden">
+                        <div class="filtro-dropdown-header">
+                            <span class="filtro-dropdown-title">Campos</span>
+                            <button id="btn-toggle-all-filtros" class="filtro-dropdown-desactivar">Desactivar
+                                todo</button>
+                        </div>
+                        <div id="filtros-busqueda-lista"></div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -1477,29 +1495,6 @@
                         <use href="#icon-undo" />
                     </svg> Volver
                 </button>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal" id="modal-filtros-busqueda">
-        <div class="modal-content sm">
-            <div class="modal-filtros-sticky-header">
-                <h3>
-                    <svg class="icon icon-line">
-                        <use href="#icon-search" />
-                    </svg>
-                    Campos de búsqueda
-                </h3>
-                <div class="modal-filtros-header">
-                    <p class="modal-filtros-desc">Campos a filtrar</p>
-                    <button id="btn-toggle-all-filtros" class="btn-toggle-all">
-                        Desactivar todo
-                    </button>
-                </div>
-            </div>
-            <div id="filtros-busqueda-lista" class="filtros-lista"></div>
-            <div class="modal-filtros-sticky-footer">
-                <button class="btn-cancel">Cerrar</button>
             </div>
         </div>
     </div>
