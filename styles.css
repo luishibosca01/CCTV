@@ -20,6 +20,7 @@
     --c-purple: rgba(129, 76, 172, 0.8);
     --c-gold: rgba(172, 155, 76, 0.8);
     --c-orange: rgba(210, 120, 50, 0.8);
+    --c-teal: rgba(56, 163, 165, 0.8);
     --c-gray-btn: #dde3ea;
     --c-white: #ffffff;
 
@@ -734,6 +735,8 @@ button:disabled {
 .badge-camara,
 .badge-nvr,
 .badge-dvr,
+.badge-analitica,
+.badge-encoder,
 .badge-otro {
     background: transparent;
     color: var(--text-main);
@@ -743,11 +746,21 @@ button:disabled {
 
 .badge-nvr-filled,
 .badge-dvr-filled,
+.badge-analitica-filled,
+.badge-encoder-filled,
 .badge-estado-produccion,
 .badge-estado-disponible,
 .badge-estado-averiado,
 .badge-estado-revisar {
     color: var(--c-white);
+}
+
+.badge-analitica-filled {
+    background: var(--c-purple);
+}
+
+.badge-encoder-filled {
+    background: var(--c-teal);
 }
 
 .badge-nvr-filled,

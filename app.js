@@ -149,6 +149,8 @@
             camara: { label: 'Cámara', emoji: '📹', badge: 'badge-camara', dot: 'var(--c-blue)', builtin: true },
             nvr: { label: 'NVR', emoji: '📟', badge: 'badge-nvr', dot: 'var(--c-green)', builtin: true },
             dvr: { label: 'DVR', emoji: '📼', badge: 'badge-dvr', dot: 'var(--c-orange)', builtin: true },
+            analitica: { label: 'Analítica', emoji: '🧠', badge: 'badge-analitica', dot: 'var(--c-purple)', builtin: true },
+            encoder: { label: 'Encoder', emoji: '🔌', badge: 'badge-encoder', dot: 'var(--c-teal)', builtin: true },
         };
 
         const KEY_TIPOS = 'cctv_tipos_custom';
