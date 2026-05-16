@@ -1354,6 +1354,7 @@
     // § RENDER — funciones de renderizado (dashboard, activos, producción)
     // ════════════════════════════════════════════════════════════════════════════
     let _filtrosPrevios = null;
+    let _filtroEdificioPiso = null; // { edificio, piso } — filtro directo desde dashboard, evalúa asignaciones
     let _estadoColapsadoPrevio = null;
     let _estadoPisosPrevio = null;
     let _pisosOcultosConEdificios = false;
@@ -2339,6 +2340,27 @@
                 .filter(({ score }) => score < Infinity)
                 .sort((a, b) => a.score - b.score)
                 .map(({ d }) => d);
+        }
+
+        // Filtro directo por edificio/piso del canal asignado (viene del dashboard)
+        if (_filtroEdificioPiso) {
+            const { edificio: fEdif, piso: fPiso } = _filtroEdificioPiso;
+            sorted = sorted.filter(d => {
+                const asigD = asignaciones[d.id] || [];
+                return asigD.some(a => {
+                    let edif = '', piso = '';
+                    if (a.tipo === 'canal' && a.slot) {
+                        edif = (a.slot.edificio || '').trim().toLowerCase();
+                        piso = S.normalizarPiso(a.slot.piso || '').toLowerCase();
+                    } else if (a.tipo === 'otro_prod' && a.item) {
+                        edif = (a.item.edificio || '').trim().toLowerCase();
+                        piso = S.normalizarPiso(a.item.piso || '').toLowerCase();
+                    }
+                    const edifOk = !fEdif || edif === fEdif;
+                    const pisoOk = !fPiso || piso === fPiso;
+                    return edifOk && pisoOk;
+                });
+            });
         }
 
         if (sorted.length === 0) {
@@ -3686,10 +3708,20 @@
             const tipoLabel = S.TIPOS[tipo]?.label?.toLowerCase() || tipo;
             const estadoQ = estado || '';
             const formaQ = forma || '';
-            const edificioQ = edificio || '';
-            const pisoQ = piso || '';
-            const query = [tipoLabel, estadoQ, formaQ, edificioQ, pisoQ].filter(Boolean).join(' ');
 
+            // Para edificio/piso usamos filtro directo (no texto libre) porque
+            // el dashboard agrupa por el edificio/piso del canal asignado, no del dispositivo.
+            if (edificio || piso) {
+                _filtroEdificioPiso = {
+                    edificio: (edificio || '').trim().toLowerCase(),
+                    piso: (piso || '').trim().toLowerCase()
+                };
+            } else {
+                _filtroEdificioPiso = null;
+            }
+
+            // El query de texto solo incluye tipo, estado y forma
+            const query = [tipoLabel, estadoQ, formaQ].filter(Boolean).join(' ');
             _forzarFiltros('tipo', 'estado', 'forma');
 
             if (_dash.tipoAbierto) {
@@ -3736,6 +3768,9 @@
             const btnX = document.getElementById('btn-limpiar-busqueda');
             const query = input.value;
 
+            // Si el usuario escribe manualmente, cancela el filtro directo de edificio/piso
+            _filtroEdificioPiso = null;
+
             if (btnX) btnX.classList.toggle('hidden', !query);
 
             if (query && _tabActual !== 'activos') {
@@ -3759,6 +3794,7 @@
         limpiarBusqueda() {
 
             if (_busqTimer) clearTimeout(_busqTimer);
+            _filtroEdificioPiso = null;
 
             const input = document.getElementById('input-busqueda');
             input.value = '';
