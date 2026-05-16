@@ -67,7 +67,6 @@ body.dark-mode {
     --hover: brightness(1.2);
 }
 
-
 /* ═══════════════════════════════════════════════════════
    RESET & BASE
 ═══════════════════════════════════════════════════════ */
@@ -99,7 +98,6 @@ body.modal-open {
 .svg-sprite {
     display: none;
 }
-
 
 /* ═══════════════════════════════════════════════════════
    LAYOUT
@@ -147,13 +145,6 @@ body.modal-open {
     grid-template-columns: 1fr 1fr;
     gap: var(--sp-4);
 }
-
-.form-row-3 {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: var(--sp-4);
-}
-
 
 /* ═══════════════════════════════════════════════════════
    HEADER
@@ -211,7 +202,6 @@ body.modal-open {
     flex-shrink: 0;
 }
 
-
 /* ═══════════════════════════════════════════════════════
    SCROLLBAR
 ═══════════════════════════════════════════════════════ */
@@ -233,7 +223,6 @@ body.modal-open {
 ::-webkit-scrollbar-thumb:hover {
     background: var(--text-muted);
 }
-
 
 /* ═══════════════════════════════════════════════════════
    CARD
@@ -267,13 +256,6 @@ body.modal-open {
     margin-top: var(--sp-5);
 }
 
-.card-title-actions {
-    display: flex;
-    align-items: center;
-    gap: var(--sp-3);
-    width: 100%;
-}
-
 .contador-badge {
     font-size: var(--fs-sm);
     font-weight: 600;
@@ -283,7 +265,6 @@ body.modal-open {
     padding: var(--sp-1) var(--sp-3);
     margin-left: var(--sp-1);
 }
-
 
 /* ═══════════════════════════════════════════════════════
    FORMS
@@ -395,16 +376,9 @@ textarea.textarea-modal {
     margin-bottom: var(--sp-4);
 }
 
-.input-flex-row--no-mb {
-    display: flex;
-    gap: var(--sp-2);
-    align-items: flex-end;
-}
-
 #sel-canal-dispositivo option:disabled {
     color: var(--text-disabled);
 }
-
 
 /* ═══════════════════════════════════════════════════════
    BUTTONS
@@ -441,11 +415,14 @@ button:disabled {
 
 .btn-edit {
     background: var(--c-blue);
-    color: var(--c-white);
 }
 
 .btn-backup {
     background: var(--c-green);
+}
+
+.btn-edit,
+.btn-backup {
     color: var(--c-white);
 }
 
@@ -656,7 +633,6 @@ button:disabled {
     margin-left: var(--sp-4);
 }
 
-
 /* ═══════════════════════════════════════════════════════
    ICONS
 ═══════════════════════════════════════════════════════ */
@@ -708,7 +684,6 @@ button:disabled {
     height: 0.95em;
 }
 
-
 /* ═══════════════════════════════════════════════════════
    BADGES
 ═══════════════════════════════════════════════════════ */
@@ -735,32 +710,12 @@ button:disabled {
     text-transform: uppercase;
 }
 
-.badge-nvr-filled,
-.badge-dvr-filled,
-.badge-analitica-filled,
-.badge-encoder-filled,
-.badge-estado-produccion,
-.badge-estado-disponible,
-.badge-estado-averiado,
-.badge-estado-revisar {
-    color: var(--c-white);
-}
-
-.badge-encoder-filled {
-    background: var(--c-teal);
-}
-
-.badge-nvr-filled,
-.badge-estado-disponible {
-    background: var(--c-green);
-}
-
-.badge-dvr-filled {
-    background: var(--c-orange);
-}
-
 .badge-estado-averiado {
     background: var(--c-red);
+}
+
+.badge-estado-disponible {
+    background: var(--c-green);
 }
 
 .badge-estado-desafectado {
@@ -774,7 +729,6 @@ button:disabled {
     border-color: var(--c-orange);
     font-size: var(--fs-xs);
 }
-
 
 /* ═══════════════════════════════════════════════════════
    TABS (main navigation)
@@ -851,7 +805,6 @@ button:disabled {
     animation: tabFadeIn 0.22s ease forwards;
 }
 
-
 /* ═══════════════════════════════════════════════════════
    MINI TABS (dashboard camera view switcher)
 ═══════════════════════════════════════════════════════ */
@@ -905,7 +858,6 @@ button:disabled {
 .mini-tab-btn.activa {
     color: var(--text-main);
 }
-
 
 /* ═══════════════════════════════════════════════════════
    SEARCH BAR
@@ -983,7 +935,6 @@ button:disabled {
     height: var(--sp-5);
     stroke: var(--text-muted);
 }
-
 
 /* ═══════════════════════════════════════════════════════
    MODAL
@@ -1121,7 +1072,6 @@ button:disabled {
     margin-bottom: var(--sp-5);
 }
 
-
 /* ═══════════════════════════════════════════════════════
    TOAST
 ═══════════════════════════════════════════════════════ */
@@ -1172,12 +1122,6 @@ button:disabled {
     align-items: start;
 }
 
-.lista-1col {
-    display: grid;
-    grid-template-columns: 1fr;
-    align-items: start;
-}
-
 .dispositivo-item {
     border: 1px solid var(--bg-card);
     border-radius: var(--radius);
@@ -1195,11 +1139,6 @@ button:disabled {
 .lista-2col .dispositivo-item {
     align-items: flex-start;
     height: 80px;
-    overflow: hidden;
-}
-
-.lista-1col .dispositivo-item {
-    height: 74px;
     overflow: hidden;
 }
 
@@ -1346,7 +1285,6 @@ button:disabled {
     margin: 0 auto var(--sp-4);
 }
 
-
 /* ═══════════════════════════════════════════════════════
    NVR / GRABADOR CARDS (produccion tab)
 ═══════════════════════════════════════════════════════ */
@@ -1458,7 +1396,6 @@ button:disabled {
     padding: var(--sp-4);
 }
 
-
 /* ═══════════════════════════════════════════════════════
    CANAL SLOTS
 ═══════════════════════════════════════════════════════ */
@@ -1525,7 +1462,6 @@ button:disabled {
     font-size: var(--fs-base);
     font-style: italic;
 }
-
 
 /* ═══════════════════════════════════════════════════════
    COMBOBOX / DROPDOWN
@@ -1616,7 +1552,6 @@ button:disabled {
     border: 1px solid var(--text-muted);
 }
 
-
 /* ═══════════════════════════════════════════════════════
    DASHBOARD — GENERAL SUMMARY
 ═══════════════════════════════════════════════════════ */
@@ -1652,26 +1587,6 @@ button:disabled {
     font-weight: 600;
 }
 
-.stat-chip-val--produccion {
-    color: var(--c-blue) !important;
-}
-
-.stat-chip-val--disponible {
-    color: var(--c-green) !important;
-}
-
-.stat-chip-val--averiado {
-    color: var(--c-red) !important;
-}
-
-.stat-chip-val--revisar {
-    color: var(--c-purple) !important;
-}
-
-.stat-chip-val--desafectado {
-    color: var(--text-muted) !important;
-}
-
 .stat-chip-tipo {
     cursor: pointer;
     transition: filter 0.15s, transform 0.15s, box-shadow 0.15s;
@@ -1697,38 +1612,6 @@ button:disabled {
 
 .stat-chip-tipo.activo .stat-chip-arrow {
     transform: rotate(90deg);
-}
-
-.tipo-row {
-    display: flex;
-    align-items: center;
-    gap: var(--sp-3);
-    padding: var(--sp-3) 0;
-    border-bottom: 1px solid var(--border);
-    font-size: var(--fs-md);
-}
-
-.tipo-row:last-child {
-    border-bottom: none;
-}
-
-.tipo-row-nombre {
-    flex: 1;
-    font-weight: 600;
-    color: var(--text-main);
-}
-
-.tipo-row-count {
-    font-size: var(--fs-xl);
-    font-weight: 700;
-    color: var(--text-main);
-}
-
-.tipo-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    flex-shrink: 0;
 }
 
 #dash-disp-tree {
@@ -1849,6 +1732,12 @@ button:disabled {
     margin-bottom: var(--sp-3);
 }
 
+.stat-chip-val--produccion { color: var(--c-blue); }
+.stat-chip-val--disponible { color: var(--c-green); }
+.stat-chip-val--averiado   { color: var(--c-red); }
+.stat-chip-val--revisar    { color: var(--c-purple); }
+.stat-chip-val--desafectado { color: var(--text-muted); }
+
 .dash-chip-main .stat-chip-label {
     font-size: var(--fs-md);
     color: var(--text-muted);
@@ -1884,7 +1773,6 @@ button:disabled {
     padding: var(--sp-2) var(--sp-4);
     border-radius: var(--radius-pill);
 }
-
 
 /* ═══════════════════════════════════════════════════════
    DASHBOARD — GRABADORES SUMMARY
@@ -1940,11 +1828,13 @@ button:disabled {
     font-family: monospace;
 }
 
-.dash-grab-val--blue {
+.dash-grab-val--blue,
+.dash-cam-val--blue {
     color: var(--c-blue);
 }
 
-.dash-grab-val--green {
+.dash-grab-val--green,
+.dash-cam-val--green {
     color: var(--c-green);
 }
 
@@ -2009,7 +1899,6 @@ button:disabled {
     will-change: width;
 }
 
-
 /* ═══════════════════════════════════════════════════════
    DASHBOARD — CAMERAS (forma/edificio/modelo view)
 ═══════════════════════════════════════════════════════ */
@@ -2030,10 +1919,6 @@ button:disabled {
 
 .dash-cam-row--border {
     border-bottom: 1px solid var(--border);
-}
-
-.dash-cam-row--spread {
-    justify-content: space-between;
 }
 
 .dash-cam-row-label {
@@ -2149,7 +2034,6 @@ button:disabled {
     padding: var(--sp-1) var(--sp-1) var(--sp-3);
 }
 
-
 /* ═══════════════════════════════════════════════════════
    FILTROS MODAL
 ═══════════════════════════════════════════════════════ */
@@ -2162,102 +2046,17 @@ button:disabled {
     padding: 0;
 }
 
-#modal-filtros-busqueda .modal-filtros-sticky-header {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    background: var(--bg-card);
-    padding: var(--sp-6) var(--sp-6) var(--sp-4);
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
-}
+#modal-filtros-busqueda
 
-#modal-filtros-busqueda .modal-filtros-sticky-header h3 {
-    margin-bottom: var(--sp-4);
-}
+#modal-filtros-busqueda
 
-#modal-filtros-busqueda .modal-filtros-header {
-    margin-bottom: 0;
-}
+#modal-filtros-busqueda
 
-#modal-filtros-busqueda .filtros-lista {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    padding: var(--sp-5) var(--sp-6);
-    margin-bottom: 0;
-    overflow-y: auto;
-    flex: 1;
-}
+#modal-filtros-busqueda
 
-#modal-filtros-busqueda .modal-filtros-sticky-footer {
-    position: sticky;
-    bottom: 0;
-    z-index: 2;
-    background: var(--bg-card);
-    padding: var(--sp-4) var(--sp-6);
-    border-top: 1px solid var(--border);
-    flex-shrink: 0;
-}
+#modal-filtros-busqueda
 
-#modal-filtros-busqueda .modal-filtros-sticky-footer .btn-cancel {
-    width: 100%;
-}
-
-.modal-filtros-desc {
-    font-size: var(--fs-md);
-    color: var(--text-muted);
-    line-height: 1.4;
-    margin: 0;
-}
-
-.modal-filtros-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: var(--sp-5);
-}
-
-.filtros-lista {
-    display: flex;
-    flex-direction: column;
-    gap: var(--sp-3);
-    margin-bottom: var(--sp-5);
-}
-
-.filtro-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: var(--sp-2) var(--sp-3);
-    background: var(--input-bg);
-    border-radius: calc(var(--radius) - 4px);
-    cursor: pointer;
-    gap: var(--sp-2);
-    margin-bottom: 0;
-}
-
-.filtro-label {
-    font-size: var(--fs-lg);
-    font-weight: 500;
-    color: var(--text-main);
-    flex: 1;
-}
-
-.filtro-toggle {
-    position: relative;
-    display: inline-block;
-    width: 28px;
-    height: 16px;
-    flex-shrink: 0;
-    vertical-align: middle;
-}
-
-.filtro-toggle input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-    position: absolute;
-}
+#modal-filtros-busqueda
 
 /* ═══════════════════════════════════════════════════════
    NUEVO DROPDOWN DE FILTROS DE BÚSQUEDA
@@ -2271,8 +2070,6 @@ button:disabled {
 }
 
 #btn-filtros-busqueda {
-    position: static;
-    transform: none;
     width: 28px;
     height: 28px;
     min-width: unset;
@@ -2337,40 +2134,19 @@ button:disabled {
     text-decoration: underline;
 }
 
-.filtro-toggle-track {
-    position: absolute;
-    inset: 0;
-    border-radius: var(--radius-pill);
-    background: var(--border);
-    transition: background 0.2s;
+.badge-estado-produccion,
+.badge-estado-disponible,
+.badge-estado-averiado,
+.badge-estado-revisar {
+    color: var(--c-white);
 }
 
 .toast.info,
-.badge-estado-produccion
-.canal-slot-lista.ocupado .canal-numero
-.filtro-toggle input:checked+.filtro-toggle-track,
+.badge-estado-produccion,
+.canal-slot-lista.ocupado .canal-numero,
 .toggle-switch.on {
     background: var(--c-blue);
-}
-
-.filtro-toggle-track::after {
-    content: '';
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    left: 3px;
-    top: 3px;
-    background: var(--c-white);
-    border-radius: 50%;
-    transition: transform 0.2s;
-}
-
-.filtro-toggle input:checked+.filtro-toggle-track::after {
-    transform: translateX(12px);
-}
-
-
-/* ═══════════════════════════════════════════════════════
+}/* ═══════════════════════════════════════════════════════
    AJUSTES / GIST SYNC
 ═══════════════════════════════════════════════════════ */
 
@@ -2452,15 +2228,6 @@ button:disabled {
     border-radius: var(--radius);
     padding: var(--sp-3) var(--sp-4);
     margin-bottom: var(--sp-3);
-}
-
-.gist-autosync-row--inline {
-    margin-bottom: 0;
-    padding: var(--sp-3) var(--sp-4);
-    background: transparent;
-    border: none;
-    border-top: 1px solid var(--border);
-    border-radius: 0;
 }
 
 .gist-autosync-text {
@@ -2556,7 +2323,7 @@ button:disabled {
 
 .gist-novedades-chip-count {
     font-weight: 800;
-    color: var(--c-blue);
+    color: var(--c-green);
     font-size: var(--fs-xl);
 }
 
@@ -2634,7 +2401,6 @@ button:disabled {
     margin-top: var(--sp-6);
 }
 
-
 /* ═══════════════════════════════════════════════════════
    REPORTE
 ═══════════════════════════════════════════════════════ */
@@ -2684,7 +2450,6 @@ button:disabled {
     gap: var(--sp-3);
 }
 
-
 /* ═══════════════════════════════════════════════════════
    TIPOS CUSTOM
 ═══════════════════════════════════════════════════════ */
@@ -2701,17 +2466,10 @@ button:disabled {
     border-bottom: none;
 }
 
-.tipo-custom-emoji {
-    font-size: var(--fs-2xl);
-    width: 28px;
-    text-align: center;
-}
-
 .tipo-custom-label {
     flex: 1;
     font-size: var(--fs-lg);
 }
-
 
 /* ═══════════════════════════════════════════════════════
    IP COPIABLE
@@ -2721,7 +2479,6 @@ button:disabled {
     cursor: pointer;
     font-family: monospace;
 }
-
 
 /* ═══════════════════════════════════════════════════════
    ANIMATIONS
@@ -2781,7 +2538,6 @@ button:disabled {
     }
 }
 
-
 /* ═══════════════════════════════════════════════════════
    RESPONSIVE
 ═══════════════════════════════════════════════════════ */
@@ -2817,7 +2573,6 @@ button:disabled {
         height: auto;
     }
 }
-
 
 /* ═══════════════════════════════════════════════════════
    HOVER EFFECTS (pointer devices only)
@@ -2943,14 +2698,6 @@ button:disabled {
     color: var(--text-main);
 }
 
-.dash-cam-val--blue {
-    color: var(--c-blue);
-}
-
-.dash-cam-val--green {
-    color: var(--c-green);
-}
-
 .dash-cam-val--red {
     color: var(--c-red);
 }
@@ -2968,91 +2715,10 @@ button:disabled {
     font-size: var(--fs-base);
 }
 
-.anim-delay-0 {
-    animation-delay: 0s;
-    animation-fill-mode: both;
-}
-
-.anim-delay-1 {
-    animation-delay: 0.03s;
-    animation-fill-mode: both;
-}
-
-.anim-delay-2 {
-    animation-delay: 0.06s;
-    animation-fill-mode: both;
-}
-
-.anim-delay-3 {
-    animation-delay: 0.09s;
-    animation-fill-mode: both;
-}
-
-.anim-delay-4 {
-    animation-delay: 0.12s;
-    animation-fill-mode: both;
-}
-
-.anim-delay-5 {
-    animation-delay: 0.15s;
-    animation-fill-mode: both;
-}
-
-.anim-delay-6 {
-    animation-delay: 0.18s;
-    animation-fill-mode: both;
-}
-
-.anim-delay-7 {
-    animation-delay: 0.21s;
-    animation-fill-mode: both;
-}
-
-.anim-delay-8 {
-    animation-delay: 0.24s;
-    animation-fill-mode: both;
-}
-
-.anim-delay-9 {
-    animation-delay: 0.27s;
-    animation-fill-mode: both;
-}
-
-.anim-delay-10 {
-    animation-delay: 0.30s;
-    animation-fill-mode: both;
-}
-
-.anim-delay-11 {
-    animation-delay: 0.33s;
-    animation-fill-mode: both;
-}
-
-.anim-delay-12 {
-    animation-delay: 0.36s;
-    animation-fill-mode: both;
-}
-
-.anim-delay-13 {
-    animation-delay: 0.39s;
-    animation-fill-mode: both;
-}
-
-.anim-delay-14 {
-    animation-delay: 0.42s;
-    animation-fill-mode: both;
-}
-
-.anim-delay-15 {
-    animation-delay: 0.45s;
-    animation-fill-mode: both;
-}
-
 .canal-numero--dup,
 .canal-slot-lista.ocupado .canal-numero--dup,
 .btn-estado-revisar.activo,
-.badge-estado-revisar,
-.badge-analitica-filled {
+.badge-estado-revisar {
     background: var(--c-purple);
     color: var(--c-white);
 }
@@ -3318,19 +2984,4 @@ button:disabled {
 }
 
 /* Chips de piso (nivel 4) */
-.dash-l2-pisos-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-    gap: var(--sp-2);
-    margin-top: var(--sp-2);
-    grid-column: 1 / -1;
-}
 
-.dash-l2-piso-chip .stat-chip-valor {
-    font-size: 1.3rem;
-    color: var(--c-blue);
-}
-
-.dash-l2-piso-chip .stat-chip-label {
-    font-size: var(--fs-xs);
-}
