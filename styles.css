@@ -444,11 +444,6 @@ button:disabled {
     color: var(--c-white);
 }
 
-.btn-delete {
-    background: var(--c-red);
-    color: var(--c-white);
-}
-
 .btn-backup {
     background: var(--c-green);
     color: var(--c-white);
@@ -614,7 +609,8 @@ button:disabled {
     opacity: 1;
 }
 
-.btn-estado-averiado.activo {
+.btn-estado-averiado.activo,
+.btn-delete {
     background: var(--c-red);
     color: var(--c-white);
 }
@@ -761,10 +757,6 @@ button:disabled {
 
 .badge-dvr-filled {
     background: var(--c-orange);
-}
-
-.badge-estado-produccion {
-    background: var(--c-blue);
 }
 
 .badge-estado-averiado {
@@ -1164,10 +1156,6 @@ button:disabled {
     pointer-events: auto;
 }
 
-.toast.info {
-    background: var(--c-blue);
-}
-
 .toast.error,
 .toast.warning {
     background: var(--c-red);
@@ -1503,10 +1491,6 @@ button:disabled {
     text-align: center;
     box-sizing: border-box;
     white-space: nowrap;
-}
-
-.canal-slot-lista.ocupado .canal-numero {
-    background: var(--c-blue);
 }
 
 .canal-slot-lista.vacio .canal-numero {
@@ -2361,6 +2345,9 @@ button:disabled {
     transition: background 0.2s;
 }
 
+.toast.info,
+.badge-estado-produccion
+.canal-slot-lista.ocupado .canal-numero
 .filtro-toggle input:checked+.filtro-toggle-track,
 .toggle-switch.on {
     background: var(--c-blue);

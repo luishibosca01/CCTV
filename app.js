@@ -1374,6 +1374,7 @@
         renderProduccion();
     }
 
+    // ── Estado del dashboard ──────────────────────────────────────────────────
     const _dash = {
         tipoAbierto: null,
         tipoAbiertoPrevio: null,
@@ -1382,6 +1383,7 @@
         camarasVista: 'edificio',
         l2VistaEdificio: false,   // en getL2Html de cámaras: false=forma, true=edificios
         l2EdificioAbierto: null,  // edificio expandido en nivel 3 (vista edificios)
+        l2EdificioAbiertoPrevio: null, // <-- NUEVA VARIABLE AGREGADA
     };
 
     function _setCamarasVista(vista) {
@@ -1509,16 +1511,30 @@
 
     function _renderResumenGeneral(disps, grabs, idsEnProd) {
         const tiposServidores = ['nvr', 'dvr', 'analitica', 'encoder'];
-        const depth = (!_dash.tipoAbierto) ? 0 : (!_dash.estadoAbierto ? 1 : 2);
+        
+        // Calculamos profundidad: 0 (Main), 1 (Estados), 2 (Desglose L2), 3 (Pisos L3 de Edificio)
+        const depth = (!_dash.tipoAbierto) ? 0 : 
+                      (!_dash.estadoAbierto ? 1 : 
+                      (_dash.l2EdificioAbierto ? 3 : 2));
+
+        // ── PASO CLAVE: Inicializamos el contenedor y el wrap arriba de todo para evitar ReferenceErrors ──
+        const contenedor = document.getElementById('dash-disp-tree');
+        let wrap = contenedor.querySelector('.dash-slide-wrap');
+        if (!wrap) {
+            contenedor.innerHTML = `<div class="dash-slide-wrap"><div class="dash-slide-panel" id="dash-panel-izq"></div><div class="dash-slide-panel" id="dash-panel-der"></div></div>`;
+            wrap = contenedor.querySelector('.dash-slide-wrap');
+        }
+
+        const panelIzq = wrap.querySelector('#dash-panel-izq');
+        const panelDer = wrap.querySelector('#dash-panel-der');
+        const alturaActual = contenedor.offsetHeight;
+        const esPrimeraCarga = alturaActual === 0;
 
         // Control blindado del botón toggle en el header:
         const toggleEl = document.getElementById('dash-l2-vista-toggle');
         if (toggleEl) {
-            const debeMostrarToggle = depth === 2 && _dash.tipoAbierto === 'camara' && _dash.estadoAbierto === 'produccion';
-
-            // Usamos style.display para anular cualquier regla del CSS que lo fuerce a verse
+            const debeMostrarToggle = (depth === 2 || depth === 3) && _dash.tipoAbierto === 'camara' && _dash.estadoAbierto === 'produccion';
             toggleEl.style.display = debeMostrarToggle ? 'inline-flex' : 'none';
-
             if (debeMostrarToggle) {
                 toggleEl.querySelectorAll('.dash-l2-vista-btn').forEach(btn => {
                     btn.classList.toggle('activa', btn.dataset.vista === (_dash.l2VistaEdificio ? 'edificio' : 'forma'));
@@ -1534,8 +1550,6 @@
             </div>`;
 
             let chipsHtml = '';
-
-            // 1. CÁMARAS (y cualquier otro tipo nativo que no sea servidor)
             Object.keys(S.TIPOS_BUILTIN).filter(k => !tiposServidores.includes(k)).forEach(tipoKey => {
                 const tc = S.TIPOS[tipoKey];
                 const n = disps.filter(d => d.tipo === tipoKey).length;
@@ -1547,7 +1561,6 @@
                     </div>`;
             });
 
-            // 2. SERVIDORES (Chip agrupador)
             const nServ = disps.filter(d => tiposServidores.includes(d.tipo)).length;
             chipsHtml += `
                 <div class="stat-chip stat-chip-tipo" data-action="toggle-tipo" data-tipo="servidores">
@@ -1556,7 +1569,6 @@
                     <span class="stat-chip-arrow">▶</span>
                 </div>`;
 
-            // 3. PERSONALIZADOS (Filtrados y ordenados alfabéticamente por su nombre)
             const tiposCustomKeys = Object.keys(S.TIPOS)
                 .filter(k => !S.TIPOS_BUILTIN[k] && disps.some(d => d.tipo === k))
                 .sort((a, b) => S.TIPOS[a].label.localeCompare(S.TIPOS[b].label));
@@ -1575,16 +1587,13 @@
             return `<div class="dash-resumen-grid"><div class="dash-resumen-col-info">${chipTotal}</div><div class="dash-resumen-col-data"><div class="dashboard-grid">${chipsHtml}</div></div></div>`;
         };
 
-        // NIVEL 1: Selección de Estado (para Cámaras o para el grupo Servidores)
+        // NIVEL 1: Selección de Estado
         const getL1Html = (tipoOverride) => {
             const tipo = tipoOverride || _dash.tipoAbierto;
             if (!tipo) return '';
 
             const esGrupoServidores = tipo === 'servidores';
-            const dispsFiltrados = esGrupoServidores
-                ? disps.filter(d => tiposServidores.includes(d.tipo))
-                : disps.filter(d => d.tipo === tipo);
-
+            const dispsFiltrados = esGrupoServidores ? disps.filter(d => tiposServidores.includes(d.tipo)) : disps.filter(d => d.tipo === tipo);
             const est = _estadosDeDisps(dispsFiltrados, idsEnProd);
             const tc = esGrupoServidores ? { emoji: '🖥️', label: 'Servidores' } : S.TIPOS[tipo];
 
@@ -1595,19 +1604,12 @@
                     <div class="dash-chip-btn-group"><div class="stat-chip-volver dash-chip-btn">◀ VOLVER</div></div>
                 </div>`;
 
-            const esCamara = tipo === 'camara';
-            const tieneNivel2 = esGrupoServidores || esCamara; // Solo Servidores y Cámaras tienen un nivel más adentro
+            const tieneNivel2 = esGrupoServidores || tipo === 'camara';
 
             const chipsEstado = ESTADOS_DEF.map(e => {
                 const n = est[e.key];
-
-                // Si tiene Nivel 2, abre el detalle. Si no, va directo a la pestaña de activos.
-                const action = n > 0
-                    ? (tieneNivel2 ? `data-action="toggle-estado" data-estado="${e.key}"` : `data-action="ir-activos" data-tipo="${tipo}" data-estado="${e.key}"`)
-                    : `data-action="stop"`;
-
+                const action = n > 0 ? (tieneNivel2 ? `data-action="toggle-estado" data-estado="${e.key}"` : `data-action="ir-activos" data-tipo="${tipo}" data-estado="${e.key}"`) : `data-action="stop"`;
                 const clase = n > 0 ? "stat-chip stat-chip-tipo" : "stat-chip";
-
                 return `
                     <div class="${clase}" ${action}>
                         <div class="stat-chip-valor stat-chip-val--${e.key}">${n}</div>
@@ -1619,17 +1621,15 @@
             return `<div class="dash-resumen-grid"><div class="dash-resumen-col-info">${chipSeleccionado}</div><div class="dash-resumen-col-data"><div class="dashboard-grid">${chipsEstado}</div></div></div>`;
         };
 
-        // NIVEL 2: Desglose final (Formas para Cámaras o Tipos para Servidores)
+        // NIVEL 2: Desglose por Formas o Edificios
         const getL2Html = (estadoOverride) => {
             const tipo = _dash.tipoAbierto;
             const estado = estadoOverride || _dash.estadoAbierto;
             if (!tipo || !estado) return '';
 
             const esGrupoServidores = tipo === 'servidores';
-
             const esCamaraProd = !esGrupoServidores && estado === 'produccion';
 
-            // Título del estado seleccionado
             const chipEstado = `
                 <div class="dash-chip-main clickable dash-chip-main--${estado}" data-action="toggle-estado" data-estado="${estado}">
                     <div class="stat-chip-valor stat-chip-val--${estado}">${disps.filter(d => (esGrupoServidores ? tiposServidores.includes(d.tipo) : d.tipo === tipo) && (d.estado || (idsEnProd.has(d.id) ? 'produccion' : 'disponible')) === estado).length}</div>
@@ -1653,57 +1653,31 @@
                 const camarasDelEstado = disps.filter(d => d.tipo === 'camara' && (d.estado || (idsEnProd.has(d.id) ? 'produccion' : 'disponible')) === estado);
 
                 if (esCamaraProd && _dash.l2VistaEdificio) {
-                    // Vista por edificios — chips normales, uno por edificio
                     const conteoEdif = {};
                     camarasDelEstado.forEach(d => {
                         const asig = grabs.flatMap(g => g.canales_data).find(c => c.dispositivoId === d.id);
-                        const edif = asig?.edificio?.trim() || '__sin__';
-                        const piso = S.normalizarPiso(asig?.piso) || '__sin__';
-                        if (!conteoEdif[edif]) conteoEdif[edif] = { total: 0, pisos: {} };
-                        conteoEdif[edif].total++;
-                        conteoEdif[edif].pisos[piso] = (conteoEdif[edif].pisos[piso] || 0) + 1;
+                        const edif = asig?.edificio?.trim() || 'Sin edificio';
+                        if (!conteoEdif[edif]) conteoEdif[edif] = 0;
+                        conteoEdif[edif]++;
                     });
 
                     const filasEdif = Object.entries(conteoEdif)
-                        .filter(([k]) => k !== '__sin__')
+                        .filter(([k]) => k !== 'Sin edificio')
                         .sort((a, b) => a[0].localeCompare(b[0]))
-                        .map(([label, v]) => ({ label, total: v.total, pisos: v.pisos }));
-                    if (conteoEdif['__sin__']) filasEdif.push({ label: 'Sin edificio', total: conteoEdif['__sin__'].total, pisos: conteoEdif['__sin__'].pisos });
+                        .map(([label, total]) => ({ label, total }));
+                    if (conteoEdif['Sin edificio']) filasEdif.push({ label: 'Sin edificio', total: conteoEdif['Sin edificio'] });
 
                     if (filasEdif.length === 0) {
                         chipsFinales = `<div class="dash-empty-text">Sin cámaras con edificio asignado</div>`;
                     } else {
-                        chipsFinales = filasEdif.map(f => {
-                            const estaAbierto = _dash.l2EdificioAbierto === f.label;
-                            const pisosOrdenados = Object.entries(f.pisos).sort((a, b) => {
-                                if (a[0] === '__sin__') return 1;
-                                if (b[0] === '__sin__') return -1;
-                                return _getPisoPeso(a[0]) - _getPisoPeso(b[0]);
-                            });
-                            const pisosHtml = pisosOrdenados.map(([piso, n]) => {
-                                const pisoLabel = piso === '__sin__' ? 'Sin piso' : piso;
-                                const queryEdif = f.label !== 'Sin edificio' ? f.label : '';
-                                const queryPiso = pisoLabel !== 'Sin piso' ? pisoLabel : '';
-                                return `
-                                    <div class="stat-chip stat-chip-tipo dash-l2-piso-chip" data-action="ir-activos-edif" data-tipo="camara" data-estado="${estado}" data-edificio="${esc(queryEdif)}" data-piso="${esc(queryPiso)}">
-                                        <div class="stat-chip-valor">${n}</div>
-                                        <div class="stat-chip-label">${esc(pisoLabel).toUpperCase()}</div>
-                                    </div>`;
-                            }).join('');
-                            const chevron = `<svg class="dash-edif-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>`;
-                            return `
-                              <div class="stat-chip stat-chip-tipo" data-action="toggle-l2-edificio" data-edificio="${esc(f.label)}">
-                               <div class="stat-chip-valor">${f.total}</div>
-                               <div class="stat-chip-label">${esc(f.label).toUpperCase()}</div>
-                              </div>
-                                 ${estaAbierto ? `
-                              <div class="dash-l2-pisos-grid" style="grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: var(--sp-4); padding: var(--sp-4) 0; margin-bottom: var(--sp-3); border-bottom: 1px dashed var(--border);">
-                                  ${pisosHtml}
-                              </div>` : ''}`;
-                        }).join('');
+                        chipsFinales = filasEdif.map(f => `
+                            <div class="stat-chip stat-chip-tipo" data-action="toggle-l2-edificio" data-edificio="${esc(f.label)}">
+                                <div class="stat-chip-valor">${f.total}</div>
+                                <div class="stat-chip-label">${esc(f.label).toUpperCase()}</div>
+                                <span class="stat-chip-arrow">▶</span>
+                            </div>`).join('');
                     }
                 } else {
-                    // Vista por forma (default)
                     const conteo = {};
                     camarasDelEstado.forEach(d => { const k = d.forma || '__sin__'; conteo[k] = (conteo[k] || 0) + 1; });
                     const filas = FORMAS_DEF.filter(f => conteo[f.key] > 0);
@@ -1720,14 +1694,63 @@
             return `<div class="dash-resumen-grid"><div class="dash-resumen-col-info">${chipEstado}</div><div class="dash-resumen-col-data"><div class="dashboard-grid">${chipsFinales}</div></div></div>`;
         };
 
+        // NUEVO NIVEL 3: Desglose de Pisos para un Edificio Seleccionado
+        const getL3Html = (edificioOverride) => {
+            const estado = _dash.estadoAbierto;
+            const edifNombre = edificioOverride || _dash.l2EdificioAbierto;
+            if (!edifNombre || !estado) return '';
+
+            const camarasDelEstado = disps.filter(d => d.tipo === 'camara' && (d.estado || (idsEnProd.has(d.id) ? 'produccion' : 'disponible')) === estado);
+            
+            const camarasDelEdificio = camarasDelEstado.filter(d => {
+                const asig = grabs.flatMap(g => g.canales_data).find(c => c.dispositivoId === d.id);
+                const edif = asig?.edificio?.trim() || 'Sin edificio';
+                return edifNombre === 'Sin edificio' ? (!asig?.edificio?.trim()) : (edif.toLowerCase() === edifNombre.toLowerCase());
+            });
+
+            const conteoPisos = {};
+            camarasDelEdificio.forEach(d => {
+                const asig = grabs.flatMap(g => g.canales_data).find(c => c.dispositivoId === d.id);
+                const piso = S.normalizarPiso(asig?.piso) || '__sin__';
+                conteoPisos[piso] = (conteoPisos[piso] || 0) + 1;
+            });
+
+            const pisosOrdenados = Object.keys(conteoPisos).sort((a, b) => {
+                if (a === '__sin__') return 1;
+                if (b === '__sin__') return -1;
+                return _getPisoPeso(a) - _getPisoPeso(b);
+            });
+
+            const chipHeader = `
+                <div class="dash-chip-main clickable dash-chip-main--${estado}" data-action="toggle-l2-edificio" data-edificio="">
+                    <div class="stat-chip-valor stat-chip-val--${estado}">${camarasDelEdificio.length}</div>
+                    <div class="stat-chip-label stat-chip-val--${estado}">${esc(edifNombre).toUpperCase()}</div>
+                    <div class="dash-chip-btn-group"><div class="stat-chip-volver dash-chip-btn">◀ VOLVER</div></div>
+                </div>`;
+
+            const chipsPisos = pisosOrdenados.map(p => {
+                const pisoLabel = p === '__sin__' ? 'Sin piso' : p;
+                const queryEdif = edifNombre !== 'Sin edificio' ? edifNombre : '';
+                const queryPiso = pisoLabel !== 'Sin piso' ? pisoLabel : '';
+                return `
+                    <div class="stat-chip stat-chip-tipo" data-action="ir-activos-edif" data-tipo="camara" data-estado="${estado}" data-edificio="${esc(queryEdif)}" data-piso="${esc(queryPiso)}">
+                        <div class="stat-chip-valor">${conteoPisos[p]}</div>
+                        <div class="stat-chip-label">${esc(pisoLabel).toUpperCase()}</div>
+                    </div>`;
+            }).join('');
+
+            return `<div class="dash-resumen-grid"><div class="dash-resumen-col-info">${chipHeader}</div><div class="dash-resumen-col-data"><div class="dashboard-grid">${chipsPisos}</div></div></div>`;
+        };
+
         let htmlIzq = '', htmlDer = '';
         let enDetalle = depth > 0;
         let isSlidingAtrasNivel2 = false;
+        let isSlidingAtrasNivel3 = false;
 
-        // Limpiamos los rastros de subTipoAbierto de las variables de salto
-        const saltandoNivel = _dash.estadoAbiertoPrevio !== _dash.estadoAbierto && _dash.tipoAbierto && _dash.tipoAbiertoPrevio === _dash.tipoAbierto;
-        const saltandoAdelante = saltandoNivel && _dash.estadoAbierto !== null;
-        const saltandoAtras = saltandoNivel && _dash.estadoAbierto === null;
+        const cambioEstado = _dash.estadoAbiertoPrevio !== _dash.estadoAbierto;
+        const cambioEdificio = _dash.l2EdificioAbiertoPrevio !== _dash.l2EdificioAbierto;
+        const saltandoNivel2 = cambioEstado && _dash.tipoAbierto && _dash.tipoAbiertoPrevio === _dash.tipoAbierto;
+        const saltandoNivel3 = cambioEdificio && _dash.estadoAbierto && _dash.estadoAbiertoPrevio === _dash.estadoAbierto;
 
         if (depth === 0) {
             htmlIzq = getTiposHtml();
@@ -1736,8 +1759,7 @@
         else if (depth === 1) {
             htmlIzq = getTiposHtml();
             htmlDer = getL1Html();
-
-            if (saltandoAtras) {
+            if (saltandoNivel2 && _dash.estadoAbierto === null) {
                 htmlIzq = getL1Html();
                 htmlDer = getL2Html(_dash.estadoAbiertoPrevio);
                 enDetalle = false;
@@ -1747,65 +1769,44 @@
         else if (depth === 2) {
             htmlIzq = getL1Html();
             htmlDer = getL2Html();
+            if (saltandoNivel2 && _dash.estadoAbierto !== null) {
+                wrap.style.transition = 'none';
+                wrap.classList.remove('en-detalle');
+                panelIzq.innerHTML = getL1Html();
+                void wrap.offsetWidth;
+                wrap.style.transition = '';
+            } else if (saltandoNivel3 && _dash.l2EdificioAbierto === null) {
+                htmlIzq = getL2Html();
+                htmlDer = getL3Html(_dash.l2EdificioAbiertoPrevio);
+                enDetalle = false;
+                isSlidingAtrasNivel3 = true;
+            }
+        }
+        else if (depth === 3) {
+            htmlIzq = getL2Html();
+            htmlDer = getL3Html();
+            if (saltandoNivel3 && _dash.l2EdificioAbierto !== null) {
+                wrap.style.transition = 'none';
+                wrap.classList.remove('en-detalle');
+                panelIzq.innerHTML = getL2Html();
+                void wrap.offsetWidth;
+                wrap.style.transition = '';
+            }
         }
 
-        const contenedor = document.getElementById('dash-disp-tree');
-        let wrap = contenedor.querySelector('.dash-slide-wrap');
-        if (!wrap) {
-            contenedor.innerHTML = `
-                        <div class="dash-slide-wrap">
-                            <div class="dash-slide-panel" id="dash-panel-izq"></div>
-                            <div class="dash-slide-panel" id="dash-panel-der"></div>
-                        </div>`;
-            wrap = contenedor.querySelector('.dash-slide-wrap');
+        if (_renderResumenTimeout) { clearTimeout(_renderResumenTimeout); _renderResumenTimeout = null; contenedor.style.height = ''; contenedor.style.transition = ''; }
+
+        if (_dash.tipoAbiertoPrevio === _dash.tipoAbierto && _dash.estadoAbiertoPrevio === _dash.estadoAbierto && _dash.l2EdificioAbiertoPrevio === _dash.l2EdificioAbierto && !esPrimeraCarga) {
+            panelIzq.innerHTML = htmlIzq; panelDer.innerHTML = htmlDer; return;
         }
 
-        const panelIzq = wrap.querySelector('#dash-panel-izq');
-        const panelDer = wrap.querySelector('#dash-panel-der');
-
-        const alturaActual = contenedor.offsetHeight;
-        const esPrimeraCarga = alturaActual === 0;
-
-        // Cancelar cualquier setTimeout pendiente de un render anterior
-        if (_renderResumenTimeout) {
-            clearTimeout(_renderResumenTimeout);
-            _renderResumenTimeout = null;
-            // Limpiar estilos inline que pudo haber dejado el render anterior incompleto
-            contenedor.style.height = '';
-            contenedor.style.transition = '';
-        }
-
-        if (_dash.tipoAbiertoPrevio === _dash.tipoAbierto && _dash.estadoAbiertoPrevio === _dash.estadoAbierto && !esPrimeraCarga) {
-            panelIzq.innerHTML = htmlIzq;
-            panelDer.innerHTML = htmlDer;
-            return;
-        }
-
-        if (saltandoAdelante && !esPrimeraCarga) {
-            wrap.style.transition = 'none';
-            wrap.classList.remove('en-detalle');
-            panelIzq.innerHTML = getL1Html();
-            void wrap.offsetWidth;
-            wrap.style.transition = '';
-        }
-
-        // Asignamos solo el tipo y el estado
         _dash.tipoAbiertoPrevio = _dash.tipoAbierto;
         _dash.estadoAbiertoPrevio = _dash.estadoAbierto;
+        _dash.l2EdificioAbiertoPrevio = _dash.l2EdificioAbierto;
 
-        if (!esPrimeraCarga) {
-            contenedor.style.transition = 'none';
-            contenedor.style.height = alturaActual + 'px';
-        }
-
-        panelIzq.style.height = '';
-        panelIzq.style.overflow = '';
-        panelDer.style.height = '';
-        panelDer.style.overflow = '';
-
-        panelIzq.innerHTML = htmlIzq;
-        panelDer.innerHTML = htmlDer;
-
+        if (!esPrimeraCarga) { contenedor.style.transition = 'none'; contenedor.style.height = alturaActual + 'px'; }
+        panelIzq.style.height = ''; panelIzq.style.overflow = ''; panelDer.style.height = ''; panelDer.style.overflow = '';
+        panelIzq.innerHTML = htmlIzq; panelDer.innerHTML = htmlDer;
         void contenedor.offsetHeight;
 
         const panelActivo = enDetalle ? panelDer : panelIzq;
@@ -1813,13 +1814,7 @@
 
         if (esPrimeraCarga) {
             wrap.classList.toggle('en-detalle', enDetalle);
-            if (enDetalle) {
-                panelIzq.style.height = '0px';
-                panelIzq.style.overflow = 'hidden';
-            } else {
-                panelDer.style.height = '0px';
-                panelDer.style.overflow = 'hidden';
-            }
+            if (enDetalle) { panelIzq.style.height = '0px'; panelIzq.style.overflow = 'hidden'; } else { panelDer.style.height = '0px'; panelDer.style.overflow = 'hidden'; }
         } else {
             requestAnimationFrame(() => {
                 contenedor.style.transition = 'height 0.35s cubic-bezier(0.4, 0, 0.2, 1)';
@@ -1827,29 +1822,15 @@
                 if (alturaObjetivo > 0) contenedor.style.height = alturaObjetivo + 'px';
 
                 _renderResumenTimeout = setTimeout(() => {
-                    contenedor.style.height = '';
-                    contenedor.style.transition = '';
-
+                    contenedor.style.height = ''; contenedor.style.transition = '';
                     if (isSlidingAtrasNivel2) {
-                        wrap.style.transition = 'none';
-                        panelIzq.innerHTML = getTiposHtml();
-                        panelDer.innerHTML = getL1Html();
-                        wrap.classList.add('en-detalle');
-                        void wrap.offsetWidth;
-                        wrap.style.transition = '';
-
-                        panelIzq.style.height = '0px';
-                        panelIzq.style.overflow = 'hidden';
-                        panelDer.style.height = '';
-                        panelDer.style.overflow = '';
+                        wrap.style.transition = 'none'; panelIzq.innerHTML = getTiposHtml(); panelDer.innerHTML = getL1Html(); wrap.classList.add('en-detalle'); void wrap.offsetWidth; wrap.style.transition = '';
+                        panelIzq.style.height = '0px'; panelIzq.style.overflow = 'hidden'; panelDer.style.height = ''; panelDer.style.overflow = '';
+                    } else if (isSlidingAtrasNivel3) {
+                        wrap.style.transition = 'none'; panelIzq.innerHTML = getL1Html(); panelDer.innerHTML = getL2Html(); wrap.classList.add('en-detalle'); void wrap.offsetWidth; wrap.style.transition = '';
+                        panelIzq.style.height = '0px'; panelIzq.style.overflow = 'hidden'; panelDer.style.height = ''; panelDer.style.overflow = '';
                     } else {
-                        if (enDetalle) {
-                            panelIzq.style.height = '0px';
-                            panelIzq.style.overflow = 'hidden';
-                        } else {
-                            panelDer.style.height = '0px';
-                            panelDer.style.overflow = 'hidden';
-                        }
+                        if (enDetalle) { panelIzq.style.height = '0px'; panelIzq.style.overflow = 'hidden'; } else { panelDer.style.height = '0px'; panelDer.style.overflow = 'hidden'; }
                     }
                 }, 360);
             });
@@ -5316,7 +5297,10 @@
         if (!_dash.tipoAbierto) return;
         if (e.target.closest('[data-action]:not([data-action="stop"])')) return;
 
-        if (_dash.estadoAbierto) {
+        // Retroceso secuencial inteligente de niveles
+        if (_dash.l2EdificioAbierto) {
+            _dash.l2EdificioAbierto = null;
+        } else if (_dash.estadoAbierto) {
             _dash.estadoAbierto = null;
         } else {
             _dash.tipoAbierto = null;
@@ -5827,7 +5811,11 @@
 
             if (action === 'toggle-l2-edificio') {
                 const edif = btn.dataset.edificio;
-                _dash.l2EdificioAbierto = _dash.l2EdificioAbierto === edif ? null : edif;
+                if (!edif) {
+                    _dash.l2EdificioAbierto = null;
+                } else {
+                    _dash.l2EdificioAbierto = _dash.l2EdificioAbierto === edif ? null : edif;
+                }
                 const disps = _data.dispositivos;
                 const grabs = _data.grabadores;
                 const idsEnProd = _calcIdsEnProd();
