@@ -1380,6 +1380,8 @@
         estadoAbierto: null,
         estadoAbiertoPrevio: null,
         camarasVista: 'edificio',
+        l2VistaEdificio: false,   // en getL2Html de cámaras: false=forma, true=edificios
+        l2EdificioAbierto: null,  // edificio expandido en nivel 3 (vista edificios)
     };
 
     function _setCamarasVista(vista) {
@@ -1475,31 +1477,54 @@
     }
 
     function _toggleTipoDetalle(tipoKey) {
-        if (_dash.tipoAbierto !== tipoKey) _dash.estadoAbierto = null;
+        if (_dash.tipoAbierto !== tipoKey) {
+            _dash.estadoAbierto = null;
+            _dash.l2VistaEdificio = false;
+            _dash.l2EdificioAbierto = null;
+        }
         _dash.tipoAbierto = _dash.tipoAbierto === tipoKey ? null : tipoKey;
 
         const disps = _data.dispositivos;
         const grabs = _data.grabadores;
         const idsEnProd = _calcIdsEnProd();
-        _renderResumenGeneral(disps, idsEnProd);
+        _renderResumenGeneral(disps, grabs, idsEnProd);
     };
 
     function _toggleEstadoDetalle(estadoKey) {
         if (!_dash.tipoAbierto) return;
 
         _dash.estadoAbierto = _dash.estadoAbierto === estadoKey ? null : estadoKey;
+        if (!_dash.estadoAbierto) {
+            _dash.l2VistaEdificio = false;
+            _dash.l2EdificioAbierto = null;
+        }
 
         const disps = _data.dispositivos;
         const grabs = _data.grabadores;
         const idsEnProd = _calcIdsEnProd();
-        _renderResumenGeneral(disps, idsEnProd);
+        _renderResumenGeneral(disps, grabs, idsEnProd);
     };
 
     function _inyectarStaggerChips() { }
 
-    function _renderResumenGeneral(disps, idsEnProd) {
+    function _renderResumenGeneral(disps, grabs, idsEnProd) {
         const tiposServidores = ['nvr', 'dvr', 'analitica', 'encoder'];
         const depth = (!_dash.tipoAbierto) ? 0 : (!_dash.estadoAbierto ? 1 : 2);
+
+        // Control blindado del botón toggle en el header:
+        const toggleEl = document.getElementById('dash-l2-vista-toggle');
+        if (toggleEl) {
+            const debeMostrarToggle = depth === 2 && _dash.tipoAbierto === 'camara' && _dash.estadoAbierto === 'produccion';
+
+            // Usamos style.display para anular cualquier regla del CSS que lo fuerce a verse
+            toggleEl.style.display = debeMostrarToggle ? 'inline-flex' : 'none';
+
+            if (debeMostrarToggle) {
+                toggleEl.querySelectorAll('.dash-l2-vista-btn').forEach(btn => {
+                    btn.classList.toggle('activa', btn.dataset.vista === (_dash.l2VistaEdificio ? 'edificio' : 'forma'));
+                });
+            }
+        }
 
         // NIVEL 0: Grilla Principal
         const getTiposHtml = () => {
@@ -1602,6 +1627,8 @@
 
             const esGrupoServidores = tipo === 'servidores';
 
+            const esCamaraProd = !esGrupoServidores && estado === 'produccion';
+
             // Título del estado seleccionado
             const chipEstado = `
                 <div class="dash-chip-main clickable dash-chip-main--${estado}" data-action="toggle-estado" data-estado="${estado}">
@@ -1613,7 +1640,6 @@
             let chipsFinales = '';
 
             if (esGrupoServidores) {
-                // Mostrar chips de NVR, DVR, etc. que tengan ese estado
                 chipsFinales = tiposServidores.map(tKey => {
                     const n = disps.filter(d => d.tipo === tKey && (d.estado || (idsEnProd.has(d.id) ? 'produccion' : 'disponible')) === estado).length;
                     if (n === 0) return '';
@@ -1624,18 +1650,71 @@
                         </div>`;
                 }).join('');
             } else {
-                // Lógica original de formas para cámaras
                 const camarasDelEstado = disps.filter(d => d.tipo === 'camara' && (d.estado || (idsEnProd.has(d.id) ? 'produccion' : 'disponible')) === estado);
-                const conteo = {};
-                camarasDelEstado.forEach(d => { const k = d.forma || '__sin__'; conteo[k] = (conteo[k] || 0) + 1; });
-                const filas = FORMAS_DEF.filter(f => conteo[f.key] > 0);
-                if (conteo['__sin__'] > 0) filas.push({ key: '', label: 'Sin forma' });
 
-                chipsFinales = filas.map(f => `
-                    <div class="stat-chip stat-chip-tipo" data-action="ir-activos" data-tipo="camara" data-estado="${estado}" data-forma="${f.key}">
-                        <div class="stat-chip-valor">${conteo[f.key || '__sin__']}</div>
-                        <div class="stat-chip-label">${f.label.toUpperCase()}</div>
-                    </div>`).join('');
+                if (esCamaraProd && _dash.l2VistaEdificio) {
+                    // Vista por edificios — chips normales, uno por edificio
+                    const conteoEdif = {};
+                    camarasDelEstado.forEach(d => {
+                        const asig = grabs.flatMap(g => g.canales_data).find(c => c.dispositivoId === d.id);
+                        const edif = asig?.edificio?.trim() || '__sin__';
+                        const piso = S.normalizarPiso(asig?.piso) || '__sin__';
+                        if (!conteoEdif[edif]) conteoEdif[edif] = { total: 0, pisos: {} };
+                        conteoEdif[edif].total++;
+                        conteoEdif[edif].pisos[piso] = (conteoEdif[edif].pisos[piso] || 0) + 1;
+                    });
+
+                    const filasEdif = Object.entries(conteoEdif)
+                        .filter(([k]) => k !== '__sin__')
+                        .sort((a, b) => a[0].localeCompare(b[0]))
+                        .map(([label, v]) => ({ label, total: v.total, pisos: v.pisos }));
+                    if (conteoEdif['__sin__']) filasEdif.push({ label: 'Sin edificio', total: conteoEdif['__sin__'].total, pisos: conteoEdif['__sin__'].pisos });
+
+                    if (filasEdif.length === 0) {
+                        chipsFinales = `<div class="dash-empty-text">Sin cámaras con edificio asignado</div>`;
+                    } else {
+                        chipsFinales = filasEdif.map(f => {
+                            const estaAbierto = _dash.l2EdificioAbierto === f.label;
+                            const pisosOrdenados = Object.entries(f.pisos).sort((a, b) => {
+                                if (a[0] === '__sin__') return 1;
+                                if (b[0] === '__sin__') return -1;
+                                return _getPisoPeso(a[0]) - _getPisoPeso(b[0]);
+                            });
+                            const pisosHtml = pisosOrdenados.map(([piso, n]) => {
+                                const pisoLabel = piso === '__sin__' ? 'Sin piso' : piso;
+                                const queryEdif = f.label !== 'Sin edificio' ? f.label : '';
+                                const queryPiso = pisoLabel !== 'Sin piso' ? pisoLabel : '';
+                                return `
+                                    <div class="stat-chip stat-chip-tipo dash-l2-piso-chip" data-action="ir-activos-edif" data-tipo="camara" data-estado="${estado}" data-edificio="${esc(queryEdif)}" data-piso="${esc(queryPiso)}">
+                                        <div class="stat-chip-valor">${n}</div>
+                                        <div class="stat-chip-label">${esc(pisoLabel).toUpperCase()}</div>
+                                    </div>`;
+                            }).join('');
+                            const chevron = `<svg class="dash-edif-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>`;
+                            return `
+                              <div class="stat-chip stat-chip-tipo" data-action="toggle-l2-edificio" data-edificio="${esc(f.label)}">
+                               <div class="stat-chip-valor">${f.total}</div>
+                               <div class="stat-chip-label">${esc(f.label).toUpperCase()}</div>
+                              </div>
+                                 ${estaAbierto ? `
+                              <div class="dash-l2-pisos-grid" style="grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: var(--sp-4); padding: var(--sp-4) 0; margin-bottom: var(--sp-3); border-bottom: 1px dashed var(--border);">
+                                  ${pisosHtml}
+                              </div>` : ''}`;
+                        }).join('');
+                    }
+                } else {
+                    // Vista por forma (default)
+                    const conteo = {};
+                    camarasDelEstado.forEach(d => { const k = d.forma || '__sin__'; conteo[k] = (conteo[k] || 0) + 1; });
+                    const filas = FORMAS_DEF.filter(f => conteo[f.key] > 0);
+                    if (conteo['__sin__'] > 0) filas.push({ key: '', label: 'Sin forma' });
+
+                    chipsFinales = filas.map(f => `
+                        <div class="stat-chip stat-chip-tipo" data-action="ir-activos" data-tipo="camara" data-estado="${estado}" data-forma="${f.key}">
+                            <div class="stat-chip-valor">${conteo[f.key || '__sin__']}</div>
+                            <div class="stat-chip-label">${f.label.toUpperCase()}</div>
+                        </div>`).join('');
+                }
             }
 
             return `<div class="dash-resumen-grid"><div class="dash-resumen-col-info">${chipEstado}</div><div class="dash-resumen-col-data"><div class="dashboard-grid">${chipsFinales}</div></div></div>`;
@@ -1748,30 +1827,30 @@
                 if (alturaObjetivo > 0) contenedor.style.height = alturaObjetivo + 'px';
 
                 _renderResumenTimeout = setTimeout(() => {
-                        contenedor.style.height = '';
-                        contenedor.style.transition = '';
+                    contenedor.style.height = '';
+                    contenedor.style.transition = '';
 
-                        if (isSlidingAtrasNivel2) {
-                            wrap.style.transition = 'none';
-                            panelIzq.innerHTML = getTiposHtml();
-                            panelDer.innerHTML = getL1Html();
-                            wrap.classList.add('en-detalle');
-                            void wrap.offsetWidth;
-                            wrap.style.transition = '';
+                    if (isSlidingAtrasNivel2) {
+                        wrap.style.transition = 'none';
+                        panelIzq.innerHTML = getTiposHtml();
+                        panelDer.innerHTML = getL1Html();
+                        wrap.classList.add('en-detalle');
+                        void wrap.offsetWidth;
+                        wrap.style.transition = '';
 
+                        panelIzq.style.height = '0px';
+                        panelIzq.style.overflow = 'hidden';
+                        panelDer.style.height = '';
+                        panelDer.style.overflow = '';
+                    } else {
+                        if (enDetalle) {
                             panelIzq.style.height = '0px';
                             panelIzq.style.overflow = 'hidden';
-                            panelDer.style.height = '';
-                            panelDer.style.overflow = '';
                         } else {
-                            if (enDetalle) {
-                                panelIzq.style.height = '0px';
-                                panelIzq.style.overflow = 'hidden';
-                            } else {
-                                panelDer.style.height = '0px';
-                                panelDer.style.overflow = 'hidden';
-                            }
+                            panelDer.style.height = '0px';
+                            panelDer.style.overflow = 'hidden';
                         }
+                    }
                 }, 360);
             });
         }
@@ -2044,7 +2123,7 @@
         const disps = _data.dispositivos;
         const grabs = [..._data.grabadores].sort((a, b) => (a.descripcion || '').localeCompare(b.descripcion || ''));
         const idsEnProd = _calcIdsEnProd();
-        _renderResumenGeneral(disps, idsEnProd);
+        _renderResumenGeneral(disps, grabs, idsEnProd);
         _renderResumenGrabadores(grabs);
         _renderResumenCamaras(disps, grabs, idsEnProd);
     }
@@ -2121,7 +2200,7 @@
         if (!asigs.length) return '';
 
         const isDup = tieneMacDuplicada(d);
-        const badgeProdClass = isDup ? 'badge-estado-revisar' : 'badge-estado-produccion';
+        const badgeProdClass = isDup ? 'canal-numero--dup' : 'badge-estado-produccion';
         const hoverTitle = isDup ? 'title="⚠️ MAC Duplicada en Producción"' : '';
         const ipCopiable = (ip) => `<div class="text-truncate ip-copiable" data-copy="${esc(ip)}" title="Copiar IP">${esc(ip)}</div>`;
 
@@ -3621,11 +3700,13 @@
             }
         },
 
-        irAActivosConFiltro(tipo, estado, forma) {
+        irAActivosConFiltro(tipo, estado, forma, edificio, piso) {
             const tipoLabel = S.TIPOS[tipo]?.label?.toLowerCase() || tipo;
             const estadoQ = estado || '';
             const formaQ = forma || '';
-            const query = [tipoLabel, estadoQ, formaQ].filter(Boolean).join(' ');
+            const edificioQ = edificio || '';
+            const pisoQ = piso || '';
+            const query = [tipoLabel, estadoQ, formaQ, edificioQ, pisoQ].filter(Boolean).join(' ');
 
             _forzarFiltros('tipo', 'estado', 'forma');
 
@@ -5241,8 +5322,9 @@
             _dash.tipoAbierto = null;
         }
         const disps = _data.dispositivos;
+        const grabs = _data.grabadores;
         const idsEnProd = _calcIdsEnProd();
-        _renderResumenGeneral(disps, idsEnProd);
+        _renderResumenGeneral(disps, grabs, idsEnProd);
     });
 
     const dz = document.getElementById('importar-dropzone');
@@ -5727,6 +5809,29 @@
             }
             if (action === 'ir-activos') {
                 UI.irAActivosConFiltro(btn.dataset.tipo, btn.dataset.estado, btn.dataset.forma);
+            }
+
+            if (action === 'ir-activos-edif') {
+                const { tipo, estado, edificio, piso } = btn.dataset;
+                UI.irAActivosConFiltro(tipo, estado, null, edificio, piso);
+            }
+
+            if (action === 'l2-vista') {
+                _dash.l2VistaEdificio = btn.dataset.vista === 'edificio';
+                _dash.l2EdificioAbierto = null;
+                const disps = _data.dispositivos;
+                const grabs = _data.grabadores;
+                const idsEnProd = _calcIdsEnProd();
+                _renderResumenGeneral(disps, grabs, idsEnProd);
+            }
+
+            if (action === 'toggle-l2-edificio') {
+                const edif = btn.dataset.edificio;
+                _dash.l2EdificioAbierto = _dash.l2EdificioAbierto === edif ? null : edif;
+                const disps = _data.dispositivos;
+                const grabs = _data.grabadores;
+                const idsEnProd = _calcIdsEnProd();
+                _renderResumenGeneral(disps, grabs, idsEnProd);
             }
 
             if (action === 'toggle-edificio') {

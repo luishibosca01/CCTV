@@ -619,11 +619,6 @@ button:disabled {
     color: var(--c-white);
 }
 
-.btn-estado-revisar.activo {
-    background: var(--c-purple);
-    color: var(--c-white);
-}
-
 .btn-estado-desafectado.activo {
     background: var(--c-gray-btn);
     color: var(--text-muted);
@@ -755,10 +750,6 @@ button:disabled {
     color: var(--c-white);
 }
 
-.badge-analitica-filled {
-    background: var(--c-purple);
-}
-
 .badge-encoder-filled {
     background: var(--c-teal);
 }
@@ -778,10 +769,6 @@ button:disabled {
 
 .badge-estado-averiado {
     background: var(--c-red);
-}
-
-.badge-estado-revisar {
-    background: var(--c-purple);
 }
 
 .badge-estado-desafectado {
@@ -3075,8 +3062,12 @@ button:disabled {
 }
 
 .canal-numero--dup,
-.canal-slot-lista.ocupado .canal-numero--dup {
+.canal-slot-lista.ocupado .canal-numero--dup,
+.btn-estado-revisar.activo,
+.badge-estado-revisar,
+.badge-analitica-filled {
     background: var(--c-purple);
+    color: var(--c-white);
 }
 
 .btn-picker-chevron {
@@ -3261,4 +3252,90 @@ button:disabled {
 #btn-ajustes-gist-subir:not(.hidden),
 #btn-ajustes-gist-bajar:not(.hidden) {
     display: flex;
+}
+
+/* ═══════════════════════════════════════════════════════
+   DASH L2 VISTA TOGGLE (en el h2 de Infraestructura)
+═══════════════════════════════════════════════════════ */
+
+.dash-l2-vista-toggle {
+    display: inline-flex;
+    background: var(--input-bg);
+    border-radius: var(--radius-sm);
+    padding: 2px;
+    position: relative;
+    vertical-align: middle;
+}
+
+#card-resumen-general .card-header-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0;
+}
+
+#card-resumen-general .card-header-toggle .titulo-fijo {
+    display: inline-flex;
+    align-items: center;
+    width: calc(220px + 16px + var(--sp-5));
+    flex-shrink: 0;
+}
+
+#card-resumen-general .card-header-toggle .titulo-fijo svg {
+    margin-right: 8px;
+}
+
+.dash-l2-vista-toggle::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    bottom: 2px;
+    width: calc(50% - 2px);
+    background: var(--bg-card);
+    border-radius: calc(var(--radius-sm) - 3px);
+    box-shadow: var(--shadow);
+    transition: transform 0.2s cubic-bezier(0.34, 1.3, 0.64, 1);
+    z-index: 0;
+}
+
+.dash-l2-vista-toggle:has(.dash-l2-vista-btn:last-child.activa)::before {
+    transform: translateX(100%);
+}
+
+.dash-l2-vista-btn {
+    padding: 5px 30px;
+    /* <-- Aumentamos el relleno (antes era 3px 10px) */
+    font-size: var(--fs-sm);
+    /* <-- Letra un poco más grande (antes era --fs-xs) */
+    font-weight: 600;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color 0.2s;
+    position: relative;
+    z-index: 1;
+}
+
+.dash-l2-vista-btn.activa {
+    color: var(--text-main);
+}
+
+/* Chips de piso (nivel 4) */
+.dash-l2-pisos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: var(--sp-2);
+    margin-top: var(--sp-2);
+    grid-column: 1 / -1;
+}
+
+.dash-l2-piso-chip .stat-chip-valor {
+    font-size: 1.3rem;
+    color: var(--c-blue);
+}
+
+.dash-l2-piso-chip .stat-chip-label {
+    font-size: var(--fs-xs);
 }

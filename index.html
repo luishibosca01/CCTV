@@ -328,9 +328,17 @@
         <div id="panel-dashboard" class="tab-panel">
 
             <div class="card" id="card-resumen-general">
-                <h2><svg class="icon icon-line">
-                        <use href="#icon-grid" />
-                    </svg>Infraestructura</h2>
+                <h2 class="card-header-toggle">
+                    <span class="titulo-fijo">
+                        <svg class="icon icon-line">
+                            <use href="#icon-grid" />
+                        </svg> Infraestructura
+                    </span>
+                    <div id="dash-l2-vista-toggle" class="dash-l2-vista-toggle hidden">
+                        <button class="dash-l2-vista-btn activa" data-action="l2-vista" data-vista="forma">Forma</button>
+                        <button class="dash-l2-vista-btn" data-action="l2-vista" data-vista="edificio">Edificios</button>
+                    </div>
+                </h2>
                 <div id="dash-disp-tree"></div>
             </div>
 
