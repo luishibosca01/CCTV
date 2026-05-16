@@ -3143,6 +3143,14 @@ button:disabled {
     transition-delay: 0.80s
 }
 
+.dash-slide-wrap.en-detalle .dash-slide-panel:last-child .stat-chip:nth-child(21) {
+    transition-delay: 0.84s
+}
+
+.dash-slide-wrap.en-detalle .dash-slide-panel:last-child .stat-chip:nth-child(22) {
+    transition-delay: 0.88s
+}
+
 .dash-slide-wrap:not(.en-detalle) .dash-slide-panel:first-child .stat-chip:nth-child(1) {
     transition-delay: 0.04s
 }

@@ -1732,10 +1732,11 @@
                 const pisoLabel = p === '__sin__' ? 'Sin piso' : p;
                 const queryEdif = edifNombre !== 'Sin edificio' ? edifNombre : '';
                 const queryPiso = pisoLabel !== 'Sin piso' ? pisoLabel : '';
+                const textoMostrar = p === '__sin__' ? 'SIN PISO' : `PISO ${esc(pisoLabel).toUpperCase()}`;
                 return `
                     <div class="stat-chip stat-chip-tipo" data-action="ir-activos-edif" data-tipo="camara" data-estado="${estado}" data-edificio="${esc(queryEdif)}" data-piso="${esc(queryPiso)}">
                         <div class="stat-chip-valor">${conteoPisos[p]}</div>
-                        <div class="stat-chip-label">${esc(pisoLabel).toUpperCase()}</div>
+                        <div class="stat-chip-label">${textoMostrar}</div>
                     </div>`;
             }).join('');
 
