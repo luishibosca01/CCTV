@@ -1356,7 +1356,8 @@
     let _filtrosPrevios = null;
     let _estadoColapsadoPrevio = null;
     let _estadoPisosPrevio = null;
-    let _pisosOcultosConEdificios = false; // true cuando los pisos están en pisosCollapsed solo por colapsar edificios (Estado 1)
+    let _pisosOcultosConEdificios = false;
+    let _renderResumenTimeout = null; // true cuando los pisos están en pisosCollapsed solo por colapsar edificios (Estado 1)
 
     function _calcIdsEnProd() {
         const { grabadores: grabs, otros_prod: otros = [] } = _data;
@@ -1686,6 +1687,15 @@
         const alturaActual = contenedor.offsetHeight;
         const esPrimeraCarga = alturaActual === 0;
 
+        // Cancelar cualquier setTimeout pendiente de un render anterior
+        if (_renderResumenTimeout) {
+            clearTimeout(_renderResumenTimeout);
+            _renderResumenTimeout = null;
+            // Limpiar estilos inline que pudo haber dejado el render anterior incompleto
+            contenedor.style.height = '';
+            contenedor.style.transition = '';
+        }
+
         if (_dash.tipoAbiertoPrevio === _dash.tipoAbierto && _dash.estadoAbiertoPrevio === _dash.estadoAbierto && !esPrimeraCarga) {
             panelIzq.innerHTML = htmlIzq;
             panelDer.innerHTML = htmlDer;
@@ -1737,8 +1747,7 @@
                 wrap.classList.toggle('en-detalle', enDetalle);
                 if (alturaObjetivo > 0) contenedor.style.height = alturaObjetivo + 'px';
 
-                setTimeout(() => {
-                    if (contenedor.style.height === alturaObjetivo + 'px') {
+                _renderResumenTimeout = setTimeout(() => {
                         contenedor.style.height = '';
                         contenedor.style.transition = '';
 
@@ -1763,7 +1772,6 @@
                                 panelDer.style.overflow = 'hidden';
                             }
                         }
-                    }
                 }, 360);
             });
         }

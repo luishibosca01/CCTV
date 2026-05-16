@@ -24,7 +24,7 @@
     --c-gray-btn: #dde3ea;
     --c-white: #ffffff;
 
-    --shadow: 0 1px 4px rgba(0, 0, 0, .08), 0 0 0 1px rgba(0, 0, 0, .04);
+    --shadow: 0 0 4px rgba(0, 0, 0, .08), 0 0 0 1px rgba(0, 0, 0, .04);
     --hover: brightness(0.9);
 
     --radius: 20px;
@@ -63,7 +63,7 @@ body.dark-mode {
     --input-bg: #313333;
     --c-gray-btn: #313333;
     --bg-toast: #2d3748;
-    --shadow: 0 4px 20px rgba(0, 0, 0, .4);
+    --shadow: 0 0 20px rgba(0, 0, 0, .4);
     --hover: brightness(1.2);
 }
 
@@ -513,8 +513,8 @@ button:disabled {
 
 #btn-scroll-top {
     position: fixed;
-    bottom: var(--sp-6);
-    right: var(--sp-5);
+    bottom: var(--sp-7);
+    right: var(--sp-7);
     z-index: 80;
     width: 44px;
     height: 44px;
@@ -1642,7 +1642,7 @@ button:disabled {
     left: auto;
     top: calc(100% + 4px);
     z-index: 100;
-    border: 1.5px solid var(--text-muted);
+    border: 1px solid var(--text-muted);
 }
 
 
@@ -1846,27 +1846,27 @@ button:disabled {
 }
 
 .dash-chip-main--produccion {
-    box-shadow: 0 8px 24px -6px var(--c-blue);
+    box-shadow: 0 0 12px -2px var(--c-blue);
     border-color: var(--c-blue);
 }
 
 .dash-chip-main--disponible {
-    box-shadow: 0 8px 24px -6px var(--c-green);
+    box-shadow: 0 0 12px -2px var(--c-green);
     border-color: var(--c-green);
 }
 
 .dash-chip-main--averiado {
-    box-shadow: 0 8px 24px -6px var(--c-red);
+    box-shadow: 0 0 12px -2px var(--c-red);
     border-color: var(--c-red);
 }
 
 .dash-chip-main--revisar {
-    box-shadow: 0 8px 24px -6px var(--c-purple);
+    box-shadow: 0 0 12px -2px var(--c-purple);
     border-color: var(--c-purple);
 }
 
 .dash-chip-main--desafectado {
-    box-shadow: 0 8px 24px -6px var(--text-muted);
+    box-shadow: 0 0 12px -2px var(--text-muted);
     border-color: var(--text-muted);
 }
 
@@ -2319,10 +2319,10 @@ button:disabled {
     left: auto;
     top: calc(100% + 12px);
     z-index: 1000;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+    box-shadow: 0 0 18px rgba(0, 0, 0, 0.18);
     max-height: none;
     overflow-y: visible;
-    border: 1.5px solid var(--text-muted);
+    border: 1px solid var(--text-muted);
 }
 
 #filtros-busqueda-lista {
@@ -2863,7 +2863,7 @@ button:disabled {
 
     .stat-chip-tipo:hover {
         filter: var(--hover);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, .12);
+        box-shadow: 0 0 8px rgba(0, 0, 0, .12);
     }
 
     .dash-chip-main.clickable:hover {
