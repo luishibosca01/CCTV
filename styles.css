@@ -52,7 +52,9 @@
     --fs-2xl: 1.1rem;
 }
 
-body.dark-mode {
+body.dark-mode,
+html.dark-mode body,
+html.dark-mode {
     --bg-body: #131314;
     --bg-card: #1e1f20;
     --bg-header: #131314f6;
@@ -65,6 +67,14 @@ body.dark-mode {
     --bg-toast: #2d3748;
     --shadow: 0 0 20px rgba(0, 0, 0, .4);
     --hover: brightness(1.2);
+}
+
+/* Anti-flash: durante la carga inicial (data-tab-inicial presente) se suprime la transición */
+body[data-tab-inicial] {
+    transition: none !important;
+}
+body[data-tab-inicial] * {
+    transition: none !important;
 }
 
 /* ═══════════════════════════════════════════════════════

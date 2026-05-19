@@ -20,6 +20,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/svg+xml" href="./icon.svg">
+    <script src="./flash.js"></script>
     <link rel="stylesheet" href="./styles.css">
     <script src="./app.js" defer></script>
 
@@ -397,6 +398,9 @@
                             </svg>
                         </button>
                         <div id="dropdown-vista-activos" class="combobox-dropdown hidden">
+                            <div class="filtro-dropdown-header">
+                                <span class="filtro-dropdown-title">Agrupar por</span>
+                            </div>
                             <div class="canal-disp-item" data-orden="edificio-piso">Edificio /
                                 Piso</div>
                             <div class="canal-disp-item" data-orden="estado">Estado</div>

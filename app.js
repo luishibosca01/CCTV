@@ -2,13 +2,46 @@
     'use strict';
 
     // ════════════════════════════════════════════════════════════════════════════
+    // § MIGRACIÓN localStorage — renombra claves viejas (sin prefijo) a nuevas
+    // Corre una sola vez; se marca con la clave 'cctvs:migrated_v1'
+    // ════════════════════════════════════════════════════════════════════════════
+    ; (() => {
+        try {
+            if (!localStorage.getItem('cctvs:migrated_v1')) {
+                const migraciones = [
+                    ['cctv_tema',           'cctvs:cctv_tema'],
+                    ['cctv_tab',            'cctvs:cctv_tab'],
+                    ['cctv_activos_orden',  'cctvs:cctv_activos_orden'],
+                    ['cctv_activos_recordar','cctvs:cctv_activos_recordar'],
+                    ['cctv_act_collapsed',  'cctvs:cctv_act_collapsed'],
+                    ['cctv_pisos_collapsed','cctvs:cctv_pisos_collapsed'],
+                    ['cctv_tipos_custom',   'cctvs:cctv_tipos_custom'],
+                    ['cctv_edificios',      'cctvs:cctv_edificios'],
+                    ['cctv_data_v1',        'cctvs:cctv_data_v1'],
+                    ['cctv_gist_cfg',       'cctvs:cctv_gist_cfg'],
+                    ['cctv_grab_expanded',  'cctvs:cctv_grab_expanded'],
+                    ['cctv_busq_activos',   'cctvs:cctv_busq_activos'],
+                ];
+                migraciones.forEach(([vieja, nueva]) => {
+                    const val = localStorage.getItem(vieja);
+                    if (val !== null) {
+                        localStorage.setItem(nueva, val);
+                        localStorage.removeItem(vieja);
+                    }
+                });
+                localStorage.setItem('cctvs:migrated_v1', '1');
+            }
+        } catch (_) { }
+    })();
+
+    // ════════════════════════════════════════════════════════════════════════════
     // § BOOT — dark-mode y tab inicial (síncrono, antes del parse completo)
     // ════════════════════════════════════════════════════════════════════════════
     ; (() => {
         try {
-            const t = localStorage.getItem('cctv_tema');
+            const t = localStorage.getItem('cctvs:cctv_tema');
             if (t === 'true' || t === null) document.body.classList.add('dark-mode');
-            const saved = JSON.parse(localStorage.getItem('cctv_tab') || 'null');
+            const saved = JSON.parse(localStorage.getItem('cctvs:cctv_tab') || 'null');
             const tab = (saved && saved.tab && (Date.now() - saved.ts) < 3600000) ? saved.tab : 'dashboard';
             document.body.setAttribute('data-tab-inicial', tab);
         } catch (_) { }
@@ -18,20 +51,24 @@
     // § CONSTANTES — literales compartidos entre módulos
     // ════════════════════════════════════════════════════════════════════════════
 
+    // Prefijo global de la app — evita colisiones en localStorage cuando se hostea
+    // en un dominio compartido (ej: GitHub Pages con múltiples apps)
+    const APP_KEY = 'cctvs';
+
     // Tabs de la aplicación
     const TABS = ['dashboard', 'activos', 'produccion'];
 
     // Tiempo de expiración de estado guardado en localStorage
     const UNA_HORA = 60 * 60 * 1000;
 
-    // Claves localStorage
+    // Claves localStorage — todas prefijadas con APP_KEY para evitar colisiones
     const LS = {
-        TEMA: 'cctv_tema',
-        TAB: 'cctv_tab',
-        ACTIVOS_ORDEN: 'cctv_activos_orden',
-        ACTIVOS_RECORDAR: 'cctv_activos_recordar',
-        ACTIVOS_COLLAPSED: 'cctv_act_collapsed',
-        PISOS_COLLAPSED: 'cctv_pisos_collapsed',
+        TEMA: `${APP_KEY}:cctv_tema`,
+        TAB: `${APP_KEY}:cctv_tab`,
+        ACTIVOS_ORDEN: `${APP_KEY}:cctv_activos_orden`,
+        ACTIVOS_RECORDAR: `${APP_KEY}:cctv_activos_recordar`,
+        ACTIVOS_COLLAPSED: `${APP_KEY}:cctv_act_collapsed`,
+        PISOS_COLLAPSED: `${APP_KEY}:cctv_pisos_collapsed`,
     };
 
     // Formas de cámara (orden canónico)
@@ -153,7 +190,7 @@
             encoder: { label: 'Encoder', emoji: '🔌', badge: 'badge-encoder', dot: 'var(--c-teal)', builtin: true },
         };
 
-        const KEY_TIPOS = 'cctv_tipos_custom';
+        const KEY_TIPOS = `${APP_KEY}:cctv_tipos_custom`;
         let TIPOS = { ...TIPOS_BUILTIN };
 
         function cargarTipos() {
@@ -179,7 +216,7 @@
         }
         cargarTipos();
 
-        const KEY_EDIFICIOS = 'cctv_edificios';
+        const KEY_EDIFICIOS = `${APP_KEY}:cctv_edificios`;
         let _edificios = [];
 
         function cargarEdificios() {
@@ -557,7 +594,7 @@
     // ════════════════════════════════════════════════════════════════════════════
     // § STORE — datos en memoria, persistencia localStorage
     // ════════════════════════════════════════════════════════════════════════════
-    const KEY = 'cctv_data_v1';
+    const KEY = `${APP_KEY}:cctv_data_v1`;
     let _data = { dispositivos: [], grabadores: [], otros_prod: [] };
 
     // Caches de derived data — se invalidan en cada guardar()/cargar()
@@ -739,7 +776,7 @@
     // § GIST SYNC — sincronización con GitHub Gist
     // ════════════════════════════════════════════════════════════════════════════
     const GistSync = (() => {
-        const CFG_KEY = 'cctv_gist_cfg';
+        const CFG_KEY = `${APP_KEY}:cctv_gist_cfg`;
         const FILENAME = 'cctv_data.json';
         const DEBOUNCE_MS = 3000;
         const RE_GIST_ID = /^[a-f0-9]{20,40}$/i;
@@ -2587,7 +2624,7 @@
             if (btn) btn.classList.toggle('activo', estadoActual === e);
         });
     }
-    const KEY_EXPANDED = 'cctv_grab_expanded';
+    const KEY_EXPANDED = `${APP_KEY}:cctv_grab_expanded`;
     const _grabExpanded = (() => {
         try {
             const saved = JSON.parse(localStorage.getItem(KEY_EXPANDED) || 'null');
@@ -2621,7 +2658,7 @@
         { id: 'ubicacion', label: 'Ubicación' },
         { id: 'ip', label: 'Dirección IP' },
     ];
-    const KEY_BUSQ = 'cctv_busq_activos';
+    const KEY_BUSQ = `${APP_KEY}:cctv_busq_activos`;
 
     function getEstadoEfectivo(d, asignaciones) {
         return d.estado || (asignaciones[d.id]?.length ? 'produccion' : 'disponible');
@@ -2633,7 +2670,9 @@
             .replace(/\bmini\s+domo\b/gi, 'minidomo')
             .replace(/\bmini\s+bullet\b/gi, 'minibullet');
 
-        const tokens = (qNorm.match(/"[^"]+"|\S+/g) || []).map(t => t.replace(/"/g, ''));
+        const tokens = (qNorm.match(/"[^"]+"|\S+/g) || [])
+            .map(t => t.replace(/"/g, ''))
+            .map(t => /^-?\d+$/.test(t) ? (parseInt(t, 10).toString()) : t); // normaliza pisos numéricos: "03" → "3"
         const tokenRegexes = tokens.map(t => new RegExp('(?<![a-z0-9])' + t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![a-z0-9])', 'i'));
         return { tokens, tokenRegexes };
     }
@@ -2658,17 +2697,17 @@
 
         if (_busqActivos.has('ubicacion')) {
             const edifDisp = (d.edificio || '').trim();
-            const pisoDisp = (d.piso || '').trim();
+            const pisoDisp = S.normalizarPiso(d.piso || '');
             if (edifDisp || pisoDisp) campos.push([edifDisp, pisoDisp].filter(Boolean).join(' ').toLowerCase());
             asigD.forEach(a => {
                 if (a.tipo === 'canal' && a.slot) {
                     const edifCanal = (a.slot.edificio || '').trim();
-                    const pisoCanal = (a.slot.piso || '').trim();
+                    const pisoCanal = S.normalizarPiso(a.slot.piso || '');
                     if (edifCanal || pisoCanal) campos.push([edifCanal, pisoCanal].filter(Boolean).join(' ').toLowerCase());
                 }
                 if (a.tipo === 'otro_prod' && a.item) {
                     const edifOtro = (a.item.edificio || '').trim();
-                    const pisoOtro = (a.item.piso || '').trim();
+                    const pisoOtro = S.normalizarPiso(a.item.piso || '');
                     if (edifOtro || pisoOtro) campos.push([edifOtro, pisoOtro].filter(Boolean).join(' ').toLowerCase());
                 }
             });
@@ -3330,10 +3369,15 @@
 
             const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
             const url = URL.createObjectURL(blob);
-            window.open(url, '_blank');
-            setTimeout(() => URL.revokeObjectURL(url), 60000);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `reporte-cctv-${new Date().toISOString().slice(0,10)}.html`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 10000);
             MM.cerrar('modal-reporte');
-            toast('Reporte generado', 'success');
+            toast('Reporte descargado', 'success');
         },
 
         abrirTiposDispositivo() {
@@ -3380,18 +3424,21 @@
         _renderTiposCustom() {
             const cont = document.getElementById('lista-tipos-custom');
             if (!cont) return;
+            const builtin = Object.entries(S.TIPOS).filter(([, v]) => v.builtin);
             const custom = Object.entries(S.TIPOS).filter(([, v]) => !v.builtin);
-            if (!custom.length) {
-                cont.innerHTML = `<div class="dash-empty-text dash-empty-text--sm-pad">Sin tipos personalizados</div>`;
-                return;
-            }
-            cont.innerHTML = custom.map(([k, v]) => `
+            const builtinHtml = builtin.map(([, v]) => `
                         <div class="tipo-custom-row">
-                            <span class="tipo-custom-label">${esc(v.label)}</span>
+                            <span class="tipo-custom-label">${esc(v.emoji)} ${esc(v.label)}</span>
+                        </div>`).join('');
+            const separador = custom.length ? `<div class="filtro-dropdown-header" style="margin-top:var(--sp-3)"><span class="filtro-dropdown-title">Personalizados</span></div>` : '';
+            const customHtml = custom.map(([k, v]) => `
+                        <div class="tipo-custom-row">
+                            <span class="tipo-custom-label">${esc(v.emoji)} ${esc(v.label)}</span>
                             <button data-action="eliminar-tipo" data-key="${esc(k)}" class="icon-btn btn-delete btn-delete--sm" title="Eliminar tipo">
                                 <svg class="icon icon-line icon--sm"><use href="#icon-trash"/></svg>
                             </button>
                         </div>`).join('');
+            cont.innerHTML = builtinHtml + separador + customHtml;
         },
 
         agregarTipoCustom() {

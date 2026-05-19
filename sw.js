@@ -5,7 +5,8 @@ const urlsToCache = [
   './manifest.json',
   './icon.svg',
   './app.js',
-  './styles.css'
+  './styles.css',
+  './flash.js'
 ];
 
 // Instalación
