@@ -25,7 +25,7 @@
     <link rel="stylesheet" href="./styles.css">
     <script src="./app.js" defer></script>
 
-    <title>CCTVS</title>
+    <title>SGC</title>
 
 </head>
 
@@ -245,7 +245,7 @@
             <svg class="icon icon-line">
                 <use href="#icon-camera" />
             </svg>
-            CCTVS
+            SGC
         </h1>
         <span id="header-tab-titulo"></span>
         <div class="header-buttons">
@@ -337,8 +337,10 @@
                         </svg> Infraestructura
                     </span>
                     <div id="dash-l2-vista-toggle" class="dash-l2-vista-toggle hidden">
-                        <button class="dash-l2-vista-btn activa" data-action="l2-vista" data-vista="forma">Forma</button>
-                        <button class="dash-l2-vista-btn" data-action="l2-vista" data-vista="edificio">Edificios</button>
+                        <button class="dash-l2-vista-btn activa" data-action="l2-vista"
+                            data-vista="forma">Forma</button>
+                        <button class="dash-l2-vista-btn" data-action="l2-vista"
+                            data-vista="edificio">Edificios</button>
                     </div>
                 </h2>
                 <div id="dash-disp-tree"></div>
@@ -405,10 +407,18 @@
                             <div class="canal-disp-item" data-orden="edificio-piso">Edificio /
                                 Piso</div>
                             <div class="canal-disp-item" data-orden="estado">Estado</div>
-                            <div class="canal-disp-item" data-orden="marca">Marca / Modelo</div>
+                            <div class="canal-disp-item" data-orden="marca">Marca</div>
+                            <div class="canal-disp-item" data-orden="modelo">Modelo</div>
+                            <div class="canal-disp-item" data-orden="patrimonio">Patrimonio</div>
                             <div class="canal-disp-item" data-orden="forma">Tipo / Forma</div>
                         </div>
                     </div>
+                    <button id="btn-reporte-agrupamiento" class="icon-btn btn-inline"
+                        title="Exportar Sumario de Agrupamiento Actual">
+                        <svg class="icon icon-line">
+                            <use href="#icon-report" />
+                        </svg>
+                    </button>
 
                     <button class="icon-btn btn-edit btn-inline" title="Agregar dispositivo">
                         <svg class="icon icon-line">
@@ -462,7 +472,7 @@
                     </svg>
                     Ajustes
                 </h3>
-                <span class="modal-header-version">260516.0149</span>
+                <span class="modal-header-version">260520</span>
             </div>
 
             <div class="modal-scroll-body">
@@ -484,15 +494,6 @@
                                 <use href="#icon-building" />
                             </svg>
                             Edificios
-                            <svg class="icon icon-line btn-ajustes-chevron">
-                                <use href="#icon-chevron-right" />
-                            </svg>
-                        </button>
-                        <button class="btn-ajustes">
-                            <svg class="icon icon-line">
-                                <use href="#icon-report" />
-                            </svg>
-                            Reporte
                             <svg class="icon icon-line btn-ajustes-chevron">
                                 <use href="#icon-chevron-right" />
                             </svg>
@@ -587,98 +588,32 @@
         </div>
     </div>
 
-    <div class="modal" id="modal-reporte">
+    <div class="modal" id="modal-reporte-agrupamiento">
         <div class="modal-content modal-content--flex sm2">
             <div class="modal-header modal-sticky-header">
                 <h3>
                     <svg class="icon icon-line">
                         <use href="#icon-report" />
                     </svg>
-                    Generar Reporte
+                    Sumario de Vista Actual
                 </h3>
             </div>
 
             <div class="modal-scroll-body">
-                <div class="section-label section-label--mb">Secciones a incluir</div>
-
-                <div class="reporte-opciones-lista">
-                    <label class="reporte-opcion">
-                        <input type="checkbox" id="rpt-activos-totales" checked>
-                        <span class="reporte-opcion-texto">
-                            <span class="reporte-opcion-titulo">Activos totales por tipo</span>
-                            <span class="reporte-opcion-desc">Resumen general de dispositivos agrupados por
-                                categoría</span>
-                        </span>
-                    </label>
-                    <label class="reporte-opcion">
-                        <input type="checkbox" id="rpt-edificios" checked>
-                        <span class="reporte-opcion-texto">
-                            <span class="reporte-opcion-titulo">Edificios con totales</span>
-                            <span class="reporte-opcion-desc">Lista de edificios y cantidad de dispositivos en cada
-                                uno</span>
-                        </span>
-                    </label>
-                    <label class="reporte-opcion">
-                        <input type="checkbox" id="rpt-formas" checked>
-                        <span class="reporte-opcion-texto">
-                            <span class="reporte-opcion-titulo">Cámaras por forma</span>
-                            <span class="reporte-opcion-desc">Distribución de cámaras según tipo de chasis (domo,
-                                bullet, turret…)</span>
-                        </span>
-                    </label>
-                    <label class="reporte-opcion">
-                        <input type="checkbox" id="rpt-cam-edificio" checked>
-                        <span class="reporte-opcion-texto">
-                            <span class="reporte-opcion-titulo">Cámaras por edificio y piso</span>
-                            <span class="reporte-opcion-desc">Desglose detallado de cámaras ubicadas en cada piso</span>
-                        </span>
-                    </label>
-                    <label class="reporte-opcion">
-                        <input type="checkbox" id="rpt-modelos" checked>
-                        <span class="reporte-opcion-texto">
-                            <span class="reporte-opcion-titulo">Cantidad por modelo</span>
-                            <span class="reporte-opcion-desc">Ranking de modelos más utilizados en el inventario</span>
-                        </span>
-                    </label>
-                    <label class="reporte-opcion">
-                        <input type="checkbox" id="rpt-estados" checked>
-                        <span class="reporte-opcion-texto">
-                            <span class="reporte-opcion-titulo">Estado de dispositivos</span>
-                            <span class="reporte-opcion-desc">Activos operativos, averiados, en revisión y
-                                desafectados</span>
-                        </span>
-                    </label>
-                    <label class="reporte-opcion">
-                        <input type="checkbox" id="rpt-marcas">
-                        <span class="reporte-opcion-texto">
-                            <span class="reporte-opcion-titulo">Distribución por marca</span>
-                            <span class="reporte-opcion-desc">Cantidad de dispositivos por fabricante</span>
-                        </span>
-                    </label>
-                    <label class="reporte-opcion">
-                        <input type="checkbox" id="rpt-grabadores">
-                        <span class="reporte-opcion-texto">
-                            <span class="reporte-opcion-titulo">Lista de grabadores</span>
-                            <span class="reporte-opcion-desc">NVR/DVR con capacidad de canales y ubicación</span>
-                        </span>
-                    </label>
+                <div class="section-label section-label--mb">Grupos de la vista a incluir en el HTML</div>
+                <div id="reporte-agrupamiento-lista" class="reporte-opciones-lista">
                 </div>
             </div>
 
             <div class="modal-sticky-footer">
                 <div class="btn-group btn-group--no-mt">
-                    <button class="btn-edit btn-full" id="btn-generar-reporte">
+                    <button class="btn-edit btn-flex" id="btn-generar-reporte-agrupamiento">
                         <svg class="icon icon-line">
-                            <use href="#icon-report" />
+                            <use href="#icon-download" />
                         </svg>
-                        Generar
+                        Descargar HTML
                     </button>
-                    <button class="btn-cancel">
-                        <svg class="icon icon-line">
-                            <use href="#icon-undo" />
-                        </svg>
-                        Volver
-                    </button>
+                    <button class="btn-cancel btn-flex">Cancelar</button>
                 </div>
             </div>
         </div>
@@ -1545,7 +1480,7 @@
 </html>
 
 <!--// ====================================================================
-    //              NOTAS SISTEMA LUSHIBOSCA CCTVS VERSION 304
+    //              NOTAS SISTEMA LUSHIBOSCA SGC VERSION 260520.1400
     // ====================================================================
     
       - CAMBIOS:

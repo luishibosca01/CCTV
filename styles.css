@@ -1490,7 +1490,7 @@ button:disabled {
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     box-shadow: var(--shadow);
-    max-height: 220px;
+    max-height: 300px;
     overflow-y: auto;
     z-index: 200;
 }
