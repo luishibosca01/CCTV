@@ -961,7 +961,7 @@
         // Umbral: el remoto debe tener al menos MIN_REMOTE_DISPS dispositivos
         // y el local debe tener al menos RATIO_MIN * remoto para subir sin alerta.
         const _GUARD_MIN_REMOTE = 1;   // sólo actúa si el gist tiene ≥ 1 dispositivo
-        const _GUARD_RATIO_MIN  = 0.5; // local < 50 % del remoto → bloquea
+        const _GUARD_RATIO_MIN = 0.5; // local < 50 % del remoto → bloquea
 
         async function _contarDispositivosRemoto(token, gistId) {
             try {
@@ -988,7 +988,7 @@
 
             // ── Guardia anti-vaciado: sólo en subidas automáticas (silenciosas) ──
             if (silencioso && !forzar && gistId) {
-                const localCount  = (_data.dispositivos || []).length;
+                const localCount = (_data.dispositivos || []).length;
                 const remoteCount = await _contarDispositivosRemoto(token, gistId);
 
                 if (remoteCount !== null
@@ -1095,9 +1095,6 @@
             }, DEBOUNCE_MS);
         }
 
-        // ── Helper: merge de entidades (dispositivos, grabadores, otros_prod) ──────
-        // Acepta datos ya sanitizados o crudos (los sanitiza internamente).
-        // NO maneja tipos/edificios — eso lo hace _combinarDatosRemotos.
         function _combinarEntidades(remoto) {
             let cDispsAdd = 0, cDispsUpd = 0;
             let cGrabsAdd = 0, cGrabsUpd = 0;
@@ -1106,6 +1103,13 @@
 
             function _labelDisp(d) {
                 return d.mac || d.modelo || d.id;
+            }
+
+            // Helper para obtener el nombre real del dispositivo en lugar del ID interno
+            function _getDispLabelForMerge(id) {
+                if (!id) return '';
+                const d = _data.dispositivos.find(x => x.id === id) || (remoto.dispositivos || []).find(x => x.id === id);
+                return d ? (d.mac || d.serial || d.id) : id;
             }
 
             const mapD = new Map(_data.dispositivos.map(d => [d.id, d]));
@@ -1142,7 +1146,14 @@
                     let updated = false;
                     ['marca', 'modelo', 'ip', 'edificio', 'piso', 'rack', 'puerto', 'mac', 'comentarios', 'dispositivoId'].forEach(k => {
                         if (!loc[k] && san[k]) {
-                            cambios.push({ cat: 'grab', op: 'upd', label: loc.descripcion || loc.id, campo: k, antes: loc[k] || '', despues: san[k] });
+                            let valAntes = loc[k] || '';
+                            let valDespues = san[k];
+                            // Si es dispositivoId, resolvemos la etiqueta legible
+                            if (k === 'dispositivoId') {
+                                valAntes = _getDispLabelForMerge(loc[k]);
+                                valDespues = _getDispLabelForMerge(san[k]);
+                            }
+                            cambios.push({ cat: 'grab', op: 'upd', label: loc.descripcion || loc.id, campo: k, antes: valAntes, despues: valDespues });
                             loc[k] = san[k]; updated = true;
                         }
                     });
@@ -1153,7 +1164,8 @@
                                 const dispLocal = _data.dispositivos.find(d => d.id === cRem.dispositivoId);
                                 const inactivo = dispLocal && ['averiado', 'revisar', 'desafectado'].includes(dispLocal.estado);
                                 if (!inactivo) {
-                                    cambios.push({ cat: 'canal', op: 'upd', label: `${loc.descripcion || loc.id} › Canal ${cRem.canal}`, campo: 'dispositivoId', antes: '', despues: cRem.dispositivoId });
+                                    // Resolvemos la etiqueta para la asignación en canales
+                                    cambios.push({ cat: 'canal', op: 'upd', label: `${loc.descripcion || loc.id} › Canal ${cRem.canal}`, campo: 'dispositivoId', antes: '', despues: _getDispLabelForMerge(cRem.dispositivoId) });
                                     cLoc.dispositivoId = cRem.dispositivoId; updated = true;
                                 }
                             }
@@ -1181,7 +1193,14 @@
                     let updated = false;
                     ['dispositivoId', 'descripcion', 'ip', 'edificio', 'piso', 'rack', 'puerto', 'comentarios'].forEach(k => {
                         if (!loc[k] && san[k]) {
-                            cambios.push({ cat: 'otro', op: 'upd', label: loc.descripcion || loc.id, campo: k, antes: loc[k] || '', despues: san[k] });
+                            let valAntes = loc[k] || '';
+                            let valDespues = san[k];
+                            // Si es dispositivoId, resolvemos la etiqueta legible
+                            if (k === 'dispositivoId') {
+                                valAntes = _getDispLabelForMerge(loc[k]);
+                                valDespues = _getDispLabelForMerge(san[k]);
+                            }
+                            cambios.push({ cat: 'otro', op: 'upd', label: loc.descripcion || loc.id, campo: k, antes: valAntes, despues: valDespues });
                             loc[k] = san[k]; updated = true;
                         }
                     });
@@ -2687,40 +2706,40 @@
             // No retornamos: listaOtros debe renderizarse igualmente
         } else {
 
-        lista.innerHTML = grabs.map(g => {
-            const canalesHtml = g.canales_data.map(c => {
-                const disp = c.dispositivoId ? _data.dispositivos.find(d => d.id === c.dispositivoId) : null;
+            lista.innerHTML = grabs.map(g => {
+                const canalesHtml = g.canales_data.map(c => {
+                    const disp = c.dispositivoId ? _data.dispositivos.find(d => d.id === c.dispositivoId) : null;
 
-                if (disp) {
-                    const tituloCanal = c.descripcion || disp.mac || disp.serial || '—';
-                    const isDupMac = tieneMacDuplicada(disp);
-                    const isDupCanal = estaEnMultiCanal(c.dispositivoId);
-                    const isDup = isDupMac || isDupCanal;
-                    const badgeClass = isDup ? ' canal-numero--dup' : '';
-                    const tituloHover = isDupCanal
-                        ? `[EN MÚLTIPLES GRABADORES] ${esc(tituloCanal)}`
-                        : isDupMac ? `[MAC DUPLICADA] ${esc(tituloCanal)}` : esc(tituloCanal);
+                    if (disp) {
+                        const tituloCanal = c.descripcion || disp.mac || disp.serial || '—';
+                        const isDupMac = tieneMacDuplicada(disp);
+                        const isDupCanal = estaEnMultiCanal(c.dispositivoId);
+                        const isDup = isDupMac || isDupCanal;
+                        const badgeClass = isDup ? ' canal-numero--dup' : '';
+                        const tituloHover = isDupCanal
+                            ? `[EN MÚLTIPLES GRABADORES] ${esc(tituloCanal)}`
+                            : isDupMac ? `[MAC DUPLICADA] ${esc(tituloCanal)}` : esc(tituloCanal);
 
-                    return `<div class="canal-slot-lista ocupado" data-canal="${c.canal}">
+                        return `<div class="canal-slot-lista ocupado" data-canal="${c.canal}">
                                 <div class="canal-numero${badgeClass}">CH ${c.canal}</div>
                                 <div class="canal-dispositivo-nombre" title="${tituloHover}">${esc(tituloCanal)}</div>
                                 <div class="canal-dispositivo-ip ${c.ip ? 'ip-copiable' : ''}" ${c.ip ? `data-copy="${esc(c.ip)}" title="Copiar IP"` : ''}>${c.ip ? esc(c.ip) : ''}</div>
                             </div>`;
-                } else {
-                    return `<div class="canal-slot-lista vacio" data-canal="${c.canal}">
+                    } else {
+                        return `<div class="canal-slot-lista vacio" data-canal="${c.canal}">
                                 <div class="canal-numero">CH ${c.canal}</div>
                                 <div class="canal-vacio-label">Vacío</div>
                                 <div></div>
                             </div>`;
-                }
-            }).join('');
+                    }
+                }).join('');
 
-            const ocupados = g.canales_data.filter(c => c.dispositivoId).length;
-            const libres = g.canales_n - ocupados;
-            const collapsed = !_grabExpanded.has(g.id);
-            const gridClass = 'nvr-canales-grid';
+                const ocupados = g.canales_data.filter(c => c.dispositivoId).length;
+                const libres = g.canales_n - ocupados;
+                const collapsed = !_grabExpanded.has(g.id);
+                const gridClass = 'nvr-canales-grid';
 
-            return `<div class="nvr-card anim-in${collapsed ? ' collapsed' : ''}" data-grab-id="${esc(g.id)}">
+                return `<div class="nvr-card anim-in${collapsed ? ' collapsed' : ''}" data-grab-id="${esc(g.id)}">
                     <div class="nvr-card-header nvr-header-toggle">
                         <div class="nvr-card-header-info">
                             <div class="nvr-card-nombre">
@@ -2739,33 +2758,33 @@
                     </div>
                     <div class="${gridClass}${collapsed ? ' collapsed' : ''}"><div class="nvr-canales-grid-inner">${canalesHtml}</div></div>
                 </div>`;
-        }).join('');
+            }).join('');
 
-        if (!lista._delegRegistrada) {
-            lista._delegRegistrada = true;
-            lista.addEventListener('click', function (e) {
-                if (e.target.closest('[data-copy]')) return; // deja que el handler de data-copy lo maneje
-                const btnEdit = e.target.closest('.nvr-btn-editar');
-                if (btnEdit) {
-                    e.stopPropagation();
-                    const card = btnEdit.closest('[data-grab-id]');
-                    if (card) UI.abrirEditarGrabador(card.dataset.grabId);
-                    return;
-                }
-                const header = e.target.closest('.nvr-header-toggle');
-                if (header) {
-                    const card = header.closest('[data-grab-id]');
-                    if (card) UI.toggleGrabColapse(card.dataset.grabId);
-                    return;
-                }
-                const slot = e.target.closest('.canal-slot-lista[data-canal]');
-                if (slot) {
-                    const card = slot.closest('[data-grab-id]');
-                    if (card) UI.abrirAsignarCanal(card.dataset.grabId, +slot.dataset.canal);
-                    return;
-                }
-            });
-        }
+            if (!lista._delegRegistrada) {
+                lista._delegRegistrada = true;
+                lista.addEventListener('click', function (e) {
+                    if (e.target.closest('[data-copy]')) return; // deja que el handler de data-copy lo maneje
+                    const btnEdit = e.target.closest('.nvr-btn-editar');
+                    if (btnEdit) {
+                        e.stopPropagation();
+                        const card = btnEdit.closest('[data-grab-id]');
+                        if (card) UI.abrirEditarGrabador(card.dataset.grabId);
+                        return;
+                    }
+                    const header = e.target.closest('.nvr-header-toggle');
+                    if (header) {
+                        const card = header.closest('[data-grab-id]');
+                        if (card) UI.toggleGrabColapse(card.dataset.grabId);
+                        return;
+                    }
+                    const slot = e.target.closest('.canal-slot-lista[data-canal]');
+                    if (slot) {
+                        const card = slot.closest('[data-grab-id]');
+                        if (card) UI.abrirAsignarCanal(card.dataset.grabId, +slot.dataset.canal);
+                        return;
+                    }
+                });
+            }
         } // end else (grabs.length > 0)
 
         const listaOtros = document.getElementById('lista-otros-prod');
