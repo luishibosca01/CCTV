@@ -1766,6 +1766,13 @@
 
     function _inyectarStaggerChips() { }
 
+    // Asigna --i a cada .stat-chip dentro de un panel para transition-delay escalonado
+    function _asignarIndicesChips(panel) {
+        panel.querySelectorAll('.stat-chip').forEach((chip, idx) => {
+            chip.style.setProperty('--i', idx + 1);
+        });
+    }
+
     function _renderResumenGeneral(disps, grabs, idsEnProd) {
         const tiposServidores = ['nvr', 'dvr', 'analitica', 'encoder'];
 
@@ -2030,7 +2037,7 @@
             if (saltandoNivel2 && _dash.estadoAbierto !== null) {
                 wrap.style.transition = 'none';
                 wrap.classList.remove('en-detalle');
-                panelIzq.innerHTML = getL1Html();
+                panelIzq.innerHTML = getL1Html(); _asignarIndicesChips(panelIzq);
                 void wrap.offsetWidth;
                 wrap.style.transition = '';
             } else if (saltandoNivel3 && _dash.l2EdificioAbierto === null) {
@@ -2046,7 +2053,7 @@
             if (saltandoNivel3 && _dash.l2EdificioAbierto !== null) {
                 wrap.style.transition = 'none';
                 wrap.classList.remove('en-detalle');
-                panelIzq.innerHTML = getL2Html();
+                panelIzq.innerHTML = getL2Html(); _asignarIndicesChips(panelIzq);
                 void wrap.offsetWidth;
                 wrap.style.transition = '';
             }
@@ -2055,7 +2062,7 @@
         if (_renderResumenTimeout) { clearTimeout(_renderResumenTimeout); _renderResumenTimeout = null; contenedor.style.height = ''; contenedor.style.transition = ''; }
 
         if (_dash.tipoAbiertoPrevio === _dash.tipoAbierto && _dash.estadoAbiertoPrevio === _dash.estadoAbierto && _dash.l2EdificioAbiertoPrevio === _dash.l2EdificioAbierto && !esPrimeraCarga) {
-            panelIzq.innerHTML = htmlIzq; panelDer.innerHTML = htmlDer; return;
+            panelIzq.innerHTML = htmlIzq; panelDer.innerHTML = htmlDer; _asignarIndicesChips(panelIzq); _asignarIndicesChips(panelDer); return;
         }
 
         _dash.tipoAbiertoPrevio = _dash.tipoAbierto;
@@ -2064,7 +2071,7 @@
 
         if (!esPrimeraCarga) { contenedor.style.transition = 'none'; contenedor.style.height = alturaActual + 'px'; }
         panelIzq.style.height = ''; panelIzq.style.overflow = ''; panelDer.style.height = ''; panelDer.style.overflow = '';
-        panelIzq.innerHTML = htmlIzq; panelDer.innerHTML = htmlDer;
+        panelIzq.innerHTML = htmlIzq; panelDer.innerHTML = htmlDer; _asignarIndicesChips(panelIzq); _asignarIndicesChips(panelDer);
         void contenedor.offsetHeight;
 
         const panelActivo = enDetalle ? panelDer : panelIzq;
@@ -2082,10 +2089,10 @@
                 _renderResumenTimeout = setTimeout(() => {
                     contenedor.style.height = ''; contenedor.style.transition = '';
                     if (isSlidingAtrasNivel2) {
-                        wrap.style.transition = 'none'; panelIzq.innerHTML = getTiposHtml(); panelDer.innerHTML = getL1Html(); wrap.classList.add('en-detalle'); void wrap.offsetWidth; wrap.style.transition = '';
+                        wrap.style.transition = 'none'; panelIzq.innerHTML = getTiposHtml(); panelDer.innerHTML = getL1Html(); _asignarIndicesChips(panelIzq); _asignarIndicesChips(panelDer); wrap.classList.add('en-detalle'); void wrap.offsetWidth; wrap.style.transition = '';
                         panelIzq.style.height = '0px'; panelIzq.style.overflow = 'hidden'; panelDer.style.height = ''; panelDer.style.overflow = '';
                     } else if (isSlidingAtrasNivel3) {
-                        wrap.style.transition = 'none'; panelIzq.innerHTML = getL1Html(); panelDer.innerHTML = getL2Html(); wrap.classList.add('en-detalle'); void wrap.offsetWidth; wrap.style.transition = '';
+                        wrap.style.transition = 'none'; panelIzq.innerHTML = getL1Html(); panelDer.innerHTML = getL2Html(); _asignarIndicesChips(panelIzq); _asignarIndicesChips(panelDer); wrap.classList.add('en-detalle'); void wrap.offsetWidth; wrap.style.transition = '';
                         panelIzq.style.height = '0px'; panelIzq.style.overflow = 'hidden'; panelDer.style.height = ''; panelDer.style.overflow = '';
                     } else {
                         if (enDetalle) { panelIzq.style.height = '0px'; panelIzq.style.overflow = 'hidden'; } else { panelDer.style.height = '0px'; panelDer.style.overflow = 'hidden'; }
@@ -4086,7 +4093,12 @@
                 : 0;
             const enProduccionComoGrab = !!grabAsociado;
             const enProduccionComoCanal = _data.grabadores.some(g => g.canales_data.some(c => c.dispositivoId === id));
-            const enProduccion = enProduccionComoGrab || enProduccionComoCanal;
+
+            // NUEVO: Buscar también si está asignado en "Otros dispositivos"
+            const enProduccionComoOtro = (_data.otros_prod || []).some(o => o.dispositivoId === id);
+
+            // Se actualiza la validación sumando la nueva constante
+            const enProduccion = enProduccionComoGrab || enProduccionComoCanal || enProduccionComoOtro;
 
             const selTipo = document.getElementById(`${prefijo}-tipo`);
             selTipo.disabled = enProduccion;
@@ -4104,8 +4116,8 @@
                 avisoStrong = `⚠️ Este grabador está en producción con ${canalesOcupados} canal${canalesOcupados === 1 ? '' : 'es'} ocupado${canalesOcupados === 1 ? '' : 's'}. No se puede cambiar el tipo, canales ni eliminar mientras tenga cámaras asignadas.`;
             } else if (enProduccionComoGrab) {
                 avisoStrong = `ℹ️ Este grabador está en producción. No se puede eliminar`;
-            } else if (enProduccionComoCanal) {
-                avisoStrong = `ℹ️ Este dispositivo está asignado a un grabador en producción.`;
+            } else if (enProduccionComoCanal || enProduccionComoOtro) { // ACTUALIZADO
+                avisoStrong = `ℹ️ Este dispositivo está asignado en producción.`;
             }
             const formBody = document.querySelector('#modal-editar-disp .modal-scroll-body');
             const existente = document.getElementById('aviso-prod-disp');
@@ -4125,10 +4137,12 @@
             }
 
             const btnAsig = document.getElementById('btn-editar-asignacion');
-            if (esCamara) {
-                btnAsig.classList.toggle('hidden', !enProduccionComoCanal);
+            // ACTUALIZADO: Manejar botón si está en canales o en otros dispositivos
+            if (enProduccionComoCanal || enProduccionComoOtro) {
+                btnAsig.classList.remove('hidden');
                 btnAsig.title = 'Ver asignación';
-                btnAsig.onclick = () => UI.editarAsignacionCamara();
+                // Cambiamos el nombre de la función porque ya no es solo para cámaras
+                btnAsig.onclick = () => UI.editarAsignacionDispositivo();
             } else if (esGrab && enProduccionComoGrab) {
                 btnAsig.classList.remove('hidden');
                 btnAsig.title = 'Ver grabador';
@@ -4325,44 +4339,63 @@
             guardar(); render(); MM.cerrar('modal-editar-disp'); _edicion.dispId = null; _edicion.snapshotDisp = null;
         },
 
-        editarAsignacionCamara() {
+        editarAsignacionDispositivo() {
             if (!_edicion.dispId) return;
 
-            // Recolectar todos los canales donde está asignado este dispositivo
             const asignaciones = [];
+
+            // 1. Recolectar de canales en NVR/DVR
             for (const g of _data.grabadores) {
                 g.canales_data.forEach(slot => {
                     if (slot.dispositivoId === _edicion.dispId) {
-                        asignaciones.push({ grabId: g.id, grabNombre: g.descripcion, canal: slot.canal });
+                        asignaciones.push({ tipo: 'canal', grabId: g.id, grabNombre: g.descripcion, canal: slot.canal });
                     }
                 });
             }
+
+            // 2. Recolectar de Otros Dispositivos
+            (_data.otros_prod || []).forEach(o => {
+                if (o.dispositivoId === _edicion.dispId) {
+                    asignaciones.push({ tipo: 'otro_prod', id: o.id, descripcion: o.descripcion || 'Sin descripción' });
+                }
+            });
+
             if (!asignaciones.length) return;
 
             const dispId = _edicion.dispId;
 
+            // Si hay una sola asignación, ir directo
             if (asignaciones.length === 1) {
-                // Caso original: navegar directo
+                const asig = asignaciones[0];
                 MM.cerrar('modal-editar-disp');
-                setTimeout(() => UI.abrirAsignarCanal(asignaciones[0].grabId, asignaciones[0].canal, dispId), 180);
+                if (asig.tipo === 'canal') {
+                    setTimeout(() => UI.abrirAsignarCanal(asig.grabId, asig.canal, dispId), 180);
+                } else {
+                    setTimeout(() => UI.abrirEditarOtroProd(asig.id, dispId), 180);
+                }
                 return;
             }
 
-            // Múltiples asignaciones: cerrar padre → abrir picker con retorno al padre si cancela
-            const opciones = asignaciones.map(a => ({ titulo: `Canal ${a.canal} — ${a.grabNombre}`, sub: null }));
+            // Si está en múltiples lugares, mostrar el modal de selección (picker)
+            const opciones = asignaciones.map(a => {
+                if (a.tipo === 'canal') return { titulo: `Canal ${a.canal} — ${a.grabNombre}`, sub: null };
+                return { titulo: `Otros Disp. — ${a.descripcion}`, sub: null };
+            });
 
             MM.cerrar('modal-editar-disp');
             setTimeout(() => {
                 pickerModal(
-                    'Ver asignación en canal',
+                    'Ver asignación en producción',
                     opciones,
                     (idx) => {
-                        // Eligió una opción: ir al canal
                         const elegida = asignaciones[idx];
-                        setTimeout(() => UI.abrirAsignarCanal(elegida.grabId, elegida.canal, dispId), 150);
+                        if (elegida.tipo === 'canal') {
+                            setTimeout(() => UI.abrirAsignarCanal(elegida.grabId, elegida.canal, dispId), 150);
+                        } else {
+                            setTimeout(() => UI.abrirEditarOtroProd(elegida.id, dispId), 150);
+                        }
                     },
                     () => {
-                        // Canceló: volver al modal de dispositivo
                         UI.abrirEditarDispositivo(dispId);
                     }
                 );
@@ -4918,9 +4951,10 @@
             MM.cerrar('modal-nuevo-otro-prod');
         },
 
-        abrirEditarOtroProd(id) {
+        abrirEditarOtroProd(id, desdeDispId = null) {
             const o = (_data.otros_prod || []).find(x => x.id === id); if (!o) return;
             _edicion.otroProdId = id;
+            _edicion.otroProdDesdeDispId = desdeDispId; // Guardamos de dónde vinimos
             const prefijo = 'editar-otro-prod';
 
             document.getElementById(`${prefijo}-descripcion`).value = o.descripcion || '';
@@ -4953,6 +4987,16 @@
             ];
             _edicion.canalDispOcupados = new Set(idsOcupados);
 
+            // Convertir el botón Cancelar en Volver si llegamos desde un dispositivo
+            const btnCancel = document.querySelector('#modal-editar-otro-prod .btn-cancel');
+            if (btnCancel) {
+                if (desdeDispId) {
+                    btnCancel.innerHTML = `<svg class="icon icon-line"><use href="#icon-undo"></use></svg> Volver`;
+                } else {
+                    btnCancel.innerHTML = `Cancelar`;
+                }
+            }
+
             ModalLock.reset('modal-editar-otro-prod');
             MM.abrir('modal-editar-otro-prod');
 
@@ -4970,8 +5014,15 @@
 
         cerrarEditarOtroProd() {
             MM.cerrar('modal-editar-otro-prod');
+            const dispId = _edicion.otroProdDesdeDispId; // Recuperamos si había un ID
+
+            // Limpiamos los estados
             _edicion.otroProdId = null;
             _edicion.snapshotOtroProd = null;
+            _edicion.otroProdDesdeDispId = null;
+
+            // Si vinimos del modal del dispositivo, lo reabrimos
+            if (dispId) setTimeout(() => UI.abrirEditarDispositivo(dispId), 180);
         },
 
         guardarOtroProd(prefijo) {
@@ -5963,7 +6014,19 @@
                 tituloEl.textContent = LABELS[_tabActual] || '';
                 tituloEl.classList.toggle('visible', tabsOcultas);
             }
+
+            // ─── NUEVO: Cerrar dropdowns de la cabecera al hacer scroll ───
+            const ddActivos = document.getElementById('dropdown-vista-activos');
+            if (ddActivos && !ddActivos.classList.contains('hidden')) {
+                ddActivos.classList.add('hidden');
+            }
+
+            const ddFiltros = document.getElementById('dropdown-filtros');
+            if (ddFiltros && !ddFiltros.classList.contains('hidden')) {
+                ddFiltros.classList.add('hidden');
+            }
         }
+
         window.addEventListener('scroll', actualizarBoton, { passive: true });
         const _cambiarTabOrig = UI.cambiarTab.bind(UI);
         UI.cambiarTab = function (...args) {
