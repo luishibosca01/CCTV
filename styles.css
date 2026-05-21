@@ -3017,3 +3017,76 @@ button:disabled {
 }
 
 /* Chips de piso (nivel 4) */
+/* ── Modal detalle de merge Gist ── */
+.gist-detalle-bloque {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: .75rem;
+    overflow: hidden;
+}
+.gist-detalle-header {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .5rem .75rem;
+    background: var(--bg-hover);
+    font-weight: 600;
+    font-size: .85rem;
+}
+.gist-detalle-cat {
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+.gist-detalle-label {
+    color: var(--text);
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.gist-detalle-badge-new {
+    font-size: .7rem;
+    font-weight: 700;
+    padding: .1em .45em;
+    border-radius: 999px;
+    background: var(--c-green);
+    color: #fff;
+    flex-shrink: 0;
+}
+.gist-detalle-fila {
+    display: grid;
+    grid-template-columns: 6rem 1fr auto 1fr;
+    gap: .35rem .5rem;
+    align-items: center;
+    padding: .35rem .75rem;
+    border-top: 1px solid var(--border);
+    font-size: .82rem;
+}
+.gist-detalle-campo {
+    color: var(--text-muted);
+    font-size: .75rem;
+    font-weight: 600;
+}
+.gist-detalle-antes {
+    color: var(--text-muted);
+    text-decoration: line-through;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.gist-detalle-arrow {
+    color: var(--text-muted);
+    font-size: .8rem;
+    flex-shrink: 0;
+}
+.gist-detalle-despues {
+    color: var(--c-green);
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

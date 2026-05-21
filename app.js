@@ -1027,6 +1027,11 @@
             let cDispsAdd = 0, cDispsUpd = 0;
             let cGrabsAdd = 0, cGrabsUpd = 0;
             let cOtrosAdd = 0, cOtrosUpd = 0;
+            const cambios = []; // detalle campo a campo para el modal de detalle
+
+            function _labelDisp(d) {
+                return d.mac || d.modelo || d.id;
+            }
 
             const mapD = new Map(_data.dispositivos.map(d => [d.id, d]));
             const mapG = new Map(_data.grabadores.map(g => [g.id, g]));
@@ -1037,11 +1042,15 @@
                 if (!san) return;
                 if (!mapD.has(san.id)) {
                     _data.dispositivos.push(san); mapD.set(san.id, san); cDispsAdd++;
+                    cambios.push({ cat: 'disp', op: 'add', label: _labelDisp(san), tipo: san.tipo });
                 } else {
                     const loc = mapD.get(san.id);
                     let updated = false;
                     ['marca', 'modelo', 'serial', 'mac', 'patrimonio', 'firmware', 'forma', 'estado'].forEach(k => {
-                        if (!loc[k] && san[k]) { loc[k] = san[k]; updated = true; }
+                        if (!loc[k] && san[k]) {
+                            cambios.push({ cat: 'disp', op: 'upd', label: _labelDisp(loc), campo: k, antes: loc[k] || '', despues: san[k] });
+                            loc[k] = san[k]; updated = true;
+                        }
                     });
                     if (updated) cDispsUpd++;
                 }
@@ -1052,11 +1061,15 @@
                 if (!san) return;
                 if (!mapG.has(san.id)) {
                     _data.grabadores.push(san); mapG.set(san.id, san); cGrabsAdd++;
+                    cambios.push({ cat: 'grab', op: 'add', label: san.descripcion || san.id, tipo: san.tipo });
                 } else {
                     const loc = mapG.get(san.id);
                     let updated = false;
                     ['marca', 'modelo', 'ip', 'edificio', 'piso', 'rack', 'puerto', 'mac', 'comentarios', 'dispositivoId'].forEach(k => {
-                        if (!loc[k] && san[k]) { loc[k] = san[k]; updated = true; }
+                        if (!loc[k] && san[k]) {
+                            cambios.push({ cat: 'grab', op: 'upd', label: loc.descripcion || loc.id, campo: k, antes: loc[k] || '', despues: san[k] });
+                            loc[k] = san[k]; updated = true;
+                        }
                     });
                     san.canales_data.forEach(cRem => {
                         const cLoc = loc.canales_data.find(c => c.canal === cRem.canal);
@@ -1064,10 +1077,16 @@
                             if (!cLoc.dispositivoId && cRem.dispositivoId) {
                                 const dispLocal = _data.dispositivos.find(d => d.id === cRem.dispositivoId);
                                 const inactivo = dispLocal && ['averiado', 'revisar', 'desafectado'].includes(dispLocal.estado);
-                                if (!inactivo) { cLoc.dispositivoId = cRem.dispositivoId; updated = true; }
+                                if (!inactivo) {
+                                    cambios.push({ cat: 'canal', op: 'upd', label: `${loc.descripcion || loc.id} › Canal ${cRem.canal}`, campo: 'dispositivoId', antes: '', despues: cRem.dispositivoId });
+                                    cLoc.dispositivoId = cRem.dispositivoId; updated = true;
+                                }
                             }
                             ['descripcion', 'ip', 'puerto', 'edificio', 'piso', 'rack', 'comentarios'].forEach(k => {
-                                if (!cLoc[k] && cRem[k]) { cLoc[k] = cRem[k]; updated = true; }
+                                if (!cLoc[k] && cRem[k]) {
+                                    cambios.push({ cat: 'canal', op: 'upd', label: `${loc.descripcion || loc.id} › Canal ${cRem.canal}`, campo: k, antes: cLoc[k] || '', despues: cRem[k] });
+                                    cLoc[k] = cRem[k]; updated = true;
+                                }
                             });
                         }
                     });
@@ -1081,17 +1100,21 @@
                 if (!mapO.has(san.id)) {
                     if (!_data.otros_prod) _data.otros_prod = [];
                     _data.otros_prod.push(san); mapO.set(san.id, san); cOtrosAdd++;
+                    cambios.push({ cat: 'otro', op: 'add', label: san.descripcion || san.id });
                 } else {
                     const loc = mapO.get(san.id);
                     let updated = false;
                     ['dispositivoId', 'descripcion', 'ip', 'edificio', 'piso', 'rack', 'puerto', 'comentarios'].forEach(k => {
-                        if (!loc[k] && san[k]) { loc[k] = san[k]; updated = true; }
+                        if (!loc[k] && san[k]) {
+                            cambios.push({ cat: 'otro', op: 'upd', label: loc.descripcion || loc.id, campo: k, antes: loc[k] || '', despues: san[k] });
+                            loc[k] = san[k]; updated = true;
+                        }
                     });
                     if (updated) cOtrosUpd++;
                 }
             });
 
-            return { cDispsAdd, cDispsUpd, cGrabsAdd, cGrabsUpd, cOtrosAdd, cOtrosUpd };
+            return { cDispsAdd, cDispsUpd, cGrabsAdd, cGrabsUpd, cOtrosAdd, cOtrosUpd, cambios };
         }
 
         function _combinarDatosRemotos(remoto) {
@@ -1125,7 +1148,7 @@
                 if (cEdif > 0) S.guardarEdificios();
             }
 
-            return { ...res, cTipos, cEdif };
+            return { ...res, cTipos, cEdif, cambios: res.cambios || [] };
         }
 
         async function bajar() {
@@ -1375,12 +1398,114 @@
                     };
                 }
 
+                const btnVerDetalle = document.getElementById('gist-novedades-ver-detalle');
+                if (btnVerDetalle) {
+                    btnVerDetalle.onclick = () => _mostrarDetalleModal(resMerge.cambios || []);
+                }
+
                 setTimeout(() => MM.abrir('modal-gist-novedades'), 600);
 
             } catch (_) {
             } finally {
                 _spinStop();
             }
+        }
+
+        function _mostrarDetalleModal(cambios) {
+            const lista = document.getElementById('gist-detalle-lista');
+            if (!lista) return;
+
+            const CAT_LABEL = {
+                disp: 'Dispositivo',
+                grab: 'Grabador',
+                canal: 'Canal',
+                otro: 'Otro disp.',
+            };
+            const CAMPO_LABEL = {
+                marca: 'Marca', modelo: 'Modelo', serial: 'Serial', mac: 'MAC',
+                patrimonio: 'Patrimonio', firmware: 'Firmware', forma: 'Forma', estado: 'Estado',
+                ip: 'IP', edificio: 'Edificio', piso: 'Piso', rack: 'Rack', puerto: 'Puerto',
+                comentarios: 'Comentarios', descripcion: 'Descripción', dispositivoId: 'Disp. asignado',
+            };
+
+            const grupos = new Map();
+            cambios.forEach(c => {
+                const key = `${c.cat}::${c.label}`;
+                if (!grupos.has(key)) grupos.set(key, { cat: c.cat, label: c.label, items: [] });
+                grupos.get(key).items.push(c);
+            });
+
+            lista.innerHTML = '';
+
+            if (grupos.size === 0) {
+                const p = document.createElement('p');
+                p.className = 'dash-empty-text';
+                p.style.padding = '1rem 0';
+                p.textContent = 'Sin cambios para mostrar.';
+                lista.appendChild(p);
+            } else {
+                const frag = document.createDocumentFragment();
+                grupos.forEach(({ cat, label, items }) => {
+                    const bloque = document.createElement('div');
+                    bloque.className = 'gist-detalle-bloque';
+
+                    const header = document.createElement('div');
+                    header.className = 'gist-detalle-header';
+
+                    const catBadge = document.createElement('span');
+                    catBadge.className = 'gist-detalle-cat';
+                    catBadge.textContent = CAT_LABEL[cat] || cat;
+
+                    const labelEl = document.createElement('span');
+                    labelEl.className = 'gist-detalle-label';
+                    labelEl.textContent = label;
+
+                    header.appendChild(catBadge);
+                    header.appendChild(labelEl);
+
+                    if (items[0]?.op === 'add') {
+                        const badge = document.createElement('span');
+                        badge.className = 'gist-detalle-badge-new';
+                        badge.textContent = 'Nuevo';
+                        header.appendChild(badge);
+                    }
+
+                    bloque.appendChild(header);
+
+                    items.forEach(c => {
+                        if (c.op === 'add') return;
+                        const fila = document.createElement('div');
+                        fila.className = 'gist-detalle-fila';
+
+                        const campoEl = document.createElement('span');
+                        campoEl.className = 'gist-detalle-campo';
+                        campoEl.textContent = CAMPO_LABEL[c.campo] || c.campo;
+
+                        const antesEl = document.createElement('span');
+                        antesEl.className = 'gist-detalle-antes';
+                        antesEl.textContent = c.antes || '(vacío)';
+
+                        const arrow = document.createElement('span');
+                        arrow.className = 'gist-detalle-arrow';
+                        arrow.textContent = '→';
+
+                        const despuesEl = document.createElement('span');
+                        despuesEl.className = 'gist-detalle-despues';
+                        despuesEl.textContent = c.despues;
+
+                        fila.appendChild(campoEl);
+                        fila.appendChild(antesEl);
+                        fila.appendChild(arrow);
+                        fila.appendChild(despuesEl);
+                        bloque.appendChild(fila);
+                    });
+
+                    frag.appendChild(bloque);
+                });
+                lista.appendChild(frag);
+            }
+
+            MM.abrir('modal-gist-detalle');
         }
 
         return { subir, bajar, subirAuto, verificarAlAbrir, toggleToken, toggleAuto, guardarConfig, poblarModal, init, actualizarBotonesAjustes: _actualizarBotonesAjustes, _generarPayload, _combinarEntidades };
@@ -5878,6 +6003,12 @@
         // Modal gist novedades
         document.querySelector('#modal-gist-novedades .btn-cancel')
             ?.addEventListener('click', () => MM.cerrar('modal-gist-novedades'));
+        document.getElementById('gist-novedades-ignorar')
+            ?.addEventListener('click', () => MM.cerrar('modal-gist-novedades'));
+
+        // Modal gist detalle
+        document.getElementById('gist-detalle-volver')
+            ?.addEventListener('click', () => MM.cerrar('modal-gist-detalle'));
 
         // Scroll top
         on('btn-scroll-top', 'click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
