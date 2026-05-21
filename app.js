@@ -954,13 +954,51 @@
             return payload;
         }
 
-        async function _ejecutarSubida(silencioso = false) {
+        // ── Guardia anti-vaciado ─────────────────────────────────────────────────
+        // Compara el conteo local de dispositivos contra el remoto antes de subir.
+        // Si el local tiene MENOS dispositivos que el remoto (situación post-reset),
+        // muestra un diálogo de advertencia y aborta la subida automática.
+        // Umbral: el remoto debe tener al menos MIN_REMOTE_DISPS dispositivos
+        // y el local debe tener al menos RATIO_MIN * remoto para subir sin alerta.
+        const _GUARD_MIN_REMOTE = 1;   // sólo actúa si el gist tiene ≥ 1 dispositivo
+        const _GUARD_RATIO_MIN  = 0.5; // local < 50 % del remoto → bloquea
+
+        async function _contarDispositivosRemoto(token, gistId) {
+            try {
+                const res = await fetch(`https://api.github.com/gists/${gistId}?_ts=${Date.now()}`, {
+                    headers: { Authorization: `token ${token}` }
+                });
+                if (!res.ok) return null;
+                const data = await res.json();
+                const raw = data?.files?.[FILENAME]?.content;
+                if (!raw) return 0;
+                const parsed = S.safeParse(raw);
+                return Array.isArray(parsed?.dispositivos) ? parsed.dispositivos.length : 0;
+            } catch { return null; }
+        }
+
+        async function _ejecutarSubida(silencioso = false, forzar = false) {
             const token = _cfg.token;
             const gistId = _cfg.gistId;
             if (!token) { if (!silencioso) toast('Ingresá el token primero', 'error'); return; }
             if (gistId && !RE_GIST_ID.test(gistId)) {
                 if (!silencioso) toast('Gist ID inválido', 'error');
                 return;
+            }
+
+            // ── Guardia anti-vaciado: sólo en subidas automáticas (silenciosas) ──
+            if (silencioso && !forzar && gistId) {
+                const localCount  = (_data.dispositivos || []).length;
+                const remoteCount = await _contarDispositivosRemoto(token, gistId);
+
+                if (remoteCount !== null
+                    && remoteCount >= _GUARD_MIN_REMOTE
+                    && localCount < remoteCount * _GUARD_RATIO_MIN) {
+
+                    // Muestra toast persistente con acciones (no auto-dismiss)
+                    _mostrarAlertaVaciado(localCount, remoteCount);
+                    return; // ← aborta la subida
+                }
             }
 
             _setBusy(true);
@@ -1010,7 +1048,44 @@
             }
         }
 
-        function subir() { _ejecutarSubida(false); }
+        // Alerta visual no-auto-dismiss cuando el autosync detecta posible vaciado
+        function _mostrarAlertaVaciado(localCount, remoteCount) {
+            document.getElementById('gist-guard-alert')?.remove();
+
+            const div = document.createElement('div');
+            div.id = 'gist-guard-alert';
+            div.className = 'gist-guard-alert';
+            div.innerHTML = `
+                <span class="gist-guard-alert__icon">&#9888;&#65039;</span>
+                <div class="gist-guard-alert__body">
+                    <strong>Sincronizacion bloqueada</strong>
+                    <p>El Gist remoto tiene <strong>${remoteCount}</strong> dispositivos pero
+                    localmente hay <strong>${localCount}</strong>.
+                    Subir ahora sobreescribiria datos en GitHub.</p>
+                    <div class="gist-guard-alert__btns">
+                        <button class="btn btn-sm btn-primary" id="gist-guard-btn-bajar">Bajar datos del Gist</button>
+                        <button class="btn btn-sm btn-danger"  id="gist-guard-btn-forzar">Subir de todos modos</button>
+                        <button class="btn btn-sm"             id="gist-guard-btn-cerrar">Ignorar</button>
+                    </div>
+                </div>`;
+
+            const panel = document.getElementById('modal-gist') || document.body;
+            panel.prepend(div);
+
+            div.querySelector('#gist-guard-btn-bajar').addEventListener('click', () => {
+                div.remove();
+                bajar();
+            });
+            div.querySelector('#gist-guard-btn-forzar').addEventListener('click', () => {
+                div.remove();
+                _ejecutarSubida(false, true);
+            });
+            div.querySelector('#gist-guard-btn-cerrar').addEventListener('click', () => div.remove());
+
+            toast('Autosync bloqueado: La carga elimina demasiados datos. Revisa los ajustes de sincronizacion.', 'warning');
+        }
+
+        function subir() { _ejecutarSubida(false, true); }  // manual: siempre forzada
 
         function subirAuto() {
             if (!_cfg.auto || !_cfg.token) return;
@@ -1074,24 +1149,17 @@
                     san.canales_data.forEach(cRem => {
                         const cLoc = loc.canales_data.find(c => c.canal === cRem.canal);
                         if (cLoc) {
-                            if (cLoc.dispositivoId !== cRem.dispositivoId) {
-                                if (cRem.dispositivoId) {
-                                    // Asignación: remoto tiene dispositivo, local no (o tiene uno distinto)
-                                    const dispLocal = _data.dispositivos.find(d => d.id === cRem.dispositivoId);
-                                    const inactivo = dispLocal && ['averiado', 'revisar', 'desafectado'].includes(dispLocal.estado);
-                                    if (!inactivo) {
-                                        cambios.push({ cat: 'canal', op: 'upd', label: `${loc.descripcion || loc.id} › Canal ${cRem.canal}`, campo: 'dispositivoId', antes: cLoc.dispositivoId || '', despues: cRem.dispositivoId });
-                                        cLoc.dispositivoId = cRem.dispositivoId; updated = true;
-                                    }
-                                } else if (cLoc.dispositivoId) {
-                                    // Desasignación: remoto tiene null, local tenía un dispositivo → se respeta el borrado
-                                    cambios.push({ cat: 'canal', op: 'upd', label: `${loc.descripcion || loc.id} › Canal ${cRem.canal}`, campo: 'dispositivoId', antes: cLoc.dispositivoId, despues: '' });
-                                    cLoc.dispositivoId = null; updated = true;
+                            if (!cLoc.dispositivoId && cRem.dispositivoId) {
+                                const dispLocal = _data.dispositivos.find(d => d.id === cRem.dispositivoId);
+                                const inactivo = dispLocal && ['averiado', 'revisar', 'desafectado'].includes(dispLocal.estado);
+                                if (!inactivo) {
+                                    cambios.push({ cat: 'canal', op: 'upd', label: `${loc.descripcion || loc.id} › Canal ${cRem.canal}`, campo: 'dispositivoId', antes: '', despues: cRem.dispositivoId });
+                                    cLoc.dispositivoId = cRem.dispositivoId; updated = true;
                                 }
                             }
                             ['descripcion', 'ip', 'puerto', 'edificio', 'piso', 'rack', 'comentarios'].forEach(k => {
-                                if (cRem[k] !== cLoc[k]) {
-                                    cambios.push({ cat: 'canal', op: 'upd', label: `${loc.descripcion || loc.id} › Canal ${cRem.canal}`, campo: k, antes: cLoc[k] || '', despues: cRem[k] || '' });
+                                if (!cLoc[k] && cRem[k]) {
+                                    cambios.push({ cat: 'canal', op: 'upd', label: `${loc.descripcion || loc.id} › Canal ${cRem.canal}`, campo: k, antes: cLoc[k] || '', despues: cRem[k] });
                                     cLoc[k] = cRem[k]; updated = true;
                                 }
                             });
@@ -2616,8 +2684,8 @@
                     <svg class="icon icon-line icon--lg-muted"><use href="#icon-server"/></svg>
                     Sin grabadores registrados.<br>Usá el botón <strong>+</strong> para agregar uno.
                 </div>`;
-            return;
-        }
+            // No retornamos: listaOtros debe renderizarse igualmente
+        } else {
 
         lista.innerHTML = grabs.map(g => {
             const canalesHtml = g.canales_data.map(c => {
@@ -2698,6 +2766,7 @@
                 }
             });
         }
+        } // end else (grabs.length > 0)
 
         const listaOtros = document.getElementById('lista-otros-prod');
 
@@ -3422,7 +3491,7 @@
             const ok = await confirmarModal('¿Borrar todos los datos? Se eliminarán dispositivos, grabadores, tipos personalizados y edificios. Esta acción no se puede deshacer (antes de cerrar la página).', 'Borrar todo');
             if (!ok) return;
             historial.empujar('Restablecer todos los datos');
-            _data = { dispositivos: [], grabadores: [] };
+            _data = { dispositivos: [], grabadores: [], otros_prod: [] };
             Object.keys(S.TIPOS).forEach(k => { if (!S.TIPOS_BUILTIN[k]) delete S.TIPOS[k]; });
             S.guardarTipos();
             S.edificios.length = 0;
