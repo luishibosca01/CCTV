@@ -1074,17 +1074,24 @@
                     san.canales_data.forEach(cRem => {
                         const cLoc = loc.canales_data.find(c => c.canal === cRem.canal);
                         if (cLoc) {
-                            if (!cLoc.dispositivoId && cRem.dispositivoId) {
-                                const dispLocal = _data.dispositivos.find(d => d.id === cRem.dispositivoId);
-                                const inactivo = dispLocal && ['averiado', 'revisar', 'desafectado'].includes(dispLocal.estado);
-                                if (!inactivo) {
-                                    cambios.push({ cat: 'canal', op: 'upd', label: `${loc.descripcion || loc.id} › Canal ${cRem.canal}`, campo: 'dispositivoId', antes: '', despues: cRem.dispositivoId });
-                                    cLoc.dispositivoId = cRem.dispositivoId; updated = true;
+                            if (cLoc.dispositivoId !== cRem.dispositivoId) {
+                                if (cRem.dispositivoId) {
+                                    // Asignación: remoto tiene dispositivo, local no (o tiene uno distinto)
+                                    const dispLocal = _data.dispositivos.find(d => d.id === cRem.dispositivoId);
+                                    const inactivo = dispLocal && ['averiado', 'revisar', 'desafectado'].includes(dispLocal.estado);
+                                    if (!inactivo) {
+                                        cambios.push({ cat: 'canal', op: 'upd', label: `${loc.descripcion || loc.id} › Canal ${cRem.canal}`, campo: 'dispositivoId', antes: cLoc.dispositivoId || '', despues: cRem.dispositivoId });
+                                        cLoc.dispositivoId = cRem.dispositivoId; updated = true;
+                                    }
+                                } else if (cLoc.dispositivoId) {
+                                    // Desasignación: remoto tiene null, local tenía un dispositivo → se respeta el borrado
+                                    cambios.push({ cat: 'canal', op: 'upd', label: `${loc.descripcion || loc.id} › Canal ${cRem.canal}`, campo: 'dispositivoId', antes: cLoc.dispositivoId, despues: '' });
+                                    cLoc.dispositivoId = null; updated = true;
                                 }
                             }
                             ['descripcion', 'ip', 'puerto', 'edificio', 'piso', 'rack', 'comentarios'].forEach(k => {
-                                if (!cLoc[k] && cRem[k]) {
-                                    cambios.push({ cat: 'canal', op: 'upd', label: `${loc.descripcion || loc.id} › Canal ${cRem.canal}`, campo: k, antes: cLoc[k] || '', despues: cRem[k] });
+                                if (cRem[k] !== cLoc[k]) {
+                                    cambios.push({ cat: 'canal', op: 'upd', label: `${loc.descripcion || loc.id} › Canal ${cRem.canal}`, campo: k, antes: cLoc[k] || '', despues: cRem[k] || '' });
                                     cLoc[k] = cRem[k]; updated = true;
                                 }
                             });
