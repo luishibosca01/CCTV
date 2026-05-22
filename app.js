@@ -317,6 +317,7 @@
                 const c = parseInt(d.canales);
                 obj.canales = Number.isFinite(c) && c >= 1 && c <= 256 ? c : 16;
             }
+            if (d.updatedAt && typeof d.updatedAt === 'string') obj.updatedAt = d.updatedAt;
             return obj;
         }
 
@@ -351,7 +352,7 @@
                 });
             }
 
-            return {
+            const grabObj = {
                 id,
                 descripcion: sanitize(g.descripcion || '', 80),
                 tipo: ['nvr', 'dvr'].includes(g.tipo) ? g.tipo : 'nvr',
@@ -368,6 +369,8 @@
                 canales_n: n,
                 canales_data: slots,
             };
+            if (g.updatedAt && typeof g.updatedAt === 'string') grabObj.updatedAt = g.updatedAt;
+            return grabObj;
         }
 
         function sanitizarOtroProd(o) {
@@ -375,7 +378,7 @@
             const id = _strSeguro(o.id, 32);
             if (!id || !RE_ID.test(id)) return null;
 
-            return {
+            const otroObj = {
                 id,
                 dispositivoId: _strSeguro(o.dispositivoId, 32) || null,
                 descripcion: sanitize(o.descripcion || '', 80),
@@ -386,6 +389,8 @@
                 puerto: sanitize(o.puerto || '', 10),
                 comentarios: sanitize(o.comentarios || '', 300),
             };
+            if (o.updatedAt && typeof o.updatedAt === 'string') otroObj.updatedAt = o.updatedAt;
+            return otroObj;
         }
 
         function sanitizarDataTotal(raw) {
@@ -618,6 +623,17 @@
             _data.grabadores = Array.isArray(d.grabadores) ? d.grabadores : [];
             _data.otros_prod = Array.isArray(d.otros_prod) ? d.otros_prod : [];
         } catch { _data = { dispositivos: [], grabadores: [], otros_prod: [] }; }
+
+        // Migración: asignar updatedAt a entidades que aún no lo tienen.
+        // Se usa la fecha actual para que se sincronicen en el próximo merge,
+        // pero cualquier entidad remota con timestamp posterior seguirá ganando.
+        let _migrado = false;
+        const _tsMig = new Date().toISOString();
+        _data.dispositivos.forEach(d => { if (!d.updatedAt) { d.updatedAt = _tsMig; _migrado = true; } });
+        _data.grabadores.forEach(g => { if (!g.updatedAt) { g.updatedAt = _tsMig; _migrado = true; } });
+        (_data.otros_prod || []).forEach(o => { if (!o.updatedAt) { o.updatedAt = _tsMig; _migrado = true; } });
+        if (_migrado) { try { localStorage.setItem(KEY, JSON.stringify(_data)); } catch (_) {} }
+
         _invalidarCaches();
     }
 
@@ -938,7 +954,7 @@
             const otros = (_data.otros_prod || []).map(S.sanitizarOtroProd).filter(Boolean);
             const tiposCustom = {};
             Object.entries(S.TIPOS).forEach(([k, v]) => {
-                if (!v.builtin) tiposCustom[k] = { label: v.label, emoji: v.emoji };
+                if (!v.builtin) tiposCustom[k] = { label: v.label, emoji: v.emoji, ...(v.updatedAt ? { updatedAt: v.updatedAt } : {}) };
             });
             const payload = {
                 dispositivos: disps,
@@ -1099,23 +1115,28 @@
             let cDispsAdd = 0, cDispsUpd = 0;
             let cGrabsAdd = 0, cGrabsUpd = 0;
             let cOtrosAdd = 0, cOtrosUpd = 0;
-            const cambios = []; // detalle campo a campo para el modal de detalle
+            const cambios = [];
 
-            function _labelDisp(d) {
-                return d.mac || d.modelo || d.id;
-            }
+            function _labelDisp(d) { return d.mac || d.modelo || d.id; }
 
-            // Helper para obtener el nombre real del dispositivo en lugar del ID interno
             function _getDispLabelForMerge(id) {
                 if (!id) return '';
                 const d = _data.dispositivos.find(x => x.id === id) || (remoto.dispositivos || []).find(x => x.id === id);
                 return d ? (d.mac || d.serial || d.id) : id;
             }
 
+            // Compara timestamps: retorna true si el remoto es más nuevo
+            function _remoteMasNuevo(loc, rem) {
+                if (!rem.updatedAt) return false;       // remoto sin ts → fallback aditivo
+                if (!loc.updatedAt) return true;        // local sin ts → remoto gana
+                return rem.updatedAt > loc.updatedAt;   // ISO string comparison
+            }
+
             const mapD = new Map(_data.dispositivos.map(d => [d.id, d]));
             const mapG = new Map(_data.grabadores.map(g => [g.id, g]));
             const mapO = new Map((_data.otros_prod || []).map(o => [o.id, o]));
 
+            // ── Dispositivos ──────────────────────────────────────────────────
             (remoto.dispositivos || []).forEach(d => {
                 const san = d._sanitized ? d : S.sanitizarDisp(d, remoto.tiposCustom || {});
                 if (!san) return;
@@ -1124,17 +1145,39 @@
                     cambios.push({ cat: 'disp', op: 'add', label: _labelDisp(san), tipo: san.tipo });
                 } else {
                     const loc = mapD.get(san.id);
-                    let updated = false;
-                    ['marca', 'modelo', 'serial', 'mac', 'patrimonio', 'firmware', 'forma', 'estado'].forEach(k => {
-                        if (!loc[k] && san[k]) {
-                            cambios.push({ cat: 'disp', op: 'upd', label: _labelDisp(loc), campo: k, antes: loc[k] || '', despues: san[k] });
-                            loc[k] = san[k]; updated = true;
+                    if (_remoteMasNuevo(loc, san)) {
+                        // Remoto más nuevo: sobreescribir campos editables preservando el id
+                        const camposDisp = ['tipo', 'estado', 'marca', 'modelo', 'serial', 'mac',
+                                            'patrimonio', 'firmware', 'forma', 'canales', 'updatedAt'];
+                        const antes = {}, despues = {};
+                        camposDisp.forEach(k => {
+                            if (san[k] !== undefined && san[k] !== loc[k]) {
+                                antes[k] = loc[k]; despues[k] = san[k];
+                                loc[k] = san[k];
+                            }
+                        });
+                        if (Object.keys(antes).length) {
+                            cambios.push({ cat: 'disp', op: 'upd', label: _labelDisp(loc),
+                                campo: Object.keys(antes).join(', '),
+                                antes: Object.values(antes).join(' / '),
+                                despues: Object.values(despues).join(' / ') });
+                            cDispsUpd++;
                         }
-                    });
-                    if (updated) cDispsUpd++;
+                    } else {
+                        // Fallback aditivo: solo rellena campos vacíos (sin timestamp o local más nuevo)
+                        let updated = false;
+                        ['marca', 'modelo', 'serial', 'mac', 'patrimonio', 'firmware', 'forma', 'estado'].forEach(k => {
+                            if (!loc[k] && san[k]) {
+                                cambios.push({ cat: 'disp', op: 'upd', label: _labelDisp(loc), campo: k, antes: loc[k] || '', despues: san[k] });
+                                loc[k] = san[k]; updated = true;
+                            }
+                        });
+                        if (updated) cDispsUpd++;
+                    }
                 }
             });
 
+            // ── Grabadores ────────────────────────────────────────────────────
             (remoto.grabadores || []).forEach(g => {
                 const san = g._sanitized ? g : S.sanitizarGrab(g);
                 if (!san) return;
@@ -1144,43 +1187,69 @@
                 } else {
                     const loc = mapG.get(san.id);
                     let updated = false;
-                    ['marca', 'modelo', 'ip', 'edificio', 'piso', 'rack', 'puerto', 'mac', 'comentarios', 'dispositivoId'].forEach(k => {
-                        if (!loc[k] && san[k]) {
-                            let valAntes = loc[k] || '';
-                            let valDespues = san[k];
-                            // Si es dispositivoId, resolvemos la etiqueta legible
-                            if (k === 'dispositivoId') {
-                                valAntes = _getDispLabelForMerge(loc[k]);
-                                valDespues = _getDispLabelForMerge(san[k]);
+                    if (_remoteMasNuevo(loc, san)) {
+                        // Remoto más nuevo: sobreescribir campos del grabador
+                        const camposGrab = ['descripcion', 'marca', 'modelo', 'ip', 'edificio',
+                                            'piso', 'rack', 'puerto', 'mac', 'comentarios', 'dispositivoId', 'updatedAt'];
+                        camposGrab.forEach(k => {
+                            if (san[k] !== undefined && san[k] !== loc[k]) {
+                                const valAntes = k === 'dispositivoId' ? _getDispLabelForMerge(loc[k]) : (loc[k] || '');
+                                const valDespues = k === 'dispositivoId' ? _getDispLabelForMerge(san[k]) : san[k];
+                                cambios.push({ cat: 'grab', op: 'upd', label: loc.descripcion || loc.id, campo: k, antes: valAntes, despues: valDespues });
+                                loc[k] = san[k]; updated = true;
                             }
-                            cambios.push({ cat: 'grab', op: 'upd', label: loc.descripcion || loc.id, campo: k, antes: valAntes, despues: valDespues });
-                            loc[k] = san[k]; updated = true;
-                        }
-                    });
-                    san.canales_data.forEach(cRem => {
-                        const cLoc = loc.canales_data.find(c => c.canal === cRem.canal);
-                        if (cLoc) {
-                            if (!cLoc.dispositivoId && cRem.dispositivoId) {
-                                const dispLocal = _data.dispositivos.find(d => d.id === cRem.dispositivoId);
-                                const inactivo = dispLocal && ['averiado', 'revisar', 'desafectado'].includes(dispLocal.estado);
-                                if (!inactivo) {
-                                    // Resolvemos la etiqueta para la asignación en canales
-                                    cambios.push({ cat: 'canal', op: 'upd', label: `${loc.descripcion || loc.id} › Canal ${cRem.canal}`, campo: 'dispositivoId', antes: '', despues: _getDispLabelForMerge(cRem.dispositivoId) });
-                                    cLoc.dispositivoId = cRem.dispositivoId; updated = true;
-                                }
-                            }
-                            ['descripcion', 'ip', 'puerto', 'edificio', 'piso', 'rack', 'comentarios'].forEach(k => {
-                                if (!cLoc[k] && cRem[k]) {
-                                    cambios.push({ cat: 'canal', op: 'upd', label: `${loc.descripcion || loc.id} › Canal ${cRem.canal}`, campo: k, antes: cLoc[k] || '', despues: cRem[k] });
+                        });
+                        // Sobreescribir canales completos
+                        san.canales_data.forEach(cRem => {
+                            const cLoc = loc.canales_data.find(c => c.canal === cRem.canal);
+                            if (!cLoc) return;
+                            const dispLocal = cRem.dispositivoId ? _data.dispositivos.find(d => d.id === cRem.dispositivoId) : null;
+                            const inactivo = dispLocal && ['averiado', 'revisar', 'desafectado'].includes(dispLocal.estado);
+                            ['dispositivoId', 'descripcion', 'ip', 'puerto', 'edificio', 'piso', 'rack', 'comentarios'].forEach(k => {
+                                if (k === 'dispositivoId' && inactivo) return;
+                                if (cRem[k] !== cLoc[k]) {
+                                    const valAntes = k === 'dispositivoId' ? _getDispLabelForMerge(cLoc[k]) : (cLoc[k] || '');
+                                    const valDespues = k === 'dispositivoId' ? _getDispLabelForMerge(cRem[k]) : (cRem[k] || '');
+                                    cambios.push({ cat: 'canal', op: 'upd', label: `${loc.descripcion || loc.id} › Canal ${cRem.canal}`, campo: k, antes: valAntes, despues: valDespues });
                                     cLoc[k] = cRem[k]; updated = true;
                                 }
                             });
-                        }
-                    });
+                        });
+                    } else {
+                        // Fallback aditivo
+                        ['marca', 'modelo', 'ip', 'edificio', 'piso', 'rack', 'puerto', 'mac', 'comentarios', 'dispositivoId'].forEach(k => {
+                            if (!loc[k] && san[k]) {
+                                const valAntes = k === 'dispositivoId' ? _getDispLabelForMerge(loc[k]) : (loc[k] || '');
+                                const valDespues = k === 'dispositivoId' ? _getDispLabelForMerge(san[k]) : san[k];
+                                cambios.push({ cat: 'grab', op: 'upd', label: loc.descripcion || loc.id, campo: k, antes: valAntes, despues: valDespues });
+                                loc[k] = san[k]; updated = true;
+                            }
+                        });
+                        san.canales_data.forEach(cRem => {
+                            const cLoc = loc.canales_data.find(c => c.canal === cRem.canal);
+                            if (cLoc) {
+                                if (!cLoc.dispositivoId && cRem.dispositivoId) {
+                                    const dispLocal = _data.dispositivos.find(d => d.id === cRem.dispositivoId);
+                                    const inactivo = dispLocal && ['averiado', 'revisar', 'desafectado'].includes(dispLocal.estado);
+                                    if (!inactivo) {
+                                        cambios.push({ cat: 'canal', op: 'upd', label: `${loc.descripcion || loc.id} › Canal ${cRem.canal}`, campo: 'dispositivoId', antes: '', despues: _getDispLabelForMerge(cRem.dispositivoId) });
+                                        cLoc.dispositivoId = cRem.dispositivoId; updated = true;
+                                    }
+                                }
+                                ['descripcion', 'ip', 'puerto', 'edificio', 'piso', 'rack', 'comentarios'].forEach(k => {
+                                    if (!cLoc[k] && cRem[k]) {
+                                        cambios.push({ cat: 'canal', op: 'upd', label: `${loc.descripcion || loc.id} › Canal ${cRem.canal}`, campo: k, antes: cLoc[k] || '', despues: cRem[k] });
+                                        cLoc[k] = cRem[k]; updated = true;
+                                    }
+                                });
+                            }
+                        });
+                    }
                     if (updated) cGrabsUpd++;
                 }
             });
 
+            // ── Otros prod ────────────────────────────────────────────────────
             (remoto.otros_prod || []).forEach(o => {
                 const san = o._sanitized ? o : S.sanitizarOtroProd(o);
                 if (!san) return;
@@ -1191,19 +1260,27 @@
                 } else {
                     const loc = mapO.get(san.id);
                     let updated = false;
-                    ['dispositivoId', 'descripcion', 'ip', 'edificio', 'piso', 'rack', 'puerto', 'comentarios'].forEach(k => {
-                        if (!loc[k] && san[k]) {
-                            let valAntes = loc[k] || '';
-                            let valDespues = san[k];
-                            // Si es dispositivoId, resolvemos la etiqueta legible
-                            if (k === 'dispositivoId') {
-                                valAntes = _getDispLabelForMerge(loc[k]);
-                                valDespues = _getDispLabelForMerge(san[k]);
+                    if (_remoteMasNuevo(loc, san)) {
+                        const camposOtro = ['dispositivoId', 'descripcion', 'ip', 'edificio',
+                                            'piso', 'rack', 'puerto', 'comentarios', 'updatedAt'];
+                        camposOtro.forEach(k => {
+                            if (san[k] !== undefined && san[k] !== loc[k]) {
+                                const valAntes = k === 'dispositivoId' ? _getDispLabelForMerge(loc[k]) : (loc[k] || '');
+                                const valDespues = k === 'dispositivoId' ? _getDispLabelForMerge(san[k]) : (san[k] || '');
+                                cambios.push({ cat: 'otro', op: 'upd', label: loc.descripcion || loc.id, campo: k, antes: valAntes, despues: valDespues });
+                                loc[k] = san[k]; updated = true;
                             }
-                            cambios.push({ cat: 'otro', op: 'upd', label: loc.descripcion || loc.id, campo: k, antes: valAntes, despues: valDespues });
-                            loc[k] = san[k]; updated = true;
-                        }
-                    });
+                        });
+                    } else {
+                        ['dispositivoId', 'descripcion', 'ip', 'edificio', 'piso', 'rack', 'puerto', 'comentarios'].forEach(k => {
+                            if (!loc[k] && san[k]) {
+                                const valAntes = k === 'dispositivoId' ? _getDispLabelForMerge(loc[k]) : (loc[k] || '');
+                                const valDespues = k === 'dispositivoId' ? _getDispLabelForMerge(san[k]) : san[k];
+                                cambios.push({ cat: 'otro', op: 'upd', label: loc.descripcion || loc.id, campo: k, antes: valAntes, despues: valDespues });
+                                loc[k] = san[k]; updated = true;
+                            }
+                        });
+                    }
                     if (updated) cOtrosUpd++;
                 }
             });
@@ -1219,8 +1296,16 @@
             if (remoto.tiposCustom && typeof remoto.tiposCustom === 'object') {
                 Object.entries(remoto.tiposCustom).forEach(([k, v]) => {
                     if (S.TIPOS_BUILTIN[k]) return;
-                    if (v && v.label && !S.TIPOS[k]) {
-                        S.TIPOS[k] = { label: v.label, emoji: v.emoji || '📦', badge: 'badge-otro', dot: 'var(--c-gold)', builtin: false };
+                    if (!v?.label) return;
+                    const locTipo = S.TIPOS[k];
+                    const remMasNuevo = v.updatedAt && (!locTipo?.updatedAt || v.updatedAt > locTipo.updatedAt);
+                    if (!locTipo) {
+                        // Tipo nuevo
+                        S.TIPOS[k] = { label: v.label, emoji: v.emoji || '📦', badge: 'badge-otro', dot: 'var(--c-gold)', builtin: false, ...(v.updatedAt ? { updatedAt: v.updatedAt } : {}) };
+                        cTipos++;
+                    } else if (remMasNuevo) {
+                        // Tipo existente pero el remoto es más nuevo: actualizar label/emoji
+                        S.TIPOS[k] = { ...locTipo, label: v.label, emoji: v.emoji || locTipo.emoji, ...(v.updatedAt ? { updatedAt: v.updatedAt } : {}) };
                         cTipos++;
                     }
                 });
@@ -1766,13 +1851,6 @@
 
     function _inyectarStaggerChips() { }
 
-    // Asigna --i a cada .stat-chip dentro de un panel para transition-delay escalonado
-    function _asignarIndicesChips(panel) {
-        panel.querySelectorAll('.stat-chip').forEach((chip, idx) => {
-            chip.style.setProperty('--i', idx + 1);
-        });
-    }
-
     function _renderResumenGeneral(disps, grabs, idsEnProd) {
         const tiposServidores = ['nvr', 'dvr', 'analitica', 'encoder'];
 
@@ -2037,7 +2115,7 @@
             if (saltandoNivel2 && _dash.estadoAbierto !== null) {
                 wrap.style.transition = 'none';
                 wrap.classList.remove('en-detalle');
-                panelIzq.innerHTML = getL1Html(); _asignarIndicesChips(panelIzq);
+                panelIzq.innerHTML = getL1Html();
                 void wrap.offsetWidth;
                 wrap.style.transition = '';
             } else if (saltandoNivel3 && _dash.l2EdificioAbierto === null) {
@@ -2053,7 +2131,7 @@
             if (saltandoNivel3 && _dash.l2EdificioAbierto !== null) {
                 wrap.style.transition = 'none';
                 wrap.classList.remove('en-detalle');
-                panelIzq.innerHTML = getL2Html(); _asignarIndicesChips(panelIzq);
+                panelIzq.innerHTML = getL2Html();
                 void wrap.offsetWidth;
                 wrap.style.transition = '';
             }
@@ -2062,7 +2140,7 @@
         if (_renderResumenTimeout) { clearTimeout(_renderResumenTimeout); _renderResumenTimeout = null; contenedor.style.height = ''; contenedor.style.transition = ''; }
 
         if (_dash.tipoAbiertoPrevio === _dash.tipoAbierto && _dash.estadoAbiertoPrevio === _dash.estadoAbierto && _dash.l2EdificioAbiertoPrevio === _dash.l2EdificioAbierto && !esPrimeraCarga) {
-            panelIzq.innerHTML = htmlIzq; panelDer.innerHTML = htmlDer; _asignarIndicesChips(panelIzq); _asignarIndicesChips(panelDer); return;
+            panelIzq.innerHTML = htmlIzq; panelDer.innerHTML = htmlDer; return;
         }
 
         _dash.tipoAbiertoPrevio = _dash.tipoAbierto;
@@ -2071,7 +2149,7 @@
 
         if (!esPrimeraCarga) { contenedor.style.transition = 'none'; contenedor.style.height = alturaActual + 'px'; }
         panelIzq.style.height = ''; panelIzq.style.overflow = ''; panelDer.style.height = ''; panelDer.style.overflow = '';
-        panelIzq.innerHTML = htmlIzq; panelDer.innerHTML = htmlDer; _asignarIndicesChips(panelIzq); _asignarIndicesChips(panelDer);
+        panelIzq.innerHTML = htmlIzq; panelDer.innerHTML = htmlDer;
         void contenedor.offsetHeight;
 
         const panelActivo = enDetalle ? panelDer : panelIzq;
@@ -2089,10 +2167,10 @@
                 _renderResumenTimeout = setTimeout(() => {
                     contenedor.style.height = ''; contenedor.style.transition = '';
                     if (isSlidingAtrasNivel2) {
-                        wrap.style.transition = 'none'; panelIzq.innerHTML = getTiposHtml(); panelDer.innerHTML = getL1Html(); _asignarIndicesChips(panelIzq); _asignarIndicesChips(panelDer); wrap.classList.add('en-detalle'); void wrap.offsetWidth; wrap.style.transition = '';
+                        wrap.style.transition = 'none'; panelIzq.innerHTML = getTiposHtml(); panelDer.innerHTML = getL1Html(); wrap.classList.add('en-detalle'); void wrap.offsetWidth; wrap.style.transition = '';
                         panelIzq.style.height = '0px'; panelIzq.style.overflow = 'hidden'; panelDer.style.height = ''; panelDer.style.overflow = '';
                     } else if (isSlidingAtrasNivel3) {
-                        wrap.style.transition = 'none'; panelIzq.innerHTML = getL1Html(); panelDer.innerHTML = getL2Html(); _asignarIndicesChips(panelIzq); _asignarIndicesChips(panelDer); wrap.classList.add('en-detalle'); void wrap.offsetWidth; wrap.style.transition = '';
+                        wrap.style.transition = 'none'; panelIzq.innerHTML = getL1Html(); panelDer.innerHTML = getL2Html(); wrap.classList.add('en-detalle'); void wrap.offsetWidth; wrap.style.transition = '';
                         panelIzq.style.height = '0px'; panelIzq.style.overflow = 'hidden'; panelDer.style.height = ''; panelDer.style.overflow = '';
                     } else {
                         if (enDetalle) { panelIzq.style.height = '0px'; panelIzq.style.overflow = 'hidden'; } else { panelDer.style.height = '0px'; panelDer.style.overflow = 'hidden'; }
@@ -3562,7 +3640,7 @@
                 if (S.TIPOS[key]) {
                     duplicados.push(label);
                 } else {
-                    S.TIPOS[key] = { label, emoji: '📦', badge: 'badge-otro', dot: 'var(--c-gold)', builtin: false };
+                    S.TIPOS[key] = { label, emoji: '📦', badge: 'badge-otro', dot: 'var(--c-gold)', builtin: false, updatedAt: new Date().toISOString() };
                     agregados.push(label);
                 }
             }
@@ -4058,11 +4136,12 @@
                 firmware: document.getElementById(`${prefijo}-firmware`).value.trim(),
             };
 
+            const _tsNow = new Date().toISOString();
             if (macs.length > 1) {
-                macs.forEach(mac => _data.dispositivos.push(S.sanitizarDisp({ ...base, mac })));
+                macs.forEach(mac => _data.dispositivos.push({ ...S.sanitizarDisp({ ...base, mac }), updatedAt: _tsNow }));
                 toast(`${macs.length} dispositivos agregados`, 'success');
             } else {
-                _data.dispositivos.push(S.sanitizarDisp({ ...base, mac: macs[0] || '' }));
+                _data.dispositivos.push({ ...S.sanitizarDisp({ ...base, mac: macs[0] || '' }), updatedAt: _tsNow });
                 toast('Dispositivo agregado', 'success');
             }
 
@@ -4331,6 +4410,7 @@
                 historial.empujar('Editar dispositivo');
             }
 
+            obj.updatedAt = new Date().toISOString();
             const idx = _data.dispositivos.findIndex(x => x.id === _edicion.dispId);
             if (idx !== -1) _data.dispositivos[idx] = obj;
             _sincronizarGrabadores(_edicion.dispId);
@@ -4483,7 +4563,7 @@
                 dispositivoId: disp.id,
             };
 
-            _data.grabadores.push(S.sanitizarGrab(datos));
+            _data.grabadores.push({ ...S.sanitizarGrab(datos), updatedAt: new Date().toISOString() });
             toast('Grabador agregado', 'success');
             guardar(); render(); MM.cerrar('modal-nuevo-grab');
         },
@@ -4611,7 +4691,7 @@
 
             if (idx !== -1) {
                 datos.canales_data = _data.grabadores[idx].canales_data;
-                _data.grabadores[idx] = S.sanitizarGrab(datos);
+                _data.grabadores[idx] = { ...S.sanitizarGrab(datos), updatedAt: new Date().toISOString() };
             }
             toast('Grabador actualizado', 'success');
             guardar(); render(); MM.cerrar('modal-editar-grab'); _edicion.grabId = null; _edicion.volverDesdeDispositivo = false; _edicion.dispIdOrigenGrab = null; _edicion.snapshotGrab = null; _edicion.volverDesdeDispositivo = false; _edicion.dispIdOrigenGrab = null;
@@ -4911,6 +4991,7 @@
             Object.assign(slot, nuevoSnapCanal, {
                 dispositivoId: nuevoSnapCanal.dispositivoId || null,
             });
+            g.updatedAt = new Date().toISOString();
             guardar(); render(); MM.cerrar('modal-canal');
 
             toast(msg, 'success');
@@ -5061,11 +5142,11 @@
                     toast('Sin cambios', 'info'); MM.cerrar('modal-editar-otro-prod'); _edicion.otroProdId = null; _edicion.snapshotOtroProd = null; return;
                 }
                 const idx = _data.otros_prod.findIndex(x => x.id === _edicion.otroProdId);
-                if (idx !== -1) _data.otros_prod[idx] = S.sanitizarOtroProd(datos);
+                if (idx !== -1) _data.otros_prod[idx] = { ...S.sanitizarOtroProd(datos), updatedAt: new Date().toISOString() };
                 toast('Actualizado', 'success');
                 MM.cerrar('modal-editar-otro-prod');
             } else {
-                _data.otros_prod.push(S.sanitizarOtroProd(datos));
+                _data.otros_prod.push({ ...S.sanitizarOtroProd(datos), updatedAt: new Date().toISOString() });
                 toast('Agregado a producción', 'success');
                 MM.cerrar('modal-nuevo-otro-prod');
             }
@@ -5257,8 +5338,14 @@
                 Object.entries(data.tiposCustom).forEach(([k, v]) => {
                     if (S.TIPOS_BUILTIN[k]) return;
                     if (typeof v?.label !== 'string' || !v.label) return;
-                    if (modo === 'replace' || !S.TIPOS[k]) {
-                        S.TIPOS[k] = { label: v.label, emoji: v.emoji || '📦', badge: 'badge-otro', dot: 'var(--c-gold)', builtin: false };
+                    if (modo === 'replace') {
+                        S.TIPOS[k] = { label: v.label, emoji: v.emoji || '📦', badge: 'badge-otro', dot: 'var(--c-gold)', builtin: false, ...(v.updatedAt ? { updatedAt: v.updatedAt } : {}) };
+                    } else {
+                        const locTipo = S.TIPOS[k];
+                        const remMasNuevo = v.updatedAt && (!locTipo?.updatedAt || v.updatedAt > locTipo.updatedAt);
+                        if (!locTipo || remMasNuevo) {
+                            S.TIPOS[k] = { label: v.label, emoji: v.emoji || '📦', badge: 'badge-otro', dot: 'var(--c-gold)', builtin: false, ...(v.updatedAt ? { updatedAt: v.updatedAt } : {}) };
+                        }
                     }
                 });
                 S.guardarTipos();
