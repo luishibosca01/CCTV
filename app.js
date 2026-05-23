@@ -1253,8 +1253,17 @@
             (remoto.otros_prod || []).forEach(o => {
                 const san = o._sanitized ? o : S.sanitizarOtroProd(o);
                 if (!san) return;
+
+                // No restaurar asignaciones a dispositivos inactivos en el local
+                const _dispInactivo = (dispId) => {
+                    if (!dispId) return false;
+                    const d = _data.dispositivos.find(x => x.id === dispId);
+                    return d && ['averiado', 'revisar', 'desafectado'].includes(d.estado);
+                };
+
                 if (!mapO.has(san.id)) {
                     if (!_data.otros_prod) _data.otros_prod = [];
+                    if (san.dispositivoId && _dispInactivo(san.dispositivoId)) return;
                     _data.otros_prod.push(san); mapO.set(san.id, san); cOtrosAdd++;
                     cambios.push({ cat: 'otro', op: 'add', label: san.descripcion || san.id });
                 } else {
@@ -1265,18 +1274,20 @@
                                             'piso', 'rack', 'puerto', 'comentarios', 'updatedAt'];
                         camposOtro.forEach(k => {
                             if (san[k] !== undefined && san[k] !== loc[k]) {
-                                const valAntes = k === 'dispositivoId' ? _getDispLabelForMerge(loc[k]) : (loc[k] || '');
-                                const valDespues = k === 'dispositivoId' ? _getDispLabelForMerge(san[k]) : (san[k] || '');
-                                cambios.push({ cat: 'otro', op: 'upd', label: loc.descripcion || loc.id, campo: k, antes: valAntes, despues: valDespues });
+                                if (k === 'dispositivoId' && _dispInactivo(san[k])) return;
+                                const va = k === 'dispositivoId' ? _getDispLabelForMerge(loc[k]) : (loc[k] || '');
+                                const vd = k === 'dispositivoId' ? _getDispLabelForMerge(san[k]) : (san[k] || '');
+                                if (k !== 'updatedAt') cambios.push({ cat: 'otro', op: 'upd', label: loc.descripcion || loc.id, campo: k, antes: va, despues: vd });
                                 loc[k] = san[k]; updated = true;
                             }
                         });
                     } else {
                         ['dispositivoId', 'descripcion', 'ip', 'edificio', 'piso', 'rack', 'puerto', 'comentarios'].forEach(k => {
                             if (!loc[k] && san[k]) {
-                                const valAntes = k === 'dispositivoId' ? _getDispLabelForMerge(loc[k]) : (loc[k] || '');
-                                const valDespues = k === 'dispositivoId' ? _getDispLabelForMerge(san[k]) : san[k];
-                                cambios.push({ cat: 'otro', op: 'upd', label: loc.descripcion || loc.id, campo: k, antes: valAntes, despues: valDespues });
+                                if (k === 'dispositivoId' && _dispInactivo(san[k])) return;
+                                const va = k === 'dispositivoId' ? _getDispLabelForMerge(loc[k]) : (loc[k] || '');
+                                const vd = k === 'dispositivoId' ? _getDispLabelForMerge(san[k]) : san[k];
+                                cambios.push({ cat: 'otro', op: 'upd', label: loc.descripcion || loc.id, campo: k, antes: va, despues: vd });
                                 loc[k] = san[k]; updated = true;
                             }
                         });
@@ -1330,11 +1341,99 @@
             return { ...res, cTipos, cEdif, cambios: res.cambios || [] };
         }
 
+        function _reemplazarConRemoto(remoto) {
+            _data.dispositivos = (remoto.dispositivos || [])
+                .map(d => S.sanitizarDisp(d, remoto.tiposCustom || {})).filter(Boolean);
+            _data.grabadores = (remoto.grabadores || [])
+                .map(g => S.sanitizarGrab(g)).filter(Boolean);
+            _data.otros_prod = (remoto.otros_prod || [])
+                .map(o => S.sanitizarOtroProd(o)).filter(Boolean);
+            Object.keys(S.TIPOS).forEach(k => { if (!S.TIPOS_BUILTIN[k]) delete S.TIPOS[k]; });
+            if (remoto.tiposCustom && typeof remoto.tiposCustom === 'object') {
+                Object.entries(remoto.tiposCustom).forEach(([k, v]) => {
+                    if (!S.TIPOS_BUILTIN[k] && v?.label) {
+                        S.TIPOS[k] = { label: v.label, emoji: v.emoji || '📦', badge: 'badge-otro', dot: 'var(--c-gold)', builtin: false, ...(v.updatedAt ? { updatedAt: v.updatedAt } : {}) };
+                    }
+                });
+                S.guardarTipos();
+            }
+            S.edificios.length = 0;
+            if (Array.isArray(remoto.edificios)) {
+                remoto.edificios.forEach(e => {
+                    if (typeof e === 'string' && e.trim()) S.edificios.push(S.sanitize(e.trim(), 60));
+                });
+                S.guardarEdificios();
+            }
+        }
+
+        function _mostrarNovedades(remoto, esValida, resMerge, origen) {
+            const desc = document.querySelector('.gist-novedades-desc');
+            if (desc) {
+                desc.innerHTML = esValida
+                    ? 'Se encontraron datos en GitHub que difieren de los locales:'
+                    : 'Se encontraron datos en GitHub.<br><strong class="gist-warn-altered">⚠️ Atención: Los datos fueron alterados manualmente.</strong>';
+            }
+            const detalle = document.getElementById('gist-novedades-detalle');
+            if (detalle) {
+                const chips = [];
+                if (resMerge.cDispsAdd) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Dispositivos nuevos</span><span class="gist-novedades-chip-count">+${resMerge.cDispsAdd}</span></div>`);
+                if (resMerge.cDispsUpd) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Dispositivos a actualizar</span><span class="gist-novedades-chip-count gist-novedades-chip-count--purple">~${resMerge.cDispsUpd}</span></div>`);
+                if (resMerge.cGrabsAdd) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Grabadores nuevos</span><span class="gist-novedades-chip-count">+${resMerge.cGrabsAdd}</span></div>`);
+                if (resMerge.cGrabsUpd) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Grabadores a actualizar</span><span class="gist-novedades-chip-count gist-novedades-chip-count--purple">~${resMerge.cGrabsUpd}</span></div>`);
+                if (resMerge.cOtrosAdd) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Otros disp. nuevos</span><span class="gist-novedades-chip-count">+${resMerge.cOtrosAdd}</span></div>`);
+                if (resMerge.cOtrosUpd) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Otros a actualizar</span><span class="gist-novedades-chip-count gist-novedades-chip-count--purple">~${resMerge.cOtrosUpd}</span></div>`);
+                if (resMerge.cTipos) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Tipos Custom</span><span class="gist-novedades-chip-count">+${resMerge.cTipos}</span></div>`);
+                if (resMerge.cEdif) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Edificios</span><span class="gist-novedades-chip-count">+${resMerge.cEdif}</span></div>`);
+                detalle.innerHTML = chips.join('');
+            }
+            const pregunta = document.getElementById('gist-novedades-pregunta');
+            if (pregunta) pregunta.textContent = origen === 'manual' ? '¿Cómo querés aplicar los cambios del Gist?' : '¿Querés agregarlos a tus datos locales?';
+            const btnReemplazar = document.getElementById('gist-novedades-reemplazar');
+            if (btnReemplazar) btnReemplazar.classList.toggle('hidden', origen !== 'manual');
+
+            function _aplicarYCerrar(modo) {
+                historial.empujar(modo === 'reemplazar'
+                    ? (esValida ? 'Reemplazar con datos del Gist' : 'Reemplazar con datos del Gist (Forzado)')
+                    : (esValida ? 'Bajar novedades desde Gist' : 'Bajar novedades desde Gist (Forzado)'));
+                if (modo === 'reemplazar') { _reemplazarConRemoto(remoto); } else { _combinarDatosRemotos(remoto); }
+                guardar(); render();
+                _cfg.lastSync = new Date().toISOString();
+                _guardarCfg(); _setStatusSync();
+                MM.cerrar('modal-gist-novedades');
+                const msgs = [];
+                if (modo === 'reemplazar') {
+                    msgs.push(`${_data.dispositivos.length} disp`, `${_data.grabadores.length} grab`);
+                    toast(esValida ? `Datos reemplazados (${msgs.join(', ')})` : `Datos reemplazados — firma inválida (${msgs.join(', ')})`, esValida ? 'success' : 'info');
+                } else {
+                    if (resMerge.cDispsAdd) msgs.push(`+${resMerge.cDispsAdd} disp`);
+                    if (resMerge.cDispsUpd) msgs.push(`~${resMerge.cDispsUpd} disp`);
+                    if (resMerge.cGrabsAdd) msgs.push(`+${resMerge.cGrabsAdd} grab`);
+                    if (resMerge.cGrabsUpd) msgs.push(`~${resMerge.cGrabsUpd} grab`);
+                    if (resMerge.cOtrosAdd) msgs.push(`+${resMerge.cOtrosAdd} otros`);
+                    if (resMerge.cOtrosUpd) msgs.push(`~${resMerge.cOtrosUpd} otros`);
+                    if (resMerge.cTipos) msgs.push(`+${resMerge.cTipos} tipos`);
+                    if (resMerge.cEdif) msgs.push(`+${resMerge.cEdif} edif`);
+                    toast(esValida ? `Datos combinados (${msgs.join(', ')})` : `Datos alterados combinados (${msgs.join(', ')})`, esValida ? 'success' : 'info');
+                }
+                _setBusy(false);
+            }
+
+            const btnOk = document.getElementById('gist-novedades-ok');
+            if (btnOk) btnOk.onclick = () => _aplicarYCerrar('combinar');
+            if (btnReemplazar) btnReemplazar.onclick = () => {
+                confirmarModal('Esto reemplazará todos tus datos locales con los del Gist. ¿Confirmar?', 'Reemplazar').then(ok => {
+                    if (ok) _aplicarYCerrar('reemplazar');
+                });
+            };
+            const btnVerDetalle = document.getElementById('gist-novedades-ver-detalle');
+            if (btnVerDetalle) btnVerDetalle.onclick = () => _mostrarDetalleModal(resMerge.cambios || []);
+            setTimeout(() => MM.abrir('modal-gist-novedades'), origen === 'manual' ? 0 : 600);
+        }
+
         async function bajar() {
             const token = document.getElementById('gist-token')?.value.trim() || _cfg.token;
             const gistId = document.getElementById('gist-id')?.value.trim() || _cfg.gistId;
 
-            // ELIMINAMOS LA LÍNEA DEL TOKEN: if (!token) { toast('Ingresá el token primero', 'error'); return; }
             if (!gistId) { toast('Ingresá el Gist ID primero', 'error'); return; }
             if (!RE_GIST_ID.test(gistId)) { toast('Gist ID inválido', 'error'); return; }
 
@@ -1342,13 +1441,9 @@
             _setStatus('Bajando…');
 
             try {
-                // ARMAMOS LOS HEADERS DINÁMICAMENTE
                 const headers = {};
-                if (token) {
-                    headers['Authorization'] = `token ${token}`;
-                }
+                if (token) headers['Authorization'] = `token ${token}`;
 
-                // EVADIMOS CACHÉ EN LA PETICIÓN PRINCIPAL
                 const url = `https://api.github.com/gists/${gistId}?_ts=${Date.now()}`;
                 const res = await fetch(url, { headers, cache: 'no-store' });
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -1361,8 +1456,6 @@
                 if (file.truncated) {
                     const rawOrigin = new URL(file.raw_url).hostname;
                     if (!rawOrigin.endsWith('.githubusercontent.com')) throw new Error('raw_url inválida');
-
-                    // EVADIMOS CACHÉ EN LA PETICIÓN RAW
                     const r2 = await fetch(`${file.raw_url}?_ts=${Date.now()}`, { cache: 'no-store' });
                     contenido = await r2.text();
                 }
@@ -1371,70 +1464,48 @@
                 if (!remoto || typeof remoto !== 'object') throw new Error('Formato inválido');
 
                 let esValida = true;
-                if (remoto.hash) {
-                    esValida = await S.verificarFirma(remoto);
-                }
+                if (remoto.hash) esValida = await S.verificarFirma(remoto);
 
-                const procesarBajada = () => {
-                    _setBusy(true);
-
-                    const dataStringAntes = JSON.stringify(_data);
-                    const tiposStringAntes = JSON.stringify(S.TIPOS);
-                    const edifStringAntes = JSON.stringify(S.edificios);
-
+                const _simularMerge = () => {
                     const backupData = S.deepClone(_data);
                     const backupTipos = S.deepClone(S.TIPOS);
                     const backupEdif = [...S.edificios];
-
+                    const dataAntes = JSON.stringify(_data);
+                    const tiposAntes = JSON.stringify(S.TIPOS);
+                    const edifAntes = JSON.stringify(S.edificios);
                     const resMerge = _combinarDatosRemotos(remoto);
-
-                    const dataStringDespues = JSON.stringify(_data);
-                    const tiposStringDespues = JSON.stringify(S.TIPOS);
-                    const edifStringDespues = JSON.stringify(S.edificios);
-
-                    const huboCambios = (dataStringAntes !== dataStringDespues || tiposStringAntes !== tiposStringDespues || edifStringAntes !== edifStringDespues);
-
+                    const huboCambios = (dataAntes !== JSON.stringify(_data) || tiposAntes !== JSON.stringify(S.TIPOS) || edifAntes !== JSON.stringify(S.edificios));
                     _data = backupData;
                     Object.keys(S.TIPOS).forEach(k => delete S.TIPOS[k]);
                     Object.assign(S.TIPOS, backupTipos);
                     S.edificios.length = 0;
                     S.edificios.push(...backupEdif);
+                    return { resMerge, huboCambios };
+                };
 
+                const _abrirNovedades = () => {
+                    const { resMerge, huboCambios } = _simularMerge();
+                    _cfg.token = token; _cfg.gistId = gistId;
+                    _guardarCfg();
                     if (!huboCambios) {
-                        _cfg.token = token; _cfg.gistId = gistId; _cfg.lastSync = new Date().toISOString();
+                        _cfg.lastSync = new Date().toISOString();
                         _guardarCfg(); _setStatusSync();
-                        toast('Sin cambios para combinar', 'info');
+                        toast('Sin cambios respecto al Gist', 'info');
                         _setBusy(false);
                         return;
                     }
-
-                    historial.empujar(esValida ? 'Bajar desde Gist' : 'Bajar desde Gist (Forzado)');
-                    _combinarDatosRemotos(remoto);
-
-                    guardar();
-                    render();
-                    _cfg.token = token; _cfg.gistId = gistId; _cfg.lastSync = new Date().toISOString();
-                    _guardarCfg(); _setStatusSync();
-
-                    const msgs = [];
-                    if (resMerge.cDispsAdd) msgs.push(`+${resMerge.cDispsAdd} disp`);
-                    if (resMerge.cDispsUpd) msgs.push(`~${resMerge.cDispsUpd} disp`);
-                    if (resMerge.cGrabsAdd) msgs.push(`+${resMerge.cGrabsAdd} grab`);
-                    if (resMerge.cGrabsUpd) msgs.push(`~${resMerge.cGrabsUpd} grab`);
-                    if (resMerge.cTipos) msgs.push(`+${resMerge.cTipos} tipos`);
-                    if (resMerge.cEdif) msgs.push(`+${resMerge.cEdif} edif`);
-
-                    toast(esValida ? `Datos combinados (${msgs.join(', ')})` : `Datos alterados combinados (${msgs.join(', ')})`, esValida ? 'success' : 'info');
                     _setBusy(false);
+                    MM.cerrar('modal-gist');
+                    _mostrarNovedades(remoto, esValida, resMerge, 'manual');
                 };
 
                 if (!esValida) {
                     _setBusy(false);
-                    confirmarModal('Los datos en GitHub han sido modificados manualmente. ¿Querés combinarlos de todos modos?', 'Combinar').then(ok => {
-                        if (ok) procesarBajada();
+                    confirmarModal('Los datos en GitHub han sido modificados manualmente. ¿Querés continuar?', 'Continuar').then(ok => {
+                        if (ok) _abrirNovedades();
                     });
                 } else {
-                    procesarBajada();
+                    _abrirNovedades();
                 }
 
             } catch (err) {
@@ -1535,54 +1606,7 @@
 
                 if (!huboCambios) return;
 
-                const desc = document.querySelector('.gist-novedades-desc');
-                if (desc) {
-                    desc.innerHTML = esValida
-                        ? 'Se encontraron campos o registros en GitHub que no están en este dispositivo:'
-                        : 'Se encontraron registros en GitHub.<br><strong class="gist-warn-altered">⚠️ Atención: Los datos fueron alterados manualmente.</strong>';
-                }
-
-                const detalle = document.getElementById('gist-novedades-detalle');
-                if (detalle) {
-                    const chips = [];
-                    if (resMerge.cDispsAdd) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Dispositivos nuevos</span><span class="gist-novedades-chip-count">+${resMerge.cDispsAdd}</span></div>`);
-                    if (resMerge.cDispsUpd) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Dispositivos a actualizar</span><span class="gist-novedades-chip-count gist-novedades-chip-count--purple">~${resMerge.cDispsUpd}</span></div>`);
-                    if (resMerge.cGrabsAdd) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Grabadores nuevos</span><span class="gist-novedades-chip-count">+${resMerge.cGrabsAdd}</span></div>`);
-                    if (resMerge.cGrabsUpd) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Grabadores a actualizar</span><span class="gist-novedades-chip-count gist-novedades-chip-count--purple">~${resMerge.cGrabsUpd}</span></div>`);
-                    if (resMerge.cOtrosAdd) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Otros disp. nuevos</span><span class="gist-novedades-chip-count">+${resMerge.cOtrosAdd}</span></div>`);
-                    if (resMerge.cOtrosUpd) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Otros a actualizar</span><span class=" gist-novedades-chip-count gist-novedades-chip-count--purple">~${resMerge.cOtrosUpd}</span></div>`);
-                    if (resMerge.cTipos) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Tipos Custom</span><span class="gist-novedades-chip-count">+${resMerge.cTipos}</span></div>`);
-                    if (resMerge.cEdif) chips.push(`<div class="gist-novedades-chip"><span class="gist-novedades-chip-label">Edificios</span><span class="gist-novedades-chip-count">+${resMerge.cEdif}</span></div>`);
-                    detalle.innerHTML = chips.join('');
-                }
-
-                const btnOk = document.getElementById('gist-novedades-ok');
-                if (btnOk) {
-                    btnOk.onclick = () => {
-                        historial.empujar(esValida ? 'Bajar novedades desde Gist' : 'Bajar novedades desde Gist (Forzado)');
-                        _combinarDatosRemotos(remoto);
-                        guardar();
-                        render();
-                        MM.cerrar('modal-gist-novedades');
-                        const msgs = [];
-                        if (resMerge.cDispsAdd) msgs.push(`+${resMerge.cDispsAdd} disp`);
-                        if (resMerge.cDispsUpd) msgs.push(`~${resMerge.cDispsUpd} disp`);
-                        if (resMerge.cGrabsAdd) msgs.push(`+${resMerge.cGrabsAdd} grab`);
-                        if (resMerge.cGrabsUpd) msgs.push(`~${resMerge.cGrabsUpd} grab`);
-                        if (resMerge.cOtrosAdd) msgs.push(`+${resMerge.cOtrosAdd} otros`);
-                        if (resMerge.cOtrosUpd) msgs.push(`~${resMerge.cOtrosUpd} otros`);
-                        if (resMerge.cTipos) msgs.push(`+${resMerge.cTipos} tipos`);
-                        if (resMerge.cEdif) msgs.push(`+${resMerge.cEdif} edif`);
-                        toast(esValida ? `Datos combinados (${msgs.join(', ')})` : `Datos alterados combinados (${msgs.join(', ')})`, esValida ? 'success' : 'info');
-                    };
-                }
-
-                const btnVerDetalle = document.getElementById('gist-novedades-ver-detalle');
-                if (btnVerDetalle) {
-                    btnVerDetalle.onclick = () => _mostrarDetalleModal(resMerge.cambios || []);
-                }
-
-                setTimeout(() => MM.abrir('modal-gist-novedades'), 600);
+                _mostrarNovedades(remoto, esValida, resMerge, 'auto');
 
             } catch (_) {
             } finally {
@@ -1851,6 +1875,13 @@
 
     function _inyectarStaggerChips() { }
 
+    // Asigna --i a cada .stat-chip dentro de un panel para transition-delay escalonado
+    function _asignarIndicesChips(panel) {
+        panel.querySelectorAll('.stat-chip').forEach((chip, idx) => {
+            chip.style.setProperty('--i', idx + 1);
+        });
+    }
+
     function _renderResumenGeneral(disps, grabs, idsEnProd) {
         const tiposServidores = ['nvr', 'dvr', 'analitica', 'encoder'];
 
@@ -2115,7 +2146,7 @@
             if (saltandoNivel2 && _dash.estadoAbierto !== null) {
                 wrap.style.transition = 'none';
                 wrap.classList.remove('en-detalle');
-                panelIzq.innerHTML = getL1Html();
+                panelIzq.innerHTML = getL1Html(); _asignarIndicesChips(panelIzq);
                 void wrap.offsetWidth;
                 wrap.style.transition = '';
             } else if (saltandoNivel3 && _dash.l2EdificioAbierto === null) {
@@ -2131,7 +2162,7 @@
             if (saltandoNivel3 && _dash.l2EdificioAbierto !== null) {
                 wrap.style.transition = 'none';
                 wrap.classList.remove('en-detalle');
-                panelIzq.innerHTML = getL2Html();
+                panelIzq.innerHTML = getL2Html(); _asignarIndicesChips(panelIzq);
                 void wrap.offsetWidth;
                 wrap.style.transition = '';
             }
@@ -2140,7 +2171,7 @@
         if (_renderResumenTimeout) { clearTimeout(_renderResumenTimeout); _renderResumenTimeout = null; contenedor.style.height = ''; contenedor.style.transition = ''; }
 
         if (_dash.tipoAbiertoPrevio === _dash.tipoAbierto && _dash.estadoAbiertoPrevio === _dash.estadoAbierto && _dash.l2EdificioAbiertoPrevio === _dash.l2EdificioAbierto && !esPrimeraCarga) {
-            panelIzq.innerHTML = htmlIzq; panelDer.innerHTML = htmlDer; return;
+            panelIzq.innerHTML = htmlIzq; panelDer.innerHTML = htmlDer; _asignarIndicesChips(panelIzq); _asignarIndicesChips(panelDer); return;
         }
 
         _dash.tipoAbiertoPrevio = _dash.tipoAbierto;
@@ -2149,7 +2180,7 @@
 
         if (!esPrimeraCarga) { contenedor.style.transition = 'none'; contenedor.style.height = alturaActual + 'px'; }
         panelIzq.style.height = ''; panelIzq.style.overflow = ''; panelDer.style.height = ''; panelDer.style.overflow = '';
-        panelIzq.innerHTML = htmlIzq; panelDer.innerHTML = htmlDer;
+        panelIzq.innerHTML = htmlIzq; panelDer.innerHTML = htmlDer; _asignarIndicesChips(panelIzq); _asignarIndicesChips(panelDer);
         void contenedor.offsetHeight;
 
         const panelActivo = enDetalle ? panelDer : panelIzq;
@@ -2167,10 +2198,10 @@
                 _renderResumenTimeout = setTimeout(() => {
                     contenedor.style.height = ''; contenedor.style.transition = '';
                     if (isSlidingAtrasNivel2) {
-                        wrap.style.transition = 'none'; panelIzq.innerHTML = getTiposHtml(); panelDer.innerHTML = getL1Html(); wrap.classList.add('en-detalle'); void wrap.offsetWidth; wrap.style.transition = '';
+                        wrap.style.transition = 'none'; panelIzq.innerHTML = getTiposHtml(); panelDer.innerHTML = getL1Html(); _asignarIndicesChips(panelIzq); _asignarIndicesChips(panelDer); wrap.classList.add('en-detalle'); void wrap.offsetWidth; wrap.style.transition = '';
                         panelIzq.style.height = '0px'; panelIzq.style.overflow = 'hidden'; panelDer.style.height = ''; panelDer.style.overflow = '';
                     } else if (isSlidingAtrasNivel3) {
-                        wrap.style.transition = 'none'; panelIzq.innerHTML = getL1Html(); panelDer.innerHTML = getL2Html(); wrap.classList.add('en-detalle'); void wrap.offsetWidth; wrap.style.transition = '';
+                        wrap.style.transition = 'none'; panelIzq.innerHTML = getL1Html(); panelDer.innerHTML = getL2Html(); _asignarIndicesChips(panelIzq); _asignarIndicesChips(panelDer); wrap.classList.add('en-detalle'); void wrap.offsetWidth; wrap.style.transition = '';
                         panelIzq.style.height = '0px'; panelIzq.style.overflow = 'hidden'; panelDer.style.height = ''; panelDer.style.overflow = '';
                     } else {
                         if (enDetalle) { panelIzq.style.height = '0px'; panelIzq.style.overflow = 'hidden'; } else { panelDer.style.height = '0px'; panelDer.style.overflow = 'hidden'; }
@@ -4244,11 +4275,13 @@
 
             _actualizarBotonesEstado(d.estado || '');
 
+            const bloquearEstado = enProduccionComoGrab;
             ['averiado', 'revisar', 'desafectado'].forEach(e => {
                 const btn = document.getElementById(`btn-estado-${e}`);
                 if (btn) {
-                    btn.disabled = enProduccionComoGrab;
-                    btn.title = enProduccionComoGrab ? 'No se puede cambiar el estado: el grabador está en producción' : '';
+                    btn.disabled = bloquearEstado;
+                    btn.title = bloquearEstado ? 'No se puede cambiar el estado: el dispositivo está en producción' : '';
+                    if (bloquearEstado) { btn.dataset.prodDisabled = '1'; } else { delete btn.dataset.prodDisabled; }
                 }
             });
 
@@ -4378,31 +4411,28 @@
             if (!huboCambios) { toast('Sin cambios', 'info'); MM.cerrar('modal-editar-disp'); _edicion.dispId = null; _edicion.snapshotDisp = null; return; }
 
             const estadosConDesasignacion = ['averiado', 'revisar', 'desafectado'];
-            const esCamara = dispActual && !['nvr', 'dvr'].includes(dispActual.tipo);
             const estadoCambioAInactivo = estadosConDesasignacion.includes(_edicion.estado) &&
                 !estadosConDesasignacion.includes(_edicion.snapshotDisp?.estado || '');
-            if (esCamara && estadoCambioAInactivo) {
-                // Recolectar TODOS los slots en TODOS los grabadores que referencian este dispositivo
+            if (estadoCambioAInactivo) {
                 const slotsAsignados = [];
                 for (const g of _data.grabadores) {
                     g.canales_data.forEach(slot => {
-                        if (slot.dispositivoId === _edicion.dispId) {
-                            slotsAsignados.push({ grab: g, slot });
-                        }
+                        if (slot.dispositivoId === _edicion.dispId) slotsAsignados.push({ grab: g, slot });
                     });
                 }
-                if (slotsAsignados.length > 0) {
+                const otrosProdAsignados = (_data.otros_prod || []).filter(o => o.dispositivoId === _edicion.dispId);
+                if (slotsAsignados.length > 0 || otrosProdAsignados.length > 0) {
                     const LABELS = { averiado: 'Averiado', revisar: 'A revisar', desafectado: 'Desafectado' };
-                    const detalleCanales = slotsAsignados
-                        .map(({ grab, slot }) => `Canal ${slot.canal} de ${grab.descripcion}`)
-                        .join(', ');
-                    const msg = `Marcar como "${LABELS[_edicion.estado]}" quitará este dispositivo de: ${detalleCanales}. ¿Confirmar?`;
+                    const partes = [];
+                    if (slotsAsignados.length > 0) partes.push(slotsAsignados.map(({ grab, slot }) => `Canal ${slot.canal} de ${grab.descripcion}`).join(', '));
+                    if (otrosProdAsignados.length > 0) partes.push(otrosProdAsignados.map(o => o.descripcion || 'Otro dispositivo').join(', '));
+                    const msg = `Marcar como "${LABELS[_edicion.estado]}" quitará este dispositivo de: ${partes.join(', ')}. ¿Confirmar?`;
                     const ok = await confirmarModal(msg, 'Guardar');
                     if (!ok) return;
-
-                    historial.empujar('Actualizar estado dispositivo y liberar canales');
-                    // Limpiar TODOS los slots encontrados
+                    historial.empujar('Actualizar estado dispositivo y liberar asignaciones');
                     slotsAsignados.forEach(({ slot }) => { slot.dispositivoId = ''; });
+                    const idsAEliminar = new Set(otrosProdAsignados.map(o => o.id));
+                    _data.otros_prod = _data.otros_prod.filter(o => !idsAEliminar.has(o.id));
                 } else {
                     historial.empujar('Editar dispositivo');
                 }
@@ -6473,7 +6503,9 @@
             });
             cfg.btns.forEach(getFn => {
                 const el = getFn();
-                if (el) el.disabled = bloqueado;
+                if (!el) return;
+                if (!bloqueado && el.dataset.prodDisabled === '1') return;
+                el.disabled = bloqueado;
             });
 
             const btnLock = document.getElementById(cfg.lockBtn);
