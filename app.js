@@ -163,14 +163,24 @@
             if (!obj) return '0';
             const core = {
                 d: (obj.dispositivos || []).map(x => [
-                    x.id, x.tipo, x.estado || null, x.mac || null, x.serial || null, x.canales || null
+                    x.id, x.tipo, x.estado || null, x.mac || null, x.serial || null, x.canales || null,
+                    x.marca || null, x.modelo || null, x.patrimonio || null, x.firmware || null, x.forma || null
                 ]),
                 g: (obj.grabadores || []).map(x => [
                     x.id, x.dispositivoId || null, x.canales_n || 16,
-                    (x.canales_data || []).map(c => [c.canal, c.dispositivoId || null])
+                    x.descripcion || null, x.tipo || null, x.marca || null, x.modelo || null,
+                    x.ip || null, x.edificio || null, x.piso || null, x.rack || null,
+                    x.puerto || null, x.mac || null, x.comentarios || null,
+                    (x.canales_data || []).map(c => [
+                        c.canal, c.dispositivoId || null, c.descripcion || null,
+                        c.ip || null, c.puerto || null, c.edificio || null,
+                        c.piso || null, c.rack || null, c.comentarios || null
+                    ])
                 ]),
                 op: (obj.otros_prod || []).map(x => [
-                    x.id, x.dispositivoId || null, x.descripcion || null
+                    x.id, x.dispositivoId || null, x.descripcion || null,
+                    x.ip || null, x.puerto || null, x.edificio || null,
+                    x.piso || null, x.rack || null, x.comentarios || null
                 ]),
                 t: obj.tiposCustom || {},
                 e: obj.edificios || []
@@ -1088,8 +1098,7 @@
                     </div>
                 </div>`;
 
-            const panel = document.getElementById('modal-gist') || document.body;
-            panel.prepend(div);
+            document.body.appendChild(div);
 
             div.querySelector('#gist-guard-btn-bajar').addEventListener('click', () => {
                 div.remove();
@@ -1453,8 +1462,9 @@
                 const remoto = S.safeParse(contenido);
                 if (!remoto || typeof remoto !== 'object') throw new Error('Formato inválido');
 
+                const tieneFirmaRemota = !!remoto.hash;
                 let esValida = true;
-                if (remoto.hash) esValida = await S.verificarFirma(remoto);
+                if (tieneFirmaRemota) esValida = await S.verificarFirma(remoto);
 
                 const _simularMerge = () => {
                     const backupData = S.deepClone(_data);
@@ -1489,7 +1499,12 @@
                     _mostrarNovedades(remoto, esValida, resMerge, 'manual');
                 };
 
-                if (!esValida) {
+                if (!tieneFirmaRemota) {
+                    _setBusy(false);
+                    confirmarModal('Los datos en el Gist no tienen firma de integridad. No se puede verificar si fueron modificados manualmente. ¿Querés continuar?', 'Continuar').then(ok => {
+                        if (ok) _abrirNovedades();
+                    });
+                } else if (!esValida) {
                     _setBusy(false);
                     confirmarModal('Los datos en GitHub han sido modificados manualmente. ¿Querés continuar?', 'Continuar').then(ok => {
                         if (ok) _abrirNovedades();
@@ -1567,8 +1582,9 @@
                 const remoto = S.safeParse(contenido);
                 if (!remoto) return;
 
+                const tieneFirmaRemota = !!remoto.hash;
                 let esValida = true;
-                if (remoto.hash) {
+                if (tieneFirmaRemota) {
                     esValida = await S.verificarFirma(remoto);
                 }
 
@@ -2597,6 +2613,36 @@
             + ipComunHtml;
     }
 
+    // Devuelve la ruta de la imagen del modelo (png tiene prioridad; jpg como alternativa).
+    // Si no hay modelo registrado, intenta un fallback genérico por forma o tipo.
+    function _getDeviceImageSrc(modelo, forma, tipo) {
+        if (modelo) {
+            const nombre = modelo.replace(/[^a-zA-Z0-9\-_.]/g, '');
+            if (nombre) return `./img/devices/${nombre}.png`;
+        }
+        const formaMap = {
+            'domo': 'domo', 'minidomo': 'domo',
+            'bullet': 'bullet', 'minibullet': 'bullet',
+            'turret': 'turret', 'domo-ptz': 'ptz'
+        };
+        const fb = forma ? formaMap[forma] : null;
+        if (fb) return `./img/devices/fallback/${fb}.png`;
+        if (tipo) return `./img/devices/fallback/${tipo}.png`;
+        return null;
+    }
+
+    // Al cargar el <img> con onerror se intenta primero .png; si falla se prueba .jpg;
+    // si también falla, se oculta la imagen y se muestra el emoji de reserva.
+    function _buildDeviceImgHtml(modelo, forma, tipo, emoji) {
+        const src = _getDeviceImageSrc(modelo, forma, tipo);
+        if (!src) return `<span class="disp-thumb-emoji">${emoji}</span>`;
+        // Prueba .png; si falla intenta .jpg; si tambi\xc3\xa9n falla reemplaza con el emoji
+        const srcJpg = src.replace(/\.png$/, '.jpg');
+        return `<img class="disp-thumb" src="${src}" alt=""
+            onerror="if(this.dataset.tried){const s=document.createElement('span');s.className='disp-thumb-emoji';s.textContent='${emoji}';this.replaceWith(s);}else{this.dataset.tried='1';this.src='${srcJpg}';}" 
+            loading="lazy">`;
+    }
+
     function _renderItemActivo(d, asignaciones, tieneMacDuplicada, dupPatrimonios) {
         const ESTADO_BADGE = { averiado: ['Averiado', 'badge-estado-averiado'], revisar: ['A revisar', 'badge-estado-revisar'], desafectado: ['Desafectado', 'badge-estado-desafectado'], disponible: ['Disponible', 'badge-estado-disponible'] };
         const tc = S.TIPOS[d.tipo] || { emoji: '📦', label: d.tipo };
@@ -2614,9 +2660,12 @@
             d.patrimonio ? `<span class="${dupPatrimonios.has(d.patrimonio.trim().toUpperCase()) ? 'pat-dup' : ''}">PAT: ${esc(d.patrimonio)}</span>` : ''
         ].filter(Boolean);
 
+        const thumbHtml = _buildDeviceImgHtml(d.modelo, d.forma, d.tipo, tc.emoji);
+
         return `<div class="dispositivo-item tipo-${esc(d.tipo)} estado-${estadoEfectivo} anim-in" data-disp-id="${esc(d.id)}">
+                    <div class="disp-thumb-wrap">${thumbHtml}</div>
                     <div class="dispositivo-info">
-                        <div class="dispositivo-nombre">${tc.emoji} ${tipoBadgeLabel}<span class="sep-muted">-</span>${esc(titulo)} </div>
+                        <div class="dispositivo-nombre">${tipoBadgeLabel}<span class="sep-muted">-</span>${esc(titulo)} </div>
                         <div class="dispositivo-meta">${d.modelo ? `<span>${esc(d.modelo)}</span>` : ''}</div>
                         ${linea3Parts.length ? `<div class="disp-linea3">${linea3Parts.join(' · ')}</div>` : ''}
                     </div>${derechaHtml}</div>`;
@@ -2974,9 +3023,21 @@
 
     function _actualizarBotonesEstado(estadoActual) {
         _edicion.estado = estadoActual;
-        ESTADOS_INACTIVOS.forEach(e => {
-            const btn = document.getElementById(`btn-estado-${e}`);
-            if (btn) btn.classList.toggle('activo', estadoActual === e);
+        const btn  = document.getElementById('btn-estado-disp');
+        const dot  = document.getElementById('estado-disp-dot');
+        const lbl  = document.getElementById('estado-disp-label');
+        if (!btn) return;
+        const LABELS = { '': 'Normal', averiado: 'Averiado', revisar: 'En revisión', desafectado: 'Desafectado' };
+        const DOT_CLASS = { '': 'estado-disp-dot--normal', averiado: 'estado-disp-dot--averiado', revisar: 'estado-disp-dot--revisar', desafectado: 'estado-disp-dot--desafectado' };
+        btn.className = 'btn-estado-disp';
+        if (estadoActual === 'averiado')   btn.classList.add('estado--averiado');
+        else if (estadoActual === 'revisar')    btn.classList.add('estado--revisar');
+        else if (estadoActual === 'desafectado') btn.classList.add('estado--desafectado');
+        if (dot) dot.className = `estado-disp-dot ${DOT_CLASS[estadoActual] || DOT_CLASS['']}`;
+        if (lbl) lbl.textContent = LABELS[estadoActual] ?? 'Normal';
+        // Marcar opción activa en el dropdown
+        document.querySelectorAll('#dropdown-estado-disp .canal-disp-item').forEach(el => {
+            el.classList.toggle('activo-vista', el.dataset.estado === (estadoActual || ''));
         });
     }
     const KEY_EXPANDED = `${APP_KEY}:cctv_grab_expanded`;
@@ -3580,6 +3641,7 @@
         abrirGist() {
             MM.cerrar('modal-ajustes');
             setTimeout(() => {
+                document.getElementById('gist-guard-alert')?.remove();
                 GistSync.poblarModal();
                 MM.abrir('modal-gist', { onEscape: () => UI.cerrarGist() });
             }, 150);
@@ -4346,14 +4408,11 @@
             _actualizarBotonesEstado(d.estado || '');
 
             const bloquearEstado = enProduccionComoGrab;
-            ESTADOS_INACTIVOS.forEach(e => {
-                const btn = document.getElementById(`btn-estado-${e}`);
-                if (btn) {
-                    btn.disabled = bloquearEstado;
-                    btn.title = bloquearEstado ? 'No se puede cambiar el estado: el dispositivo está en producción' : '';
-                    if (bloquearEstado) { btn.dataset.prodDisabled = '1'; } else { delete btn.dataset.prodDisabled; }
-                }
-            });
+            const btnEstado = document.getElementById('btn-estado-disp');
+            if (btnEstado) {
+                btnEstado.disabled = bloquearEstado;
+                btnEstado.title = bloquearEstado ? 'No se puede cambiar el estado: el dispositivo está en producción' : '';
+            }
 
             ModalLock.reset('modal-editar-disp');
             MM.abrir('modal-editar-disp', { onEscape: () => UI.cerrarModalEditarDispositivo() });
@@ -4383,9 +4442,17 @@
             }
         },
 
-        toggleEstadoDisp(estado) {
-            const nuevo = _edicion.estado === estado ? '' : estado;
-            _actualizarBotonesEstado(nuevo);
+        onSelectEstadoDisp() {
+            // obsoleto — mantenido por si hay referencias externas
+        },
+
+        toggleDropdownEstadoDisp(e) {
+            if (e) e.stopPropagation();
+            const btn = document.getElementById('btn-estado-disp');
+            if (btn && btn.disabled) return;
+            const dd = document.getElementById('dropdown-estado-disp');
+            if (!dd) return;
+            dd.classList.toggle('hidden');
         },
 
         async guardarEdicionDispositivo() {
@@ -4478,7 +4545,7 @@
             const idx = _data.dispositivos.findIndex(x => x.id === _edicion.dispId);
             if (idx !== -1) _data.dispositivos[idx] = obj;
             _sincronizarGrabadores(_edicion.dispId);
-            toast('Dispositivo actualizado', 'success');
+            toast('Activo actualizado', 'success');
 
             guardar(); render(); MM.cerrar('modal-editar-disp'); _edicion.dispId = null; _edicion.snapshotDisp = null;
         },
@@ -5303,16 +5370,21 @@
                     const newDisps = Array.isArray(data.dispositivos) ? data.dispositivos.map(d => S.sanitizarDisp(d, data.tiposCustom || {})).filter(Boolean) : [];
                     const newGrabs = Array.isArray(data.grabadores) ? data.grabadores.map(g => S.sanitizarGrab(g)).filter(Boolean) : [];
 
+                    const tieneFirma = !!data.hash;
                     let esValida = true;
-                    if (data.hash) {
+                    if (tieneFirma) {
                         esValida = await S.verificarFirma(data);
                     }
 
-                    _importarParsed = { ...data, _disps: newDisps, _grabs: newGrabs, _valida: esValida };
+                    _importarParsed = { ...data, _disps: newDisps, _grabs: newGrabs, _valida: esValida, _tieneFirma: tieneFirma };
 
-                    const textoAlerta = !esValida ? `<span class="import-warn">⚠️ Archivo alterado externamente</span>` : '';
+                    const textoAlerta = !tieneFirma
+                        ? `<span class="import-warn">⚠️ Archivo sin firma de integridad</span>`
+                        : !esValida
+                            ? `<span class="import-warn">⚠️ Archivo alterado externamente</span>`
+                            : '';
                     label.innerHTML = `<span class="import-ok">✓ ${esc(file.name)}</span><span class="import-sub">${newDisps.length} dispositivos · ${newGrabs.length} grabadores</span>${textoAlerta}`;
-                    zone.style.borderColor = !esValida ? 'var(--c-orange)' : 'var(--c-green)';
+                    zone.style.borderColor = (!tieneFirma || !esValida) ? 'var(--c-orange)' : 'var(--c-green)';
 
                     btnComb.disabled = false; btnReem.disabled = false;
                 } catch (err) {
@@ -5329,7 +5401,10 @@
             if (!_importarParsed) { toast('Seleccioná un archivo válido', 'error'); return; }
             const data = _importarParsed;
 
-            if (!data._valida) {
+            if (!data._tieneFirma) {
+                const ok = await confirmarModal('Este archivo no tiene firma de integridad. No se puede verificar si fue modificado externamente. ¿Importar de todas formas?', 'Importar');
+                if (!ok) return;
+            } else if (!data._valida) {
                 const ok = await confirmarModal('El hash de integridad no coincide. El archivo puede haber sido modificado. ¿Importar de todas formas?', 'Importar');
                 if (!ok) return;
             }
@@ -5574,7 +5649,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sumario de Vista — ${fecha}</title>
+<title>Reporte de Vista — ${fecha}</title>
 <style>
   :root { --blue: #4c72ac; --border: #e2e6ef; --muted: #5a6070; --bg: #f5f6fa; --card: #fff; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -5596,7 +5671,7 @@
 <body>
 <div class="reporte-wrap">
   <header>
-    <div><h1>📋 Sumario CCTV</h1></div>
+    <div><h1>📋 Reporte CCTV</h1></div>
     <div class="meta">Exportado el ${fecha}<br>Criterio de agrupamiento: Unidades por ${_activos.orden.toUpperCase()}</div>
   </header>
   ${htmlResumen}
@@ -5840,6 +5915,12 @@
         const ddFiltros = document.getElementById('dropdown-filtros');
         if (wrapFiltros && ddFiltros && !wrapFiltros.contains(e.target)) {
             ddFiltros.classList.add('hidden');
+        }
+
+        const wrapEstado = document.getElementById('btn-estado-disp')?.closest('.estado-disp-wrap');
+        const ddEstado = document.getElementById('dropdown-estado-disp');
+        if (wrapEstado && ddEstado && !wrapEstado.contains(e.target)) {
+            ddEstado.classList.add('hidden');
         }
     });
 
@@ -6138,6 +6219,7 @@
         const on = (id, evt, fn) => { const el = document.getElementById(id); if (el) el.addEventListener(evt, fn); };
 
         // Header
+        on('btn-inicio', 'click', () => window.location.href = '../index.html');
         on('btn-undo', 'click', () => historial.undo());
         on('btn-redo', 'click', () => historial.redo());
         document.querySelector('.header-buttons .icon-btn[title="Ajustes"]')
@@ -6296,9 +6378,14 @@
 
         // Modal editar dispositivo
         on('editar-disp-tipo', 'change', () => UI.onDispTipoChange('editar-disp'));
-        on('btn-estado-averiado', 'click', () => UI.toggleEstadoDisp('averiado'));
-        on('btn-estado-revisar', 'click', () => UI.toggleEstadoDisp('revisar'));
-        on('btn-estado-desafectado', 'click', () => UI.toggleEstadoDisp('desafectado'));
+        on('btn-estado-disp', 'click', (e) => UI.toggleDropdownEstadoDisp(e));
+        document.getElementById('dropdown-estado-disp')?.addEventListener('click', e => {
+            const item = e.target.closest('.canal-disp-item[data-estado]');
+            if (!item) return;
+            e.stopPropagation();
+            _actualizarBotonesEstado(item.dataset.estado);
+            document.getElementById('dropdown-estado-disp')?.classList.add('hidden');
+        });
         document.querySelector('#modal-editar-disp .btn-edit')
             ?.addEventListener('click', () => UI.guardarEdicionDispositivo());
         document.querySelector('#modal-editar-disp .btn-delete')
@@ -6426,9 +6513,7 @@
                 btns: [
                     () => document.querySelector('#modal-editar-disp .btn-edit'),
                     () => document.querySelector('#modal-editar-disp .btn-delete'),
-                    () => document.getElementById('btn-estado-averiado'),
-                    () => document.getElementById('btn-estado-revisar'),
-                    () => document.getElementById('btn-estado-desafectado'),
+                    () => document.getElementById('btn-estado-disp'),
                 ],
                 lockBtn: 'btn-lock-editar-disp',
             },
@@ -6545,6 +6630,78 @@
     ModalLock.init();
     GistSync.init();
     GistSync.verificarAlAbrir();
+
+    // ── ZOOM FLOTANTE DE THUMBNAILS ──
+    // Crea una copia fixed al hacer hover sobre .disp-thumb para escapar de overflow:hidden
+    (() => {
+        const SCALE = 6;
+        const ANIM_MS = 180;
+        let ghost = null;
+        let activeImg = null;
+
+        function removeGhost() {
+            if (ghost) {
+                ghost.style.opacity = '0';
+                ghost.style.transform = 'scale(1)';
+                const g = ghost;
+                setTimeout(() => g.remove(), ANIM_MS);
+                ghost = null;
+            }
+            if (activeImg) {
+                activeImg.style.opacity = '';
+                activeImg = null;
+            }
+        }
+
+        document.addEventListener('mouseover', (e) => {
+            const img = e.target.closest('.disp-thumb');
+            if (!img || img === activeImg) return;
+            removeGhost();
+
+            const rect = img.getBoundingClientRect();
+            activeImg = img;
+            img.style.opacity = '0.35';
+
+            ghost = document.createElement('img');
+            ghost.src = img.src;
+            ghost.alt = '';
+            ghost.style.cssText = `
+                position: fixed;
+                left: ${rect.left}px;
+                top: ${rect.top}px;
+                width: ${rect.width}px;
+                height: ${rect.height}px;
+                object-fit: contain;
+                border-radius: 6px;
+                background: var(--bg-input);
+                padding: 3px;
+                pointer-events: none;
+                z-index: 9999;
+                box-shadow: 0 6px 24px rgba(0,0,0,0.45);
+                opacity: 0;
+                transform: scale(1);
+                transform-origin: center center;
+                transition: transform ${ANIM_MS}ms ease, opacity ${ANIM_MS}ms ease;
+            `;
+            document.body.appendChild(ghost);
+
+            // Forzar reflow antes de animar
+            ghost.getBoundingClientRect();
+            ghost.style.opacity = '1';
+            ghost.style.transform = `scale(${SCALE})`;
+        });
+
+        document.addEventListener('mouseout', (e) => {
+            const img = e.target.closest('.disp-thumb');
+            if (!img || img !== activeImg) return;
+            if (!e.relatedTarget || !e.relatedTarget.closest('.disp-thumb')) {
+                removeGhost();
+            }
+        });
+
+        // Quitar si se hace scroll para evitar que el ghost quede flotando desalineado
+        document.addEventListener('scroll', removeGhost, { passive: true, capture: true });
+    })();
 
     (() => {
         let deferredPrompt;
