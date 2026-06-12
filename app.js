@@ -6662,7 +6662,7 @@
         if (estactil) return;
 
         const SCALE = 5;
-        const ANIM_MS = 150;
+        const ANIM_MS = 200;
         let ghost = null;
         let activeImg = null;
 
